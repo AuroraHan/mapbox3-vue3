@@ -1,18 +1,24 @@
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
+import path from "path";
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [vue()],
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
   server: {
     proxy: {
       "/tile": {
-        target: "http://127.0.0.1:8099/tile/",
+        target: "http://192.168.0.113:8099/tile/",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/tile/, ""),
       },
       "/geoserverApi": {
-        target: "http://127.0.0.1:8099/geoserverApi/",
+        target: "http://192.168.0.113:8099/geoserverApi/",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/geoserverApi/, ""),
       },
