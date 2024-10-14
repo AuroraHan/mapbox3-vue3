@@ -18,11 +18,12 @@ onMounted(() => {
 let mapR;
 
 let china = '/geoserverApi/geoserver/cite/wms?service=WMS&version=1.1.0&request=GetMap&layers=cite%3Achina-g&bbox=$sw_lng$,$sw_lat$,$ne_lng$,$ne_lat$&width=768&height=444&srs=EPSG%3A4326&styles=&format=geojson'
+let world = '/geoserverApi/geoserver/cite/wms?service=WMS&version=1.1.0&request=GetMap&layers=cite%3Aworld_50M&bbox=$sw_lng$,$sw_lat$,$ne_lng$,$ne_lat$&width=768&height=384&srs=EPSG%3A4326&styles=&format=image/jpeg'
 const initMap = () => {
     mapbox.accessToken = "pk.eyJ1IjoiaHBqbmYiLCJhIjoiY20yMzU5OGhzMDI2NjJrb2kweG5yYWRuZSJ9.HX3dEC4HuYwKuA3_Fm2wXA";
     const map = new mapbox.Map({
         container: 'map',
-        projection: "globe",
+        projection: "mercator",
         // style: 'mapbox://styles/mapbox/outdoors-v12',
         style: {
             version: 8,
@@ -61,26 +62,31 @@ const initMap = () => {
 
     map.on('moveend', () => {
         const result = setBboxBounds(china)
-        map.getSource('china').setData(result)
+        if (map.getSource('china')) map.getSource('china').setData(result)
+
+        const result1 = setBboxBounds(world)
+        if (map.getSource('wms-world')) map.getSource('wms-world').setTiles([result1])
+
     })
 }
 
+
+//添加wms服务
 const addWmsServer = () => {
-    mapR.addSource('wms-china', {
+    const current = setBboxBounds(world)
+    mapR.addSource('wms-world', {
         type: 'raster',
-        tiles: [
-            '/geoserverApi/geoserver/cite/wms?service=WMS&version=1.1.0&request=GetMap&layers=cite%3Aworld_50M&bbox={bbox-epsg-3857}&width=768&height=384&srs=EPSG%3A4326&styles=&format=image%2Fjpeg'
-        ],
-        tileSize: 512
+        tiles: [current],
+        tileSize: 256
     })
 
     mapR.addLayer({
-        id: 'wms-china',
+        id: 'wms-world',
         type: 'raster',
-        source: 'wms-china',
+        source: 'wms-world',
         // 'source-layer':''
         paint: {
-            // "raster-opacity": 1
+            "raster-opacity": 1
         }
     })
 }
@@ -104,6 +110,7 @@ const addTmsServer = () => {
 }
 // 
 
+//添加geojson服务
 const addGeoJson = () => {
     const current = setBboxBounds(china)
     mapR.addSource('china', {
