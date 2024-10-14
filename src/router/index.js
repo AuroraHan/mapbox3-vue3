@@ -4,6 +4,7 @@ import { createRouter, createWebHashHistory } from "vue-router";
 const routes = [
     { path: "/", component: () => import('@/views/addImages/index.vue') },
     { path: "/addImages", name: 'addImages', component: () => import('@/views/addImages/index.vue') },
+    { path: "/popup", name: 'popup', component: () => import('@/views/popup/index.vue') },
 
 ];
 

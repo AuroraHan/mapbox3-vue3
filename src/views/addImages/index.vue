@@ -5,10 +5,8 @@
 </template>
 
 <script setup>
-import { onMounted, ref, createApp } from 'vue'
+import { onMounted, ref, } from 'vue'
 import mapbox from 'mapbox-gl';
-import MPop from '../popup/mPop.vue';
-import emitter from '@/mitt/index'
 
 onMounted(() => {
     initMap()
@@ -59,23 +57,6 @@ const initMap = () => {
     map.on('load', () => {
 
     })
-
-    map.on('click', (e) => {
-        customPopup([e.lngLat.lng, e.lngLat.lat])
-    })
-
-}
-
-emitter.on('test', (e) => {
-    console.log(e, 'gggggg');
-
-})
-
-const customPopup = (e) => {
-    let popup = new mapbox.Popup()
-    const container = document.createElement('div')
-    createApp(MPop, { title: 'gggg' }).mount(container)
-    popup.setLngLat(e).setDOMContent(container).addTo(mapR)
 }
 
 const addWmsServer = () => {
