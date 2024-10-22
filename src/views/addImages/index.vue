@@ -1,6 +1,6 @@
 <template>
     <div id="map">
-        <div class="box" @click="addGeoJson">WMS</div>
+        <div class="box" @click="addTmsServer">WMS</div>
     </div>
 </template>
 
@@ -94,17 +94,19 @@ const addWmsServer = () => {
 const addTmsServer = () => {
     mapR.addLayer({
         id: 'tms-china',
-        type: 'line',
+        type: 'circle',
         source: {
             scheme: 'tms',
             type: 'vector',
             tiles: [
-                '/geoserverApi/geoserver/gwc/service/tms/1.0.0/cite%3Achina-g@EPSG%3A4326@pbf/{z}/{x}/{y}.pbf'
+                '/geoserverApi/geoserver/gwc/service/tms/1.0.0/cite%3Aworld_50M@EPSG%3A900913@png/{z}/{x}/{y}.pbf'
             ]
         },
         "source-layer": 'tms-china',
         paint: {
-            "line-color": '#ff0000'
+            'circle-color': '#FF0000',
+            'circle-radius': 6,
+            'circle-opacity': 0.8
         }
     })
 }
