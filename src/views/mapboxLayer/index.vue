@@ -1,10 +1,18 @@
 <template>
     <div id="map">
     </div>
+    <div class="container">
+        <div class="map-item">
+            测试地图1<el-switch v-model="map1" />
+        </div>
+        <div class="map-item">
+            测试地图2<el-switch v-model="map1" />
+        </div>
+    </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import mapbox from 'mapbox-gl';
 
 let mapR: mapboxgl.Map | null = null;
@@ -34,11 +42,32 @@ const initMap = () => {
     })
 }
 
+//
+const map1 = ref(false)
 
 </script>
 
 <style scoped>
 #map {
     height: 100vh;
+}
+
+.container {
+    z-index: 9;
+    width: 300px;
+    height: 60%;
+    position: absolute;
+    right: 3%;
+    top: 3%;
+    background-color: rgba(188, 242, 224, 0.7);
+    border-radius: 4px;
+    padding: 10px 2px;
+}
+
+.map-item {
+    line-height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
 }
 </style>
