@@ -1,6 +1,6 @@
 <template>
     <div id="map">
-        <div class="box" @click="addTmsServer">WMS</div>
+        <div class="box" @click="addGeoJson">WMS</div>
     </div>
 </template>
 
@@ -24,33 +24,33 @@ const initMap = () => {
     const map = new mapbox.Map({
         container: 'map',
         projection: "mercator",
-        // style: 'mapbox://styles/mapbox/outdoors-v12',
-        style: {
-            version: 8,
-            sources: {
-                m_mono: {
-                    type: "raster",
-                    tiles: ["/tile/google/{z}/{x}/{y}.jpg"],
-                    tileSize: 256,
-                    attribution: "",
-                },
-            },
-            glyphs: "../../static/glyphs/{fontstack}/{range}.pbf",
-            layers: [
-                {
-                    id: "m_mono",
-                    type: "raster",
-                    source: "m_mono",
-                    minZoom: 0,
-                    maxZoom: 18,
-                },
-            ],
-            fog: {
-                range: [0.8, 8],
-                color: '#e6ddec',
-                "horizon-blend": 0.1
-            }
-        },
+        style: 'mapbox://styles/mapbox/outdoors-v12',
+        // style: {
+        //     version: 8,
+        //     sources: {
+        //         m_mono: {
+        //             type: "raster",
+        //             tiles: ["/tile/google/{z}/{x}/{y}.jpg"],
+        //             tileSize: 256,
+        //             attribution: "",
+        //         },
+        //     },
+        //     glyphs: "../../static/glyphs/{fontstack}/{range}.pbf",
+        //     layers: [
+        //         {
+        //             id: "m_mono",
+        //             type: "raster",
+        //             source: "m_mono",
+        //             minZoom: 0,
+        //             maxZoom: 18,
+        //         },
+        //     ],
+        //     fog: {
+        //         range: [0.8, 8],
+        //         color: '#e6ddec',
+        //         "horizon-blend": 0.1
+        //     }
+        // },
         center: [120, 30],
         zoom: 2,
     })
