@@ -14,6 +14,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import mapbox from 'mapbox-gl';
+import { latLonToWebMercator, webMercatorToLatLon } from '@/utils/mapTools'
 
 let mapR: mapboxgl.Map | null = null;
 
@@ -39,6 +40,17 @@ const initMap = () => {
     mapR = map;
     map.on('load', () => {
 
+    })
+
+    map.on('click', (e) => {
+        console.log(e, 'kkk');
+        // const nullIsland = new mapbox.MercatorCoordinate(30000, 30000, 0);
+        // console.log(nullIsland);
+
+        const res = latLonToWebMercator(e.lngLat.lng, e.lngLat.lat)
+        console.log(res);
+        const res1 = webMercatorToLatLon(res.x, res.y)
+        console.log(res1);
     })
 }
 
