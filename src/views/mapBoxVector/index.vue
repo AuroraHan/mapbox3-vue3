@@ -2,7 +2,7 @@
     <div class="map" id="map" ref="map">
         <pre
             class="lonlat">经度:{{ Number(jw?.lng).toFixed(5) }} 纬度:{{ Number(jw?.lat).toFixed(5) }} 层级:{{ zoom.toFixed(1) }}</pre>
-        <div class="select-map" @click="addDemData">视</div>
+        <div class="select-map" @click="lookMap">视</div>
         <div class="look-map" @click="changeMap">切</div>
     </div>
     <Transition enter-active-class="animate__animated animate__bounceIn"
@@ -71,7 +71,6 @@ onUnmounted(() => {
 
 //初始化地图 version: "3.6.0"
 const initMap = () => {
-
     const currentObj = mapStyleR.value.find((item) => {
         return item.enabled
     })
