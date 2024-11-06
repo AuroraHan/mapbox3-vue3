@@ -6,6 +6,7 @@ const routes = [
     { path: "/addImages", name: 'addImages', component: () => import('@/views/addImages/index.vue') },
     { path: "/popup", name: 'popup', component: () => import('@/views/popup/index.vue') },
     { path: "/mapboxLayer", name: 'mapboxLayer', component: () => import('@/views/mapboxLayer/index.vue') },
+    { path: "/mapboxVector", name: 'mapboxVector', component: () => import('@/views/mapBoxVector/index.vue') },
 
 ];
 
