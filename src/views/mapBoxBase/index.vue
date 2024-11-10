@@ -60,6 +60,11 @@ const initMap = () => {
 
     })
 
+    map.on('style.load', () => {
+        map.setConfigProperty('basemap', 'lightPreset', 'dusk');
+        map.setConfigProperty('basemap', 'showPointOfInterestLabels', true);
+    });
+
     map.on('moveend', () => {
     })
 }
@@ -115,8 +120,7 @@ const addGeoJson = () => {
         //         },
         //     ]
         // }
-        data: './geojson/Geo.geojson'
-
+        data: './geojson/Geo.geojson',
     })
 
     mapR.addLayer({
@@ -131,6 +135,8 @@ const addGeoJson = () => {
             "fill-outline-color": '#000000'
         }
     })
+
+    mapR
 
     // mapR.addLayer({
     //     'id': 'outline',
