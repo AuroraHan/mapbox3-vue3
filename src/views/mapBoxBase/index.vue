@@ -1,24 +1,25 @@
 <template>
-    <div id="map">
-        <div class="box" @click="addGeoJson">WMS</div>
+    <div id="map" class="map">
+        <div class="box" @click="addGeoJson">json
+        </div>
     </div>
 </template>
 
-<script setup>
-import { onMounted, ref, } from 'vue'
+<script setup lang="ts">
+import { onMounted, ref, onUnmounted } from 'vue'
 import mapbox from 'mapbox-gl';
+
+let mapR: mapboxgl.Map;
 
 onMounted(() => {
     initMap()
 })
 
-/**
- * @type {mapboxgl.Map}
- */
-let mapR;
+onUnmounted(() => {
+    mapR.remove()
+})
 
-let china = '/geoserverApi/geoserver/cite/wms?service=WMS&version=1.1.0&request=GetMap&layers=cite%3Achina-g&bbox=$sw_lng$,$sw_lat$,$ne_lng$,$ne_lat$&width=768&height=444&srs=EPSG%3A4326&styles=&format=geojson'
-let world = '/geoserverApi/geoserver/cite/wms?service=WMS&version=1.1.0&request=GetMap&layers=cite%3Aworld_50M&bbox=$sw_lng$,$sw_lat$,$ne_lng$,$ne_lat$&width=768&height=384&srs=EPSG%3A4326&styles=&format=image/jpeg'
+
 const initMap = () => {
     mapbox.accessToken = "pk.eyJ1IjoiaHBqbmYiLCJhIjoiY20yMzU5OGhzMDI2NjJrb2kweG5yYWRuZSJ9.HX3dEC4HuYwKuA3_Fm2wXA";
     const map = new mapbox.Map({
@@ -59,11 +60,6 @@ const initMap = () => {
     map.on('load', () => {
 
     })
-
-    map.on('style.load', () => {
-        map.setConfigProperty('basemap', 'lightPreset', 'dusk');
-        map.setConfigProperty('basemap', 'showPointOfInterestLabels', true);
-    });
 
     map.on('moveend', () => {
     })
@@ -136,7 +132,6 @@ const addGeoJson = () => {
         }
     })
 
-    mapR
 
     // mapR.addLayer({
     //     'id': 'outline',
@@ -153,8 +148,8 @@ const addGeoJson = () => {
 
 </script>
 
-<style scoped>
-#map {
+<style lang="scss" scoped>
+.map {
     height: 100vh;
 }
 
