@@ -62,9 +62,7 @@ onMounted(() => {
 
 onUnmounted(() => {
     mapR?.remove()
-    console.log(mapR, 'qian');
     mapR = null
-    console.log(mapR, 'hou');
 })
 
 
