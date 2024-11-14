@@ -2,13 +2,15 @@
     <div id="map" class="map"></div>
     <pre
         class="lonlat">经度:{{ Number(jw?.lng).toFixed(5) }} 纬度:{{ Number(jw?.lat).toFixed(5) }} 层级:{{ zoom.toFixed(1) }}</pre>
-    <div class="box" @click="addCustom">3D</div>
+    <div class="box" @click="addSmokeMaterial">3D</div>
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref, onUnmounted } from 'vue'
 import mapbox from 'mapbox-gl';
 import * as THREE from 'three';
+import { range, texture, mix, uv, color, rotateUV, positionLocal, time, uniform } from 'three/tsl';
+import { WebGPURenderer } from 'three/webgpu'
 import { Threebox } from 'threebox-plugin';
 
 let mapR: mapboxgl.Map;
@@ -59,7 +61,7 @@ const addCustom = () => {
         id: 'box1',
         type: 'custom',
         onAdd: function (map, gl) {
-            let geometry = new THREE.BoxGeometry(3000, 3000, 3000);
+            let geometry = new THREE.BoxGeometry(30000, 30000, 30000);
             let mesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({ color: 0xff0000 }));
             const cube = tb.Object3D({ obj: mesh, units: 'meters' });
             cube.setCoords([112, 31]);
@@ -69,6 +71,49 @@ const addCustom = () => {
             tb.update(); //update Threebox scene
         }
     })
+}
+
+//在粒子上添加纹理贴图
+const addSmokeMaterial = () => {
+    const textureLoader = new THREE.TextureLoader();
+    const smokeTexture = textureLoader.load('/images/smoke1.png');
+    const positions = [];
+    const geometry = new THREE.BufferGeometry();
+    const particleMaterial = new THREE.PointsMaterial({
+        color: 0x888888,
+        size: 100,
+        map: smokeTexture,
+        blending: THREE.AdditiveBlending,
+        transparent: true
+    });
+
+    const n = 2000, n2 = n / 2; // particles spread in the cube
+
+    for (let i = 0; i < 2000; i++) {
+
+        // positions
+        const x = Math.random() * n - n2;
+        const y = Math.random() * n - n2;
+        const z = Math.random() * n - n2;
+
+        positions.push(x, y, z);
+    }
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geometry.computeBoundingSphere();
+    const particleSystem = new THREE.Points(geometry, particleMaterial);
+
+    mapR.addLayer({
+        id: 'smoke',
+        type: 'custom',
+        onAdd: function (map, gl) {
+            const cube = tb.Object3D({ obj: particleSystem, units: 'meters' });
+            cube.setCoords([112, 31]);
+            tb.add(cube);
+        },
+        render: function (gl, matrix) {
+            tb.update();
+        }
+    });
 }
 
 </script>
