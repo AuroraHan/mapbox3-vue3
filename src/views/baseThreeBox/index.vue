@@ -88,29 +88,42 @@ const addSmokeMaterial = () => {
     });
 
     const n = 2000, n2 = n / 2; // particles spread in the cube
+    const height = 100; // 圆锥体高度
+    const radius = 50; // 底部圆的半径
 
     for (let i = 0; i < 2000; i++) {
+        // y 坐标从 0 到 -height 范围
+        const y = -Math.random() * height;
 
-        // positions
-        const x = Math.random() * n - n2;
-        const y = Math.random() * n - n2;
-        const z = Math.random() * n - n2;
+        // 根据 y 坐标计算半径，使其随高度增大
+        const r = (1 + y / height) * radius;
 
+        // 生成围绕圆锥体中心的角度 theta
+        const theta = Math.random() * 2 * Math.PI;
+
+        // x 和 z 坐标基于半径 r 和角度 theta 来计算
+        const x = r * Math.cos(theta);
+        const z = r * Math.sin(theta);
+
+        // 将计算得到的 x, y, z 添加到 positions 数组中
         positions.push(x, y, z);
     }
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
     geometry.computeBoundingSphere();
     const particleSystem = new THREE.Points(geometry, particleMaterial);
 
+    let cube;
     mapR.addLayer({
         id: 'smoke',
         type: 'custom',
         onAdd: function (map, gl) {
-            const cube = tb.Object3D({ obj: particleSystem, units: 'meters' });
+            cube = tb.Object3D({ obj: particleSystem, units: 'meters', adjustment: { x: -0.5, y: -0.5, z: 0.5 } });
+            cube.rotation.x = Math.PI / 2
             cube.setCoords([112, 31]);
             tb.add(cube);
         },
         render: function (gl, matrix) {
+            // cube.rotation.y += 0.01;
             tb.update();
         }
     });
