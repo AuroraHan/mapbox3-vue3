@@ -61,9 +61,12 @@ const addCustom = () => {
         id: 'box1',
         type: 'custom',
         onAdd: function (map, gl) {
-            let geometry = new THREE.BoxGeometry(30000, 30000, 30000);
-            let mesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({ color: 0xff0000 }));
-            const cube = tb.Object3D({ obj: mesh, units: 'meters' });
+            // let geometry = new THREE.BoxGeometry(3000, 3000, 3000);
+            const geometry = new THREE.ConeGeometry(1000, 1000, 32);
+            let mesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({ color: 0xffff00 }));
+
+            const cube = tb.Object3D({ obj: mesh, units: 'meters', adjustment: { x: 0.5, y: 1, z: -0.5 } });
+            cube.rotation.x = Math.PI / 2
             cube.setCoords([112, 31]);
             tb.add(cube);
         },
@@ -88,8 +91,8 @@ const addSmokeMaterial = () => {
     });
 
     const n = 2000, n2 = n / 2; // particles spread in the cube
-    const height = 100; // 圆锥体高度
-    const radius = 50; // 底部圆的半径
+    const height = 300; // 圆锥体高度
+    const radius = 200; // 底部圆的半径
 
     for (let i = 0; i < 2000; i++) {
         // y 坐标从 0 到 -height 范围
@@ -117,7 +120,7 @@ const addSmokeMaterial = () => {
         id: 'smoke',
         type: 'custom',
         onAdd: function (map, gl) {
-            cube = tb.Object3D({ obj: particleSystem, units: 'meters', adjustment: { x: -0.5, y: -0.5, z: 0.5 } });
+            cube = tb.Object3D({ obj: particleSystem, units: 'meters', adjustment: { x: 0, y: 1, z: 0 } });
             cube.rotation.x = Math.PI / 2
             cube.setCoords([112, 31]);
             tb.add(cube);
