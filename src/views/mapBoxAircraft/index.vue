@@ -182,7 +182,7 @@ const addCustom = () => {
             tb.loadObj(options, function (model) {
                 plane = model
                     .setCoords(mapConfig.MAD.origin);
-                plane.setRotation({ x: 0, y: 0, z: 0 })
+                // plane.setRotation({ x: 90, y: 90, z: 90 })
                 plane.addTooltip("You can set the fixed scale of this plane", true);
                 plane.addEventListener('ObjectChanged', onObjectChanged, false);
                 //返回投射阴影的对象选项的值
