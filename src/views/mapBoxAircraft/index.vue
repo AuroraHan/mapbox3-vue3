@@ -38,7 +38,7 @@ let mapConfig = {
         zoom: 13.4,
         pitch: 50,
         bearing: -13,
-        scale: 1,
+        scale: 0.3,
         timezone: 'Europe/Madrid'
     },
     names: {
@@ -113,8 +113,10 @@ function init() {
     gui.add(api, 'maxZoom', 0, mapR.transform.maxZoom).step(0.5).onChange(changeScale);
 }
 
+//飞机飞行时不断触发
 function onObjectChanged(e) {
     let model = e.detail.object; //here's the object already modified
+    // 使用动画过渡将地图平移到指定位置
     if (api.pan) mapR.panTo(model.coordinates);
 }
 
@@ -134,6 +136,7 @@ const fly = (data: any) => {
     }
 
     // start the truck animation with above options, and remove the line when animation ends
+    //使用上述选项启动卡车动画，并在动画结束时删除该线
     plane.followPath(
         options,
         function () {
@@ -144,13 +147,14 @@ const fly = (data: any) => {
     // set up geometry for a line to be added to map, lofting it up a bit for *style*
     let lineGeometry = options.path;
 
-    // create and add line object
+    // create and add line object 画出航线
     line = tb.line({
         geometry: lineGeometry,
         width: 5,
         color: 'steelblue'
     })
 
+    //添加线图层
     tb.add(line, mapConfig.names.customLayer);
 }
 
@@ -161,11 +165,13 @@ const addCustom = () => {
         onAdd: function (map, gl) {
             // Creative Commons License attribution: Plane model by https://sketchfab.com/ideehochzwei
             // from  https://sketchfab.com/3d-models/plane-aa001f5a88f64b16b98356c042f2d5f3
+
+            //3D模型
             let options = {
-                obj: '/models/plane.glb',
+                obj: '/models/royale_plane.glb',
                 type: 'gltf',
                 scale: mapConfig.MAD.scale,
-                rotation: { x: 90, y: 0, z: 0 },
+                rotation: { x: -90, y: 0, z: 180 },
                 anchor: 'center',
                 bbox: false
             }
@@ -176,20 +182,21 @@ const addCustom = () => {
             tb.loadObj(options, function (model) {
                 plane = model
                     .setCoords(mapConfig.MAD.origin);
-                plane.setRotation({ x: 0, y: 0, z: 135 })
+                plane.setRotation({ x: 0, y: 0, z: 0 })
                 plane.addTooltip("You can set the fixed scale of this plane", true);
                 plane.addEventListener('ObjectChanged', onObjectChanged, false);
+                //返回投射阴影的对象选项的值
                 plane.castShadow = true;
                 tb.add(plane);
 
                 fly(flightPlan);
 
-                //setTimeout(() => {
-                //	let opt = {
-                //		coords: mapConfig.MAD.destination, duration: 20000
-                //	};
-                //	plane.set(opt)
-                //}, 3000);
+                // setTimeout(() => {
+                //     let opt = {
+                //         coords: [9, 40.5, 1500], duration: 120000
+                //     };
+                //     plane.set(opt)
+                // }, 3000);
 
             })
         },
