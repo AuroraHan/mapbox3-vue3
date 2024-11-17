@@ -9,6 +9,7 @@ const routes = [
     { path: "/mapboxVector", name: 'mapboxVector', component: () => import('@/views/mapBoxVector/index.vue') },
     { path: "/baseThreeBox", name: 'baseThreeBox', component: () => import('@/views/baseThreeBox/index.vue') },
     { path: "/baseThree", name: 'baseThree', component: () => import('@/views/baseThree/index.vue') },
+    { path: "/mapBoxAircraft", name: 'mapBoxAircraft', component: () => import('@/views/mapBoxAircraft/index.vue') },
 ];
 
 const router = createRouter({
