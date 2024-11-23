@@ -2,8 +2,9 @@ import { createRouter, createWebHashHistory } from "vue-router";
 
 
 const routes = [
-    { path: "/", component: () => import('@/views/mapBoxBase/index.vue') },
-    { path: "/mapBoxBase", name: 'addImages', component: () => import('@/views/mapBoxBase/index.vue') },
+    { path: "/", component: () => import('@/views/baseBox/index.vue') },
+    { path: "/baseBox", name: 'baseBox', component: () => import('@/views/baseBox/index.vue') },
+    { path: "/mapBoxBase", name: 'mapBoxBase', component: () => import('@/views/mapBoxBase/index.vue') },
     { path: "/popup", name: 'popup', component: () => import('@/views/popup/index.vue') },
     { path: "/mapboxLayer", name: 'mapboxLayer', component: () => import('@/views/mapboxLayer/index.vue') },
     { path: "/mapboxVector", name: 'mapboxVector', component: () => import('@/views/mapBoxVector/index.vue') },
