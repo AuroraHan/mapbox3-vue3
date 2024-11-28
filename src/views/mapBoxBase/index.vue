@@ -1,7 +1,10 @@
 <template>
     <div id="map" class="map">
-        <div class="box" @click="addGeoJson">json
-        </div>
+
+    </div>
+    <pre
+        class="lonlat">经度:{{ Number(jw?.lng).toFixed(5) }} 纬度:{{ Number(jw?.lat).toFixed(5) }} 层级:{{ zoom.toFixed(1) }}</pre>
+    <div class="box" @click="addGeoJson">json
     </div>
 </template>
 
@@ -10,6 +13,12 @@ import { onMounted, ref, onUnmounted } from 'vue'
 import mapbox from 'mapbox-gl';
 
 let mapR: mapboxgl.Map;
+
+//当前经纬度
+const jw = ref<{ lat: number, lng: number }>({ lat: 0, lng: 0 });
+
+//当前缩放层级
+const zoom = ref<Number>(0)
 
 onMounted(() => {
     initMap()
@@ -59,6 +68,14 @@ const initMap = () => {
     mapR = map;
     map.on('load', () => {
 
+    })
+
+    map.on('mousemove', (e: { lngLat: { lat: number, lng: number } }) => {
+        jw.value = e.lngLat;
+    })
+
+    map.on('zoom', () => {
+        zoom.value = map.getZoom() as Number;
     })
 
     map.on('moveend', () => {
@@ -151,6 +168,20 @@ const addGeoJson = () => {
 <style lang="scss" scoped>
 .map {
     height: 100vh;
+}
+
+.lonlat {
+    z-index: 9;
+    width: 320px;
+    font-size: 15px;
+    line-height: 35px;
+    padding: 0 3px;
+    height: 35px;
+    background-color: rgb(191, 192, 192);
+    position: absolute;
+    bottom: 3%;
+    left: 3%;
+    text-align: center;
 }
 
 .box {
