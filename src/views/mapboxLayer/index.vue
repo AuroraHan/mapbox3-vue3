@@ -3,7 +3,7 @@
     </div>
     <div class="container">
         <div class="map-item">
-            测试地图1<el-switch v-model="map1" @change="loadPartic" />
+            测试地图1<el-switch v-model="map1" @change="loadParticHight" />
         </div>
     </div>
 </template>
@@ -182,7 +182,6 @@ const loadPartic = () => {
             gl.linkProgram(this.program);
 
             this.aPos = gl.getAttribLocation(this.program, 'a_pos');
-
             const generateRandomParticles = (count: number) => {
                 const particles: any[] = [];
                 const beijing = mapbox.MercatorCoordinate.fromLngLat({ lng: 116.4074, lat: 39.9042 });
@@ -204,6 +203,83 @@ const loadPartic = () => {
 
             const particlePositions = generateRandomParticles(1000);
 
+            this.buffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(particlePositions), gl.STATIC_DRAW);
+        },
+
+        render: function (gl, matrix) {
+            gl.useProgram(this.program);
+            gl.uniformMatrix4fv(
+                gl.getUniformLocation(this.program, 'u_matrix'),
+                false,
+                matrix
+            );
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+            gl.enableVertexAttribArray(this.aPos);
+            gl.vertexAttribPointer(this.aPos, 3, gl.FLOAT, false, 0, 0);
+
+            gl.enable(gl.BLEND);
+            gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+            gl.drawArrays(gl.POINTS, 0, 1000);
+        }
+    } as mapboxgl.CustomLayerInterface;
+
+    // 添加到地图
+    mapR?.addLayer(particleLayer);
+}
+
+//根据不同高度创建粒子效果
+const loadParticHight = () => {
+    const particleLayer = {
+        id: 'particle-layer',
+        type: 'custom',
+        onAdd: function (map, gl) {
+            const vertexSource = `
+            uniform mat4 u_matrix;
+            attribute vec3 a_pos;
+            void main() {
+                gl_PointSize = 15.0;
+                gl_Position = u_matrix * vec4(a_pos, 1.0);
+            }`;
+
+            const fragmentSource = `
+            void main() {
+                gl_FragColor = vec4(1.0, 0.0, 0.0, 0.9);
+            }`;
+
+            const vertexShader = gl.createShader(gl.VERTEX_SHADER)!;
+            gl.shaderSource(vertexShader, vertexSource);
+            gl.compileShader(vertexShader);
+
+            const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER)!;
+            gl.shaderSource(fragmentShader, fragmentSource);
+            gl.compileShader(fragmentShader);
+
+            this.program = gl.createProgram()!;
+            gl.attachShader(this.program, vertexShader);
+            gl.attachShader(this.program, fragmentShader);
+            gl.linkProgram(this.program);
+
+            this.aPos = gl.getAttribLocation(this.program, 'a_pos');
+            console.log(this.aPos)
+            const generateRandomParticles = (count: number) => {
+                const particles: any[] = [];
+                for (let i = 0; i < count; i++) {
+                    const randomLng = 116.4074 + Math.random() * 0.1 - 0.05;
+                    const randomLat = 39.9042 + Math.random() * 0.1 - 0.05;
+                    const randomAltitude = 10000 + Math.random() * 40000;
+
+                    const position = mapbox.MercatorCoordinate.fromLngLat(
+                        { lng: randomLng, lat: randomLat },
+                        randomAltitude
+                    );
+                    particles.push(position.x, position.y, position.z);
+                }
+                return particles;
+            };
+
+            const particlePositions = generateRandomParticles(1000);
             this.buffer = gl.createBuffer();
             gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(particlePositions), gl.STATIC_DRAW);
