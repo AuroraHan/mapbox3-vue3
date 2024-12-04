@@ -33,7 +33,7 @@ const routsList = ref([
         path: 'mapboxLayer'
     },
     {
-        name: '暂时',
+        name: 'WebGL',
         path: 'mapboxLayer'
     },
     {

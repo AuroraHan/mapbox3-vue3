@@ -3,18 +3,15 @@
     </div>
     <div class="container">
         <div class="map-item">
-            测试地图1<el-switch v-model="map1" />
-        </div>
-        <div class="map-item">
-            测试地图2<el-switch v-model="map1" />
+            测试地图1<el-switch v-model="map1" @change="loadWebGl" />
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
-import mapbox from 'mapbox-gl';
-import { latLonToWebMercator, webMercatorToLatLon } from '@/utils/mapTools'
+import mapbox, { CustomLayerInterface } from 'mapbox-gl';
+import { latLonToWebMercator, webMercatorToLatLon } from '@/utils/mapTools';
 
 let mapR: mapboxgl.Map | null = null;
 
@@ -47,6 +44,7 @@ const initMap = () => {
         // const nullIsland = new mapbox.MercatorCoordinate(30000, 30000, 0);
         // console.log(nullIsland);
 
+        //坐标数据互相转换
         const res = latLonToWebMercator(e.lngLat.lng, e.lngLat.lat)
         console.log(res);
         const res1 = webMercatorToLatLon(res.x, res.y)
@@ -56,6 +54,100 @@ const initMap = () => {
 
 //
 const map1 = ref(false)
+
+//
+const loadWebGl = () => {
+    const highlightLayer = {
+        id: 'highlight',
+        type: 'custom',
+        // https://docs.mapbox.com/mapbox-gl-js/api/#styleimageinterface#onadd
+        onAdd: function (map, gl) {
+            // create GLSL source for vertex shader
+            const vertexSource = `
+                uniform mat4 u_matrix;
+                attribute vec3 a_pos;
+                void main() {
+                    gl_Position = u_matrix * vec4(a_pos, 1.0);
+                }`;
+
+            // create GLSL source for fragment shader
+            const fragmentSource = `
+                void main() {
+                    gl_FragColor = vec4(1.0, 0.0, 0.0, 0.5);
+                }`;
+
+            // create a vertex shader
+            const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+            gl.shaderSource(vertexShader!, vertexSource);
+            gl.compileShader(vertexShader!);
+
+            // create a fragment shader
+            const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+            gl.shaderSource(fragmentShader!, fragmentSource);
+            gl.compileShader(fragmentShader!);
+
+            // link the two shaders into a WebGL program
+            this.program = gl.createProgram();
+            gl.attachShader(this.program, vertexShader!);
+            gl.attachShader(this.program, fragmentShader!);
+            gl.linkProgram(this.program);
+
+            this.aPos = gl.getAttribLocation(this.program, 'a_pos');
+
+            // define vertices of the triangle to be rendered in the custom style layer
+            const helsinki = mapbox.MercatorCoordinate.fromLngLat({
+                lng: 25.004,
+                lat: 60.239
+            }, 30000);
+            const berlin = mapbox.MercatorCoordinate.fromLngLat({
+                lng: 13.403,
+                lat: 52.562
+            }, 50000);
+            const kyiv = mapbox.MercatorCoordinate.fromLngLat({
+                lng: 30.498,
+                lat: 50.541
+            }, 20000);
+
+            // create and initialize a WebGLBuffer to store vertex and color data
+            this.buffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+            gl.bufferData(
+                gl.ARRAY_BUFFER,
+                new Float32Array([
+                    helsinki.x,
+                    helsinki.y,
+                    helsinki.z,
+                    berlin.x,
+                    berlin.y,
+                    berlin.z,
+                    kyiv.x,
+                    kyiv.y,
+                    kyiv.z
+                ]),
+                gl.STATIC_DRAW
+            );
+        },
+
+        // method fired on each animation frame
+        // https://docs.mapbox.com/mapbox-gl-js/api/#map.event:render
+        render: function (gl, matrix) {
+            gl.useProgram(this.program);
+            gl.uniformMatrix4fv(
+                gl.getUniformLocation(this.program, 'u_matrix'),
+                false,
+                matrix
+            );
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+            gl.enableVertexAttribArray(this.aPos);
+            gl.vertexAttribPointer(this.aPos, 3, gl.FLOAT, false, 0, 0);
+            gl.enable(gl.BLEND);
+            gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+            gl.drawArrays(gl.TRIANGLE_STRIP, 0, 3);
+        }
+    } as CustomLayerInterface;
+
+    mapR?.addLayer(highlightLayer);
+}
 
 </script>
 
