@@ -1,11 +1,8 @@
 <template>
-    <div id="map" class="map">
-
-    </div>
+    <div id="map" class="map"></div>
     <pre
         class="lonlat">经度:{{ Number(jw?.lng).toFixed(5) }} 纬度:{{ Number(jw?.lat).toFixed(5) }} 层级:{{ zoom.toFixed(1) }}</pre>
-    <div class="box" @click="addGeoJson">json
-    </div>
+    <div class="box" @click="addPoint">json</div>
 </template>
 
 <script setup lang="ts">
@@ -82,6 +79,23 @@ const initMap = () => {
     })
 }
 
+const addPoint = () => {
+    mapR.addSource('china', {
+        type: 'geojson',
+        data: './geojson/grid_points.geojson',
+    })
+
+    mapR.addLayer({
+        id: 'china',
+        source: 'china',
+        type: 'circle',
+        minzoom: 2,
+        maxzoom: 18,
+        'paint': {
+            'circle-color': '#ff0000', // blue color fill
+        }
+    })
+}
 
 //添加外部geojson
 const addGeoJson = () => {
@@ -94,46 +108,7 @@ const addGeoJson = () => {
     })
     mapR.addSource('china', {
         type: 'geojson',
-        // data: {
-        //     "type": "FeatureCollection",
-        //     "features": [
-        //         {
-        //             "geometry": {
-        //                 "coordinates": [
-        //                     [
-        //                         [
-        //                             106.59223698054778,
-        //                             26.60328385825539
-        //                         ],
-        //                         [
-        //                             106.59223698054778,
-        //                             26.60239444125045
-        //                         ],
-        //                         [
-        //                             106.59323209435092,
-        //                             26.60239444125045
-        //                         ],
-        //                         [
-        //                             106.59323209435092,
-        //                             26.60328385825539
-        //                         ],
-        //                         [
-        //                             106.59223698054778,
-        //                             26.60328385825539
-        //                         ]
-        //                     ]
-        //                 ],
-        //                 "type": "Polygon"
-        //             },
-        //             "id": "712db75a-d59f-476a-b9f7-2fb69e8bee2a",
-        //             "type": "Feature",
-        //             "properties": {
-        //                 "Conc": 1875.9
-        //             }
-        //         },
-        //     ]
-        // }
-        data: './geojson/Geo.geojson',
+        data: './geojson/grid_points.geojson',
     })
 
     mapR.addLayer({
