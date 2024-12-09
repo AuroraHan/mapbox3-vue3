@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@antv/l7": "^2.22.3",
     "@types/mapbox-gl": "^3.4.0",
     "element-plus": "^2.8.5",
     "mapbox-gl": "3.6.0",

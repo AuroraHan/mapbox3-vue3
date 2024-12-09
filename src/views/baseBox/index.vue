@@ -49,7 +49,10 @@ const routsList = ref([
         name: '飞机飞行',
         path: 'mapBoxAircraft'
     },
-
+    {
+        name: 'L7',
+        path: 'mapboxL7'
+    },
 ])
 
 

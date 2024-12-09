@@ -12,6 +12,7 @@ const routes = [
     { path: "/baseThree", name: 'baseThree', component: () => import('@/views/baseThree/index.vue') },
     { path: "/mapBoxAircraft", name: 'mapBoxAircraft', component: () => import('@/views/mapBoxAircraft/index.vue') },
     { path: "/baseCesium", name: 'baseCesium', component: () => import('@/views/baseCesium/index.vue') },
+    { path: "/mapboxL7", name: 'mapboxL7', component: () => import('@/views/mapBoxL7/index.vue') },
 ];
 
 const router = createRouter({
