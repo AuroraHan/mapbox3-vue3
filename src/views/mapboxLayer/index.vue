@@ -3,7 +3,7 @@
     </div>
     <div class="container">
         <div class="map-item">
-            测试地图1<el-switch v-model="map1" @change="loadParticHight" />
+            测试地图1<el-switch v-model="map1" @change="loadWebGl" />
         </div>
     </div>
 </template>
@@ -12,11 +12,13 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import mapbox, { CustomLayerInterface } from 'mapbox-gl';
 import { latLonToWebMercator, webMercatorToLatLon } from '@/utils/mapTools';
+import { useMapbox } from '../../hooks/useMapBox'
 
 let mapR: mapboxgl.Map | null = null;
+const { getMap } = useMapbox({ container: 'map' })
 
 onMounted(() => {
-    initMap()
+    mapR = getMap()
 })
 
 onUnmounted(() => {
@@ -24,33 +26,6 @@ onUnmounted(() => {
     mapR = null;
 })
 
-const initMap = () => {
-    mapbox.accessToken = "pk.eyJ1IjoiaHBqbmYiLCJhIjoiY20yMzU5OGhzMDI2NjJrb2kweG5yYWRuZSJ9.HX3dEC4HuYwKuA3_Fm2wXA";
-    const map = new mapbox.Map({
-        container: 'map',
-        projection: "mercator",
-        style: 'mapbox://styles/mapbox/outdoors-v12',
-        center: [120, 30],
-        zoom: 2,
-    })
-
-    mapR = map;
-    map.on('load', () => {
-
-    })
-
-    map.on('click', (e) => {
-        console.log(e, 'kkk');
-        // const nullIsland = new mapbox.MercatorCoordinate(30000, 30000, 0);
-        // console.log(nullIsland);
-
-        //坐标数据互相转换
-        const res = latLonToWebMercator(e.lngLat.lng, e.lngLat.lat)
-        console.log(res);
-        const res1 = webMercatorToLatLon(res.x, res.y)
-        console.log(res1);
-    })
-}
 
 //
 const map1 = ref(false)
