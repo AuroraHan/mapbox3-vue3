@@ -229,7 +229,8 @@ const loadParticHight = () => {
             void main() {
                 float distance = length(gl_PointCoord - vec2(0.5));
                 if (distance > 0.5) discard; // 创建圆形粒子
-                gl_FragColor = vec4(v_color, 1.0); // 应用顶点传递的颜色
+                float alpha = smoothstep(0.5, 0.45, distance);//抗锯齿效果：通过距离增加颜色的渐变。
+                gl_FragColor = vec4(v_color, alpha); // 应用顶点传递的颜色
             }`;
 
             // 编译顶点着色器
@@ -259,7 +260,7 @@ const loadParticHight = () => {
             this.aColor = gl.getAttribLocation(this.program, 'a_color');
 
             // 生成粒子
-            const { positions, colors } = generateRandomParticles(10000);
+            const { positions, colors } = generateRandomParticles(100000);
 
             // 创建位置缓冲区
             this.positionBuffer = gl.createBuffer();
@@ -297,7 +298,7 @@ const loadParticHight = () => {
             gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
             // 绘制粒子
-            gl.drawArrays(gl.POINTS, 0, 10000);
+            gl.drawArrays(gl.POINTS, 0, 100000);
         }
     } as mapboxgl.CustomLayerInterface;
 
