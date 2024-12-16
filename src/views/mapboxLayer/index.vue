@@ -3,7 +3,7 @@
     </div>
     <div class="container">
         <div class="map-item">
-            测试地图1<el-switch v-model="map1" @change="singularLoadParticHight" />
+            测试地图1<el-switch v-model="map1" @change="animationLoadPartic" />
         </div>
     </div>
 </template>
@@ -463,6 +463,144 @@ const generateParticleData = (count: number) => {
     }
     return data;
 };
+
+//实现简单的动画效果
+const animationLoadPartic = () => {
+    const particleLayer = {
+        id: 'particle-layer',
+        type: 'custom',
+        onAdd: function (map, gl) {
+            const vertexSource = `
+            uniform mat4 u_matrix;
+            attribute vec3 a_pos;
+            attribute vec3 a_color;
+            varying vec3 v_color;
+            void main() {
+                gl_PointSize = 10.0; // 增大粒子大小
+                v_color = a_color; // 将颜色传递到片元着色器
+                gl_Position = u_matrix * vec4(a_pos, 1.0);
+            }`;
+
+            const fragmentSource = `
+            precision mediump float;
+            varying vec3 v_color;
+            void main() {
+                float distance = length(gl_PointCoord - vec2(0.5));
+                if (distance > 0.5) discard; // 创建圆形粒子
+                gl_FragColor = vec4(v_color, 1.0); // 应用顶点传递的颜色
+            }`;
+
+            const vertexShader = gl.createShader(gl.VERTEX_SHADER)!;
+            gl.shaderSource(vertexShader, vertexSource);
+            gl.compileShader(vertexShader);
+
+            const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER)!;
+            gl.shaderSource(fragmentShader, fragmentSource);
+            gl.compileShader(fragmentShader);
+
+            this.program = gl.createProgram()!;
+            gl.attachShader(this.program, vertexShader);
+            gl.attachShader(this.program, fragmentShader);
+            gl.linkProgram(this.program);
+
+            if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
+                console.error('Program Linking Error:', gl.getProgramInfoLog(this.program));
+                return;
+            }
+
+            this.aPos = gl.getAttribLocation(this.program, 'a_pos');
+            this.aColor = gl.getAttribLocation(this.program, 'a_color');
+
+            const generateParticleData = (count: number) => {
+                const data: any[] = [];
+                const velocities: any[] = [];
+                for (let i = 0; i < count; i++) {
+                    const randomLng = 116.4074 + Math.random() * 0.01 - 0.005;
+                    const randomLat = 39.9042 + Math.random() * 0.01 - 0.005;
+                    const randomAltitude = 10000 + Math.random() * 40000;
+
+                    const position = mapbox.MercatorCoordinate.fromLngLat(
+                        { lng: randomLng, lat: randomLat },
+                        randomAltitude
+                    );
+
+                    // 添加位置 (x, y, z)
+                    data.push(position.x, position.y, position.z);
+
+                    // 添加颜色 (r, g, b)
+                    data.push(Math.random(), Math.random(), Math.random());
+
+                    // 随机生成速度 (vx, vy, vz)
+                    velocities.push(
+                        (Math.random() - 0.5) * 0.001, // vx
+                        (Math.random() - 0.5) * 0.001, // vy
+                        (Math.random() - 0.5) * 1      // vz
+                    );
+                }
+                return { data, velocities };
+            };
+
+            const { data, velocities } = generateParticleData(5000); // 增加粒子数
+
+            this.particleData = new Float32Array(data);
+            this.particleVelocities = velocities;
+
+            this.particleBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.particleBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, this.particleData, gl.DYNAMIC_DRAW);
+
+            this.stride = 6 * Float32Array.BYTES_PER_ELEMENT;
+
+            this.updateParticles = () => {
+                for (let i = 0; i < this.particleVelocities.length; i += 3) {
+                    const index = (i / 3) * 6;
+                    this.particleData[index] += this.particleVelocities[i];
+                    this.particleData[index + 1] += this.particleVelocities[i + 1];
+                    this.particleData[index + 2] += this.particleVelocities[i + 2];
+                    if (this.particleData[index + 2] > 50000 || this.particleData[index + 2] < 10000) {
+                        this.particleData[index + 2] = 10000 + Math.random() * 40000;
+                    }
+                }
+                gl.bindBuffer(gl.ARRAY_BUFFER, this.particleBuffer);
+                gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.particleData);
+            };
+        },
+
+        render: function (gl, matrix) {
+            gl.useProgram(this.program);
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.particleBuffer);
+
+            gl.enableVertexAttribArray(this.aPos);
+            gl.vertexAttribPointer(this.aPos, 3, gl.FLOAT, false, this.stride, 0);
+
+            gl.enableVertexAttribArray(this.aColor);
+            gl.vertexAttribPointer(
+                this.aColor,
+                3,
+                gl.FLOAT,
+                false,
+                this.stride,
+                3 * Float32Array.BYTES_PER_ELEMENT
+            );
+
+            gl.uniformMatrix4fv(
+                gl.getUniformLocation(this.program, 'u_matrix'),
+                false,
+                matrix
+            );
+
+            gl.enable(gl.BLEND);
+            gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+            this.updateParticles();
+
+            console.log('Rendering frame');
+            gl.drawArrays(gl.POINTS, 0, this.particleData.length / 6);
+        }
+    } as mapboxgl.CustomLayerInterface;
+
+    mapR?.addLayer(particleLayer);
+}
 
 </script>
 
