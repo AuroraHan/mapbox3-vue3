@@ -3,7 +3,7 @@
     </div>
     <div class="container">
         <div class="map-item">
-            测试地图1<el-switch v-model="map1" @change="loadWebGl" />
+            测试地图1<el-switch v-model="map1" @change="loadParticHight" />
         </div>
     </div>
 </template>
@@ -210,76 +210,123 @@ const loadParticHight = () => {
         id: 'particle-layer',
         type: 'custom',
         onAdd: function (map, gl) {
+            // 顶点着色器
             const vertexSource = `
             uniform mat4 u_matrix;
             attribute vec3 a_pos;
+            attribute vec3 a_color;
+            varying vec3 v_color;
             void main() {
-                gl_PointSize = 15.0;
+                gl_PointSize = 8.0;
+                v_color = a_color; // 将颜色传递到片元着色器
                 gl_Position = u_matrix * vec4(a_pos, 1.0);
             }`;
 
+            // 片元着色器
             const fragmentSource = `
+            precision mediump float;
+            varying vec3 v_color;
             void main() {
-                gl_FragColor = vec4(1.0, 0.0, 0.0, 0.9);
+                float distance = length(gl_PointCoord - vec2(0.5));
+                if (distance > 0.5) discard; // 创建圆形粒子
+                gl_FragColor = vec4(v_color, 1.0); // 应用顶点传递的颜色
             }`;
 
+            // 编译顶点着色器
             const vertexShader = gl.createShader(gl.VERTEX_SHADER)!;
             gl.shaderSource(vertexShader, vertexSource);
             gl.compileShader(vertexShader);
 
+            // 编译片元着色器
             const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER)!;
             gl.shaderSource(fragmentShader, fragmentSource);
             gl.compileShader(fragmentShader);
 
+            // 创建 WebGL 程序并链接
             this.program = gl.createProgram()!;
             gl.attachShader(this.program, vertexShader);
             gl.attachShader(this.program, fragmentShader);
             gl.linkProgram(this.program);
 
+            // 检查链接状态
+            if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
+                console.error('Program Linking Error: ', gl.getProgramInfoLog(this.program));
+                return;
+            }
+
+            // 获取属性位置
             this.aPos = gl.getAttribLocation(this.program, 'a_pos');
-            console.log(this.aPos)
-            const generateRandomParticles = (count: number) => {
-                const particles: any[] = [];
-                for (let i = 0; i < count; i++) {
-                    const randomLng = 116.4074 + Math.random() * 0.1 - 0.05;
-                    const randomLat = 39.9042 + Math.random() * 0.1 - 0.05;
-                    const randomAltitude = 10000 + Math.random() * 40000;
+            this.aColor = gl.getAttribLocation(this.program, 'a_color');
 
-                    const position = mapbox.MercatorCoordinate.fromLngLat(
-                        { lng: randomLng, lat: randomLat },
-                        randomAltitude
-                    );
-                    particles.push(position.x, position.y, position.z);
-                }
-                return particles;
-            };
+            // 生成粒子
+            const { positions, colors } = generateRandomParticles(10000);
 
-            const particlePositions = generateRandomParticles(1000);
-            this.buffer = gl.createBuffer();
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(particlePositions), gl.STATIC_DRAW);
+            // 创建位置缓冲区
+            this.positionBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+
+            // 创建颜色缓冲区
+            this.colorBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
         },
 
         render: function (gl, matrix) {
             gl.useProgram(this.program);
+
+            // 绑定位置缓冲区
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
+            gl.enableVertexAttribArray(this.aPos);
+            gl.vertexAttribPointer(this.aPos, 3, gl.FLOAT, false, 0, 0);
+
+            // 绑定颜色缓冲区
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer);
+            gl.enableVertexAttribArray(this.aColor);
+            gl.vertexAttribPointer(this.aColor, 3, gl.FLOAT, false, 0, 0);
+
+            // 设置矩阵
             gl.uniformMatrix4fv(
                 gl.getUniformLocation(this.program, 'u_matrix'),
                 false,
                 matrix
             );
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
-            gl.enableVertexAttribArray(this.aPos);
-            gl.vertexAttribPointer(this.aPos, 3, gl.FLOAT, false, 0, 0);
 
+            // 启用混合以支持透明度
             gl.enable(gl.BLEND);
             gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-            gl.drawArrays(gl.POINTS, 0, 1000);
+
+            // 绘制粒子
+            gl.drawArrays(gl.POINTS, 0, 10000);
         }
     } as mapboxgl.CustomLayerInterface;
 
     // 添加到地图
     mapR?.addLayer(particleLayer);
 }
+
+// 
+// 创建随机粒子数据
+const generateRandomParticles = (count: number) => {
+    const positions: any[] = [];
+    const colors: any[] = [];
+    for (let i = 0; i < count; i++) {
+        // 随机经纬度位置
+        const randomLng = 116.4074 + Math.random() * 0.1 - 0.05;
+        const randomLat = 39.9042 + Math.random() * 0.1 - 0.05;
+        const randomAltitude = 10000 + Math.random() * 40000;
+
+        const position = mapbox.MercatorCoordinate.fromLngLat(
+            { lng: randomLng, lat: randomLat },
+            randomAltitude
+        );
+        positions.push(position.x, position.y, position.z);
+
+        // 随机颜色
+        colors.push(Math.random(), Math.random(), Math.random());
+    }
+    return { positions, colors };
+};
 
 </script>
 
