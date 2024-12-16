@@ -29,11 +29,7 @@ const routsList = ref([
         path: 'popup'
     },
     {
-        name: '图层切换',
-        path: 'mapboxLayer'
-    },
-    {
-        name: 'WebGL',
+        name: 'webGL粒子效果',
         path: 'mapboxLayer'
     },
     {
