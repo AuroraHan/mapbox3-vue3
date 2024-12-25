@@ -728,6 +728,33 @@
   resolved "https://registry.npmmirror.com/@rollup/rollup-win32-x64-msvc/-/rollup-win32-x64-msvc-4.24.0.tgz#0574d7e87b44ee8511d08cc7f914bcb802b70818"
   integrity sha512-fbMkAF7fufku0N2dE5TBXcNlg0pt0cJue4xBRE2Qc5Vqikxr4VCgKj/ht6SMdFcOacVA9rqF70APJ8RN/4vMJw==
 
+"@sakitam-gis/mapbox-wind@^2.0.4":
+  version "2.0.4"
+  resolved "https://registry.npmmirror.com/@sakitam-gis/mapbox-wind/-/mapbox-wind-2.0.4.tgz#b00924692c19cdf8d461a1c0eacb5bb2f62de27d"
+  integrity sha512-QuM+iJDwPmC8tldbj/zqbk8lNDtKMuzkdGADYHFTJzGn7+ey4PrdI2auvwa6TkKArcytY2Z4Loh8TxW1gUS+KA==
+  dependencies:
+    "@mapbox/geojson-rewind" "^0.5.2"
+    "@sakitam-gis/rbush" "3.1.2"
+    "@sakitam-gis/vis-engine" "^1.5.3"
+    gl-matrix "^3.4.3"
+    wind-core "1.1.8"
+    wind-gl-core "2.0.2"
+
+"@sakitam-gis/rbush@3.1.2":
+  version "3.1.2"
+  resolved "https://registry.npmmirror.com/@sakitam-gis/rbush/-/rbush-3.1.2.tgz#d5a176d74f95df7de6148784023f002d5bc086b6"
+  integrity sha512-pnNaLnxFBBMnHgGjFX+h2jkpZQg2vXquvDv1BUKfU72uJzJqPcS8smaLydJqcbXp8p7GruoPrQzUpqYG0MYyIg==
+  dependencies:
+    quickselect "^2.0.0"
+
+"@sakitam-gis/vis-engine@^1.5.3":
+  version "1.5.3"
+  resolved "https://registry.npmmirror.com/@sakitam-gis/vis-engine/-/vis-engine-1.5.3.tgz#45d11425cb6369e26131526c4063bad20099cb22"
+  integrity sha512-IpuZwi0XRflJiP1mNTwOSjlAJZRCczOuVh6s/feVOpXctiAoSWrAuhK0HVITLpCWAQF1bN6CRKA3LW0z1nCr0g==
+  dependencies:
+    colord "^2.9.3"
+    gl-matrix "^3.4.3"
+
 "@turf/bbox-polygon@^6.5.0":
   version "6.5.0"
   resolved "https://registry.npmmirror.com/@turf/bbox-polygon/-/bbox-polygon-6.5.0.tgz#f18128b012eedfa860a521d8f2b3779cc0801032"
@@ -1089,6 +1116,11 @@ chokidar@^4.0.0:
   dependencies:
     readdirp "^4.0.1"
 
+colord@^2.9.3:
+  version "2.9.3"
+  resolved "https://registry.npmmirror.com/colord/-/colord-2.9.3.tgz#4f8ce919de456f1d5c1c368c307fe20f3e59fb43"
+  integrity sha512-jeC1axXpnb0/2nn/Y1LPuLdgXBLH7aDcHu4KEKfqw3CUhX7ZpfBSlPKyqXE6btIgEzfWtrX3/tyBCaCvXvMkOw==
+
 commander@2:
   version "2.20.3"
   resolved "https://registry.npmmirror.com/commander/-/commander-2.20.3.tgz#fd485e84c03eb4881c20722ba48035e8531aeb33"
@@ -1326,6 +1358,11 @@ eventemitter3@^5.0.1:
   version "5.0.1"
   resolved "https://registry.npmmirror.com/eventemitter3/-/eventemitter3-5.0.1.tgz#53f5ffd0a492ac800721bb42c66b841de96423c4"
   integrity sha512-GWkBvjiSZK87ELrYOSESUYeVIc9mvLLf/nXalMOS5dYrgZq9o5OVkbZAVM06CVxYsCwH9BDZFPlQTlPA1j4ahA==
+
+exifr@^7.1.3:
+  version "7.1.3"
+  resolved "https://registry.npmmirror.com/exifr/-/exifr-7.1.3.tgz#f6218012c36dbb7d843222011b27f065fddbab6f"
+  integrity sha512-g/aje2noHivrRSLbAUtBPWFbxKdKhgj/xr1vATDdUXPOFYJlQ62Ft0oy+72V6XLIpDJfHs6gXLbBLAolqOXYRw==
 
 extend-shallow@^2.0.1:
   version "2.0.1"
@@ -2279,3 +2316,24 @@ which@^1.3.1:
   integrity sha512-HxJdYWq1MTIQbJ3nw0cqssHoTNU267KlrDuGZ1WYlxDStUtKUhOaJmh112/TZmHxxUfuJqPXSOm7tDyas0OSIQ==
   dependencies:
     isexe "^2.0.0"
+
+wind-core@1.1.8:
+  version "1.1.8"
+  resolved "https://registry.npmmirror.com/wind-core/-/wind-core-1.1.8.tgz#af993bf1aa64249624b23b8580e4a5a647a1cb42"
+  integrity sha512-mxnkLXkZ4hcoGsRBkBsP0TyCnTDAslbMMmInklKWnDKzkRJ/nkyxGOGG+06i+ta+PihEKCV3zTZMdGlMD9orZQ==
+
+wind-gl-core@2.0.2:
+  version "2.0.2"
+  resolved "https://registry.npmmirror.com/wind-gl-core/-/wind-gl-core-2.0.2.tgz#b4155e1debaad8f6fe6bc68ef5f1e5355da082d9"
+  integrity sha512-EUnUQsbucaPCFns7p6BlPE5xXiXQpb2hXMmE4t/FG4W+rKlYHjtIMWzM0wAD4M6g4Wg6JzSft7SGocPJAqjssA==
+  dependencies:
+    "@sakitam-gis/vis-engine" "^1.5.3"
+    earcut "^2.2.4"
+    wind-gl-worker "2.0.2"
+
+wind-gl-worker@2.0.2:
+  version "2.0.2"
+  resolved "https://registry.npmmirror.com/wind-gl-worker/-/wind-gl-worker-2.0.2.tgz#16ce6377cf1fc9db2f6b6ac3a57ae591fd168934"
+  integrity sha512-uEMHjQtX5w+Kn+MT0RWGyYYqou6brZMe9BMOYAqoJh74tKGpuBx0+i+4J2XppAZmD8r7KYn/UvhjGHfpOq0UlQ==
+  dependencies:
+    exifr "^7.1.3"

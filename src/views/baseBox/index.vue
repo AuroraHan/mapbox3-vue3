@@ -49,6 +49,10 @@ const routsList = ref([
         name: 'L7',
         path: 'mapboxL7'
     },
+    {
+        name: '风场加载',
+        path: 'mapboxWind'
+    },
 ])
 
 
