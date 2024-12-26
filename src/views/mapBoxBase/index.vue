@@ -137,7 +137,6 @@ const addGeoJson = () => {
     // });
 }
 
-
 </script>
 
 <style lang="scss" scoped>

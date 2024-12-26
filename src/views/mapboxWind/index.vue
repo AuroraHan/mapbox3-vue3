@@ -4,9 +4,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
-import mapbox, { CustomLayerInterface } from 'mapbox-gl';
 import { useMapbox } from '../../hooks/useMapBox'
-import { Layer, TileSource, RenderType, DecodeType, RenderFrom } from '@sakitam-gis/mapbox-wind';
+import { Layer, TileSource, RenderType, DecodeType, RenderFrom, MaskType } from '@sakitam-gis/mapbox-wind';
 
 let mapR: mapboxgl.Map | null = null;
 const { getMap } = useMapbox({ container: 'map' })
@@ -23,7 +22,11 @@ onUnmounted(() => {
     mapR = null;
 })
 
-const addWind = () => {
+const addWind = async () => {
+
+    //添加需要加载的范围
+    const clip = await fetch('/geojson/china.geojson').then(res => res.json());
+
     const source = new TileSource('wind', {
         url: '/2023111703/{z}/{x}/{y}/wind-surface.jpeg',
         tileSize: 256,
@@ -78,11 +81,18 @@ const addWind = () => {
                 104,
                 'rgba(128,128,128,255)'
             ],
-            opacity: 0.75,
+            opacity: 0.65,
         },
         renderFrom: RenderFrom.rg,
         displayRange: [0, 104],
         renderType: RenderType.colorize,
+        widthSegments: 1,
+        heightSegments: 1,
+        mask: { //设置要查看的范围之内
+            data: clip,
+            // type: MaskType.outside,
+            type: MaskType.inside, // 默认是 inside，即只显示范围内的
+        }
     });
 
     mapR?.addLayer(layer);
