@@ -1,4 +1,4 @@
-import { onMounted } from "vue";
+import { onMounted, onUnmounted } from "vue";
 import mapboxgl, { StyleSpecification } from "mapbox-gl";
 
 interface options {
@@ -27,6 +27,11 @@ export function useMapbox(options: options) {
   onMounted(() => {
     initMap();
   });
+
+  onUnmounted(() => {
+    mapR?.remove()
+    mapR = null;
+  })
 
   const getMap = () => {
     return mapR;
