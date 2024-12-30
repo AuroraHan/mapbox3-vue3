@@ -467,21 +467,14 @@ const animationLoadPartic = () => {
             const vertexSource = `
             uniform mat4 u_matrix;
             attribute vec3 a_pos;
-            attribute vec3 a_color;
-            varying vec3 v_color;
             void main() {
-                gl_PointSize = 10.0; // 增大粒子大小
-                v_color = a_color; // 将颜色传递到片元着色器
+                gl_PointSize = 5.0;
                 gl_Position = u_matrix * vec4(a_pos, 1.0);
             }`;
 
             const fragmentSource = `
-            precision mediump float;
-            varying vec3 v_color;
             void main() {
-                float distance = length(gl_PointCoord - vec2(0.5));
-                if (distance > 0.5) discard; // 创建圆形粒子
-                gl_FragColor = vec4(v_color, 1.0); // 应用顶点传递的颜色
+                gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0); // 黄色粒子
             }`;
 
             const vertexShader = gl.createShader(gl.VERTEX_SHADER)!;
@@ -497,102 +490,91 @@ const animationLoadPartic = () => {
             gl.attachShader(this.program, fragmentShader);
             gl.linkProgram(this.program);
 
-            if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
-                console.error('Program Linking Error:', gl.getProgramInfoLog(this.program));
-                return;
-            }
-
             this.aPos = gl.getAttribLocation(this.program, 'a_pos');
-            this.aColor = gl.getAttribLocation(this.program, 'a_color');
 
-            const generateParticleData = (count: number) => {
-                const data: any[] = [];
-                const velocities: any[] = [];
+            // 生成粒子数据
+            const generateRandomParticles = (count) => {
+                const particles: any[] = [];
+                const beijing = mapbox.MercatorCoordinate.fromLngLat({ lng: 116.4074, lat: 39.9042 });
+
                 for (let i = 0; i < count; i++) {
-                    const randomLng = 116.4074 + Math.random() * 0.01 - 0.005;
-                    const randomLat = 39.9042 + Math.random() * 0.01 - 0.005;
-                    const randomAltitude = 10000 + Math.random() * 40000;
+                    const randomLng = 116.4074 + Math.random() * 0.1 - 0.05;
+                    const randomLat = 39.9042 + Math.random() * 0.1 - 0.05;
+                    const randomAltitude = 10000 + Math.random() * 10000;
 
                     const position = mapbox.MercatorCoordinate.fromLngLat(
                         { lng: randomLng, lat: randomLat },
                         randomAltitude
                     );
 
-                    // 添加位置 (x, y, z)
-                    data.push(position.x, position.y, position.z);
-
-                    // 添加颜色 (r, g, b)
-                    data.push(Math.random(), Math.random(), Math.random());
-
-                    // 随机生成速度 (vx, vy, vz)
-                    velocities.push(
-                        (Math.random() - 0.5) * 0.001, // vx
-                        (Math.random() - 0.5) * 0.001, // vy
-                        (Math.random() - 0.5) * 1      // vz
-                    );
+                    particles.push(position.x, position.y, position.z);
                 }
-                return { data, velocities };
+                return particles;
             };
 
-            const { data, velocities } = generateParticleData(5000); // 增加粒子数
+            this.particlePositions = generateRandomParticles(1000);
 
-            this.particleData = new Float32Array(data);
-            this.particleVelocities = velocities;
+            // 创建缓冲区并绑定数据
+            this.buffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.particlePositions), gl.STATIC_DRAW);
 
-            this.particleBuffer = gl.createBuffer();
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.particleBuffer);
-            gl.bufferData(gl.ARRAY_BUFFER, this.particleData, gl.DYNAMIC_DRAW);
+            // 记录时间，用于控制粒子的上下运动
+            this.time = 0;
 
-            this.stride = 6 * Float32Array.BYTES_PER_ELEMENT;
-
-            this.updateParticles = () => {
-                for (let i = 0; i < this.particleVelocities.length; i += 3) {
-                    const index = (i / 3) * 6;
-                    this.particleData[index] += this.particleVelocities[i];
-                    this.particleData[index + 1] += this.particleVelocities[i + 1];
-                    this.particleData[index + 2] += this.particleVelocities[i + 2];
-                    if (this.particleData[index + 2] > 50000 || this.particleData[index + 2] < 10000) {
-                        this.particleData[index + 2] = 10000 + Math.random() * 40000;
-                    }
-                }
-                gl.bindBuffer(gl.ARRAY_BUFFER, this.particleBuffer);
-                gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.particleData);
+            // 使用 requestAnimationFrame 动态更新粒子
+            const animateParticles = () => {
+                map.triggerRepaint(); // 强制刷新图层
+                requestAnimationFrame(animateParticles);
             };
+
+            // 启动动画
+            animateParticles();
         },
 
         render: function (gl, matrix) {
             gl.useProgram(this.program);
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.particleBuffer);
-
-            gl.enableVertexAttribArray(this.aPos);
-            gl.vertexAttribPointer(this.aPos, 3, gl.FLOAT, false, this.stride, 0);
-
-            gl.enableVertexAttribArray(this.aColor);
-            gl.vertexAttribPointer(
-                this.aColor,
-                3,
-                gl.FLOAT,
-                false,
-                this.stride,
-                3 * Float32Array.BYTES_PER_ELEMENT
-            );
-
             gl.uniformMatrix4fv(
                 gl.getUniformLocation(this.program, 'u_matrix'),
                 false,
                 matrix
             );
 
+            // 更新粒子位置，使其上下浮动
+            const timeStep = 0.01; // 时间步长
+            this.time += timeStep;
+
+            const floatingAmplitude = 10; // 上下浮动的幅度
+            const frequency = 1; // 频率
+
+            // 更新粒子的z轴位置
+            const updatedPositions: any[] = [];
+            for (let i = 0; i < this.particlePositions.length; i += 3) {
+                const x = this.particlePositions[i];
+                const y = this.particlePositions[i + 1];
+                const z = this.particlePositions[i + 2];
+
+                // 使粒子在z轴上下浮动，使用sin函数
+                const newZ = z + Math.sin(this.time * frequency + i * 0.01) * floatingAmplitude;
+
+                updatedPositions.push(x, y, newZ);
+            }
+
+            // 更新粒子缓冲区数据
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(updatedPositions), gl.STATIC_DRAW);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+            gl.enableVertexAttribArray(this.aPos);
+            gl.vertexAttribPointer(this.aPos, 3, gl.FLOAT, false, 0, 0);
+
             gl.enable(gl.BLEND);
             gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-
-            this.updateParticles();
-
-            console.log('Rendering frame');
-            gl.drawArrays(gl.POINTS, 0, this.particleData.length / 6);
+            gl.drawArrays(gl.POINTS, 0, 1000); // 使用粒子数量
         }
     } as mapboxgl.CustomLayerInterface;
 
+    // 添加到地图
     mapR?.addLayer(particleLayer);
 }
 

@@ -5,7 +5,6 @@
 <script lang="ts" setup>
 import { onMounted } from 'vue'
 import { Scene, Mapbox, PointLayer } from '@antv/l7'
-import mapbox from 'mapbox-gl';
 import { useMapbox } from '../../hooks/useMapBox';
 
 let mapBox: mapboxgl.Map | null = null;
