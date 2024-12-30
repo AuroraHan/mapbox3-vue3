@@ -81,7 +81,7 @@ const addWind = async () => {
                 104,
                 'rgba(128,128,128,255)'
             ],
-            opacity: 0.65,
+            opacity: 0.7,
         },
         renderFrom: RenderFrom.rg,
         displayRange: [0, 104],
