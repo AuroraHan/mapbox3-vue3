@@ -8,6 +8,7 @@
 <script setup lang="ts">
 import { onMounted, ref, onUnmounted } from 'vue'
 import mapbox from 'mapbox-gl';
+import { AnimatedGIF, CanvasIcon } from '@sakitam-gis/viz-mapbox-gl';
 
 let mapR: mapboxgl.Map;
 
@@ -64,7 +65,7 @@ const initMap = () => {
 
     mapR = map;
     map.on('load', () => {
-
+        addGif()
     })
 
     map.on('mousemove', (e: { lngLat: { lat: number, lng: number } }) => {
@@ -135,6 +136,67 @@ const addGeoJson = () => {
     //         'line-width': 1
     //     }
     // });
+}
+
+//添加动图
+const addGif = () => {
+    fetch('/images/fly.gif').then((res) =>
+        res.arrayBuffer()
+    ).then((res) => {
+        const canvasIcon = new CanvasIcon(476, 280, {
+            autoPixelRatio: true,
+            onAdd(ctx: any) {
+                ctx.gif = AnimatedGIF.fromBuffer(res, ctx.context, {});
+            },
+            renderCallback(ctx: any) {
+                ctx.gif.update(performance.now() / 1000);
+                ctx.gif.updateFrame();
+            },
+            postRender(ctx) {
+                mapR.triggerRepaint();
+            },
+        });
+
+        const markerId = `animate-icon`;
+
+        if (!mapR.hasImage(markerId)) {
+            mapR.addImage(markerId, canvasIcon);
+        }
+
+        mapR.addSource('point', {
+            type: 'geojson',
+            data: {
+                type: 'FeatureCollection',
+                features: [
+                    {
+                        type: 'Feature',
+                        properties: {},
+                        geometry: {
+                            type: 'Point',
+                            coordinates: [120, 30],
+                        },
+                    },
+
+                ],
+            },
+        });
+
+        mapR.addLayer({
+            id: 'point',
+            type: 'symbol',
+            source: 'point',
+            layout: {
+                visibility: 'visible',
+                'icon-image': markerId,
+                'icon-size': 0.2,
+                'icon-anchor': 'bottom',
+                'icon-ignore-placement': true,
+                'icon-allow-overlap': true, // 图标允许压盖
+            },
+            paint: {},
+            filter: ['all', ['in', '$type', 'Point']],
+        });
+    })
 }
 
 </script>
