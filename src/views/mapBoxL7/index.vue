@@ -27,6 +27,7 @@ const baseConfig = () => {
     mapBox = scene.map as mapboxgl.Map
 
     add()
+    addImage()
 }
 
 const add = () => {
@@ -63,6 +64,27 @@ const add = () => {
         .color('#ff0000')
     scene.addLayer(pointLayer);
     // })
+}
+
+const addImage = () => {
+    scene.addImage('img1', '/images/test.webp')
+    const img = new PointLayer().source({
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "type": "Feature",
+                "properties": {
+                    "name": "tom"
+                },
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [114, 30]
+                }
+            },
+        ]
+    }).shape('img1').size(40)
+
+    scene.addLayer(img)
 }
 
 </script>
