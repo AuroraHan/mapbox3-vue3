@@ -666,7 +666,6 @@ const lonPartic = () => {
 
             const movingAmplitude = 0.005; // 经度移动的幅度（单位：度）
             const frequency = 1; // 频率
-            const longitudeRange = 0.1; // 经度范围（单位：度），粒子在这一范围内移动
 
             // 更新粒子的x轴位置（经度方向）
             const updatedPositions: any[] = [];
