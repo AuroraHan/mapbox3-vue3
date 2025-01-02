@@ -65,11 +65,21 @@ const initMap = () => {
 
     mapR = map;
     map.on('load', () => {
-        addGif()
+        // addGif()
+        test()
     })
 
     map.on('mousemove', (e: { lngLat: { lat: number, lng: number } }) => {
         jw.value = e.lngLat;
+    })
+
+    map.on('click', (e) => {
+        const feat = map.queryRenderedFeatures([[e.point.x - 5, e.point.y - 5], [e.point.x + 5, e.point.y + 5]], {
+            layers: ['point'],
+        })
+
+        console.log(feat, 'jjjjj');
+
     })
 
     map.on('zoom', () => {
@@ -197,6 +207,40 @@ const addGif = () => {
             filter: ['all', ['in', '$type', 'Point']],
         });
     })
+}
+
+//
+const test = () => {
+    mapR.addSource('point', {
+        type: 'geojson',
+        data: {
+            type: 'FeatureCollection',
+            features: [
+                {
+                    type: 'Feature',
+                    id: 'sds',
+                    properties: {},
+                    geometry: {
+                        type: 'Point',
+                        coordinates: [120, 30],
+                    },
+                },
+
+            ],
+        },
+    });
+
+    mapR.addLayer({
+        id: 'point',
+        type: 'circle',
+        source: 'point',
+        layout: {},
+        paint: {
+            'circle-color': '#ff0000',
+            'circle-radius': 5
+        },
+        filter: ['all', ['in', '$type', 'Point']],
+    });
 }
 
 </script>
