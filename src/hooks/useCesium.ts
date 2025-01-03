@@ -20,7 +20,14 @@ export function useCesium(options: options) {
       110.4,
       61.2
     );
-    cesiumV = new Cesium.Viewer(options.container, {});
+    cesiumV = new Cesium.Viewer(options.container, {
+      infoBox: false,
+      geocoder: false, //地址查询
+      navigationHelpButton: false, //是否现在帮助按钮
+    });
+
+    //隐藏logo
+    cesiumV.cesiumWidget.creditContainer.style.display = "none";
   };
 
   //获取Viewer
