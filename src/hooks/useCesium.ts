@@ -1,0 +1,42 @@
+import { onMounted, onUnmounted } from "vue";
+import * as Cesium from "cesium";
+
+interface options {
+  container: string | HTMLElement;
+}
+
+export function useCesium(options: options) {
+  let cesiumV: Cesium.Viewer;
+
+  //初始化
+  const initCesium = () => {
+    Cesium.Ion.defaultAccessToken =
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJlYTQ2ZjdjNS1jM2E0LTQ1M2EtOWM0My1mODMzNzY3YjYzY2YiLCJpZCI6MjkzMjcsInNjb3BlcyI6WyJhc3IiLCJnYyJdLCJpYXQiOjE1OTE5NDIzNjB9.RzKlVTVDTQ9r7cqCo-PDydgUh8Frgw0Erul_BVxiS9c";
+
+    //设置默认观察位置
+    Cesium.Camera.DEFAULT_VIEW_RECTANGLE = Cesium.Rectangle.fromDegrees(
+      89.5,
+      20.4,
+      110.4,
+      61.2
+    );
+    cesiumV = new Cesium.Viewer(options.container, {});
+  };
+
+  //获取Viewer
+  const getCesiumViewer = () => {
+    return cesiumV;
+  };
+
+  onMounted(() => {
+    initCesium();
+  });
+
+  onUnmounted(() => {
+    cesiumV.destroy();
+  });
+
+  return {
+    getCesiumViewer,
+  };
+}

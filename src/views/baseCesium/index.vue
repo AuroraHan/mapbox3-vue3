@@ -1,15 +1,17 @@
 <template>
-    <div style="width: 100%; height: 100%;">
-        <div id="cesiumContainer"></div>
-    </div>
+    <div id="cesiumContainer"></div>
 </template>
 
 <script setup lang="ts">
 import { onMounted } from 'vue';
 import * as Cesium from 'cesium';
+import { useCesium } from '../../hooks/useCesium'
+
+let cesiumV: Cesium.Viewer;
+const { getCesiumViewer } = useCesium({ container: 'cesiumContainer' })
 
 onMounted(() => {
-    const viewer = new Cesium.Viewer('cesiumContainer');
+    cesiumV = getCesiumViewer()
 })
 
 </script>
