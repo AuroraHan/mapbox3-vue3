@@ -29,7 +29,6 @@ const baseConfig = () => {
     mapR = getMap()!
     mapR.on('load', () => {
         // addGif()
-        test()
     })
 
     mapR.on('mousemove', (e: { lngLat: { lat: number, lng: number } }) => {
@@ -167,39 +166,6 @@ const addGif = () => {
     })
 }
 
-//
-const test = () => {
-    mapR.addSource('point', {
-        type: 'geojson',
-        data: {
-            type: 'FeatureCollection',
-            features: [
-                {
-                    type: 'Feature',
-                    id: 'sds',
-                    properties: {},
-                    geometry: {
-                        type: 'Point',
-                        coordinates: [120, 30],
-                    },
-                },
-
-            ],
-        },
-    });
-
-    mapR.addLayer({
-        id: 'point',
-        type: 'circle',
-        source: 'point',
-        layout: {},
-        paint: {
-            'circle-color': '#ff0000',
-            'circle-radius': 5
-        },
-        filter: ['all', ['in', '$type', 'Point']],
-    });
-}
 
 </script>
 
