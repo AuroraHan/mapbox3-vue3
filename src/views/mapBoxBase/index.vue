@@ -6,11 +6,14 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, onUnmounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import mapbox from 'mapbox-gl';
 import { AnimatedGIF, CanvasIcon } from '@sakitam-gis/viz-mapbox-gl';
+import { useMapbox } from '../../hooks/useMapBox'
 
 let mapR: mapboxgl.Map;
+
+const { getMap } = useMapbox({ container: 'map' })
 
 //当前经纬度
 const jw = ref<{ lat: number, lng: number }>({ lat: 0, lng: 0 });
@@ -19,74 +22,29 @@ const jw = ref<{ lat: number, lng: number }>({ lat: 0, lng: 0 });
 const zoom = ref<Number>(0)
 
 onMounted(() => {
-    initMap()
+    baseConfig()
 })
 
-onUnmounted(() => {
-    mapR.remove()
-})
-
-
-const initMap = () => {
-    mapbox.accessToken = "pk.eyJ1IjoiaHBqbmYiLCJhIjoiY20yMzU5OGhzMDI2NjJrb2kweG5yYWRuZSJ9.HX3dEC4HuYwKuA3_Fm2wXA";
-    const map = new mapbox.Map({
-        container: 'map',
-        projection: "mercator",
-        style: 'mapbox://styles/mapbox/outdoors-v12',
-        // style: {
-        //     version: 8,
-        //     sources: {
-        //         m_mono: {
-        //             type: "raster",
-        //             tiles: ["/tile/google/{z}/{x}/{y}.jpg"],
-        //             tileSize: 256,
-        //             attribution: "",
-        //         },
-        //     },
-        //     glyphs: "../../static/glyphs/{fontstack}/{range}.pbf",
-        //     layers: [
-        //         {
-        //             id: "m_mono",
-        //             type: "raster",
-        //             source: "m_mono",
-        //             minZoom: 0,
-        //             maxZoom: 18,
-        //         },
-        //     ],
-        //     fog: {
-        //         range: [0.8, 8],
-        //         color: '#e6ddec',
-        //         "horizon-blend": 0.1
-        //     }
-        // },
-        center: [120, 30],
-        zoom: 2,
-    })
-
-    mapR = map;
-    map.on('load', () => {
+const baseConfig = () => {
+    mapR = getMap()!
+    mapR.on('load', () => {
         // addGif()
         test()
     })
 
-    map.on('mousemove', (e: { lngLat: { lat: number, lng: number } }) => {
+    mapR.on('mousemove', (e: { lngLat: { lat: number, lng: number } }) => {
         jw.value = e.lngLat;
     })
 
-    map.on('click', (e) => {
-        const feat = map.queryRenderedFeatures([[e.point.x - 5, e.point.y - 5], [e.point.x + 5, e.point.y + 5]], {
-            layers: ['point'],
-        })
-
-        console.log(feat, 'jjjjj');
+    mapR.on('click', (e) => {
 
     })
 
-    map.on('zoom', () => {
-        zoom.value = map.getZoom() as Number;
+    mapR.on('zoom', () => {
+        zoom.value = mapR.getZoom() as Number;
     })
 
-    map.on('moveend', () => {
+    mapR.on('moveend', () => {
     })
 }
 
