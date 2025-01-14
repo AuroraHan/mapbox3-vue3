@@ -23,6 +23,18 @@ onMounted(() => {
 })
 
 const addPopups = (popup) => {
+    var hello = cesiumV.entities.add({
+        name: '贴地',
+        position: Cesium.Cartesian3.fromDegrees(120.166493, 30.9060534),
+        point: {
+            pixelSize: 10,
+            color: Cesium.Color.RED,
+            outlineColor: Cesium.Color.WHITE,
+            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+            disableDepthTestDistance: Number.POSITIVE_INFINITY,
+
+        }
+    });
     popup.add({
         geometry: Cesium.Cartesian3.fromDegrees(120.166493, 30.9060534),
         content: {
@@ -40,7 +52,7 @@ const addPopups = (popup) => {
 
 </script>
 
-<style scoped>
+<style>
 .bx-popup-ctn2 {
     position: absolute;
     z-index: 999;
