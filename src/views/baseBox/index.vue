@@ -53,6 +53,10 @@ const routsList = ref([
         name: '风场加载',
         path: 'mapboxWind'
     },
+    {
+        name: 'cesium弹出框',
+        path: 'cesiumPopup'
+    },
 ])
 
 

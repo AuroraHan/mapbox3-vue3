@@ -57,6 +57,11 @@ const routes = [
     name: "mapboxWind",
     component: () => import("@/views/mapboxWind/index.vue"),
   },
+  {
+    path: "/cesiumPopup",
+    name: "cesiumPopup",
+    component: () => import("@/views/cesiumPopup/index.vue"),
+  },
 ];
 
 const router = createRouter({
