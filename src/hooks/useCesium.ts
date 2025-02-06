@@ -27,6 +27,7 @@ export function useCesium(options: options) {
     });
 
     //隐藏logo
+    //@ts-ignore
     cesiumV.cesiumWidget.creditContainer.style.display = "none";
   };
 
