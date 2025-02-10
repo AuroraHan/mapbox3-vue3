@@ -28,7 +28,9 @@ onMounted(() => {
 const baseConfig = () => {
     mapR = getMap()!
     mapR.on('load', () => {
-        addGif()
+        // addGif()
+        initWrj()
+        addWrj()
     })
 
     mapR.on('mousemove', (e: { lngLat: { lat: number, lng: number } }) => {
@@ -164,6 +166,78 @@ const addGif = () => {
             filter: ['all', ['in', '$type', 'Point']],
         });
     })
+}
+
+
+//初始化无人机动图
+const initWrj = () => {
+    for (let i = 1; i < 4; i++) {
+        mapR.loadImage("/images/wrj/" + i + ".png", (error, image) => {
+            mapR.addImage("mwrj" + i, image!);
+        });
+    }
+}
+
+const addWrj = () => {
+    mapR.addSource('point', {
+        type: 'geojson',
+        data: {
+            type: 'FeatureCollection',
+            features: [
+                {
+                    type: 'Feature',
+                    properties: {},
+                    geometry: {
+                        type: 'Point',
+                        coordinates: [120, 30],
+                    },
+                },
+                {
+                    type: 'Feature',
+                    properties: {},
+                    geometry: {
+                        type: 'Point',
+                        coordinates: [136, 30],
+                    },
+                },
+
+            ],
+        },
+    });
+
+    mapR.addLayer({
+        id: 'wrjpoint',
+        type: 'symbol',
+        source: 'point',
+        layout: {
+            'icon-image': 'mwrj0',
+            'icon-size': 0.3,
+            'icon-anchor': 'bottom',
+            'icon-ignore-placement': true,
+            'icon-allow-overlap': true, // 图标允许压盖
+        },
+        paint: {},
+        filter: ['all', ['in', '$type', 'Point']],
+    });
+
+    requestAnimationFrame(updateTaiFengImage);
+}
+
+const currentI = ref(0)
+
+// 更新台风图片,实现gif功能
+const updateTaiFengImage = () => {
+    let layerId = "wrjpoint";
+    if (mapR.getLayer(layerId) != undefined) {
+        let currentImage = (currentI.value + 1) % 4;
+        mapR.setLayoutProperty(
+            layerId,
+            "icon-image",
+            "mwrj" + currentImage
+        );
+        currentI.value = currentImage;
+    }
+    requestAnimationFrame(updateTaiFengImage);
 }
 
 
