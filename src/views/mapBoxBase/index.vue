@@ -28,7 +28,7 @@ onMounted(() => {
 const baseConfig = () => {
     mapR = getMap()!
     mapR.on('load', () => {
-        // addGif()
+        addGif()
     })
 
     mapR.on('mousemove', (e: { lngLat: { lat: number, lng: number } }) => {

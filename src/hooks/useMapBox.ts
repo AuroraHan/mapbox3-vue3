@@ -15,7 +15,28 @@ export function useMapbox(options: options) {
     const map = new mapboxgl.Map({
       container: options.container,
       projection: "mercator",
-      style: "mapbox://styles/mapbox/outdoors-v12",
+      style: {
+        version: 8,
+        sources: {
+          m_mono: {
+            type: "raster",
+            tiles: ["/tile/{z}/{x}/{y}.jpg"],
+            tileSize: 256,
+            attribution: "",
+          },
+        },
+        glyphs: "../../static/glyphs/{fontstack}/{range}.pbf",
+        layers: [
+          {
+            id: "m_mono",
+            type: "raster",
+            source: "m_mono",
+            minzoom: 0,
+            maxzoom: 18,
+          },
+        ],
+      },
+      // style: "mapbox://styles/mapbox/outdoors-v12",
       // style: "mapbox://styles/mapbox/satellite-streets-v12",
       center: [120, 30],
       zoom: 2,
