@@ -54,8 +54,8 @@ const routsList = ref([
         path: 'mapboxWind'
     },
     {
-        name: 'aa',
-        path: 'aa'
+        name: 'cesium弹出框',
+        path: 'cesiumPopup'
     },
 ])
 
