@@ -57,6 +57,11 @@ const routes = [
     name: "mapboxWind",
     component: () => import("@/views/mapboxWind/index.vue"),
   },
+  {
+    path: "/aa",
+    name: "aa",
+    component: () => import("@/views/aa/index.vue"),
+  },
 ];
 
 const router = createRouter({
