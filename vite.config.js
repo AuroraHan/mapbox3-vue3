@@ -13,9 +13,11 @@ export default defineConfig({
   },
   server: {
     hmr: true,
+    port: 4000,
+    open: true,
     proxy: {
       "/tile": {
-        target: "http://192.168.0.108:8099/tile/",
+        target: "http://10.30.222.7:7788/tile",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/tile/, ""),
       },
