@@ -12,6 +12,10 @@ const router = useRouter();
 
 const routsList = ref([
     {
+        name: '基础空白页面',
+        path: 'basePage'
+    },
+    {
         name: '基础mapbox',
         path: 'mapBoxBase'
     },

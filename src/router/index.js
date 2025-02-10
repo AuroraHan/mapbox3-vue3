@@ -8,6 +8,11 @@ const routes = [
     component: () => import("@/views/baseBox/index.vue"),
   },
   {
+    path: "/basePage",
+    name: "basePage",
+    component: () => import("@/views/basePage/index.vue"),
+  },
+  {
     path: "/mapBoxBase",
     name: "mapBoxBase",
     component: () => import("@/views/mapBoxBase/index.vue"),
