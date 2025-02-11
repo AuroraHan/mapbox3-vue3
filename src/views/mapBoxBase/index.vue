@@ -32,7 +32,8 @@ const baseConfig = () => {
         // initWrj()
         // addWrj()
 
-        threeMarker()
+        // threeMarker()
+        draw()
     })
 
     mapR.on('mousemove', (e: { lngLat: { lat: number, lng: number } }) => {
@@ -170,92 +171,143 @@ const addGif = () => {
     })
 }
 
+//创建canvas对象
+const createMovingBallCanvas = () => {
+    // 创建 canvas 元素
+    const canvas = document.createElement('canvas');
+    canvas.width = 100;
+    canvas.height = 100;
 
-//初始化无人机动图
-const initWrj = () => {
-    for (let i = 1; i < 4; i++) {
-        mapR.loadImage("/images/wrj/" + i + ".png", (error, image) => {
-            mapR.addImage("mwrj" + i, image!);
+    //初始化无人机动图
+    const initWrj = () => {
+        for (let i = 1; i < 4; i++) {
+            mapR.loadImage("/images/wrj/" + i + ".png", (error, image) => {
+                mapR.addImage("mwrj" + i, image!);
+            });
+        }
+    }
+
+    const addWrj = () => {
+        mapR.addSource('point', {
+            type: 'geojson',
+            data: {
+                type: 'FeatureCollection',
+                features: [
+                    {
+                        type: 'Feature',
+                        properties: {},
+                        geometry: {
+                            type: 'Point',
+                            coordinates: [120, 30],
+                        },
+                    },
+                    {
+                        type: 'Feature',
+                        properties: {},
+                        geometry: {
+                            type: 'Point',
+                            coordinates: [136, 30],
+                        },
+                    },
+
+                ],
+            },
         });
+
+        mapR.addLayer({
+            id: 'wrjpoint',
+            type: 'symbol',
+            source: 'point',
+            layout: {
+                'icon-image': 'mwrj0',
+                'icon-size': 0.3,
+                'icon-anchor': 'bottom',
+                'icon-ignore-placement': true,
+                'icon-allow-overlap': true, // 图标允许压盖
+            },
+            paint: {},
+            filter: ['all', ['in', '$type', 'Point']],
+        });
+
+        requestAnimationFrame(updateTaiFengImage);
     }
-}
 
-const addWrj = () => {
-    mapR.addSource('point', {
-        type: 'geojson',
-        data: {
-            type: 'FeatureCollection',
-            features: [
-                {
-                    type: 'Feature',
-                    properties: {},
-                    geometry: {
-                        type: 'Point',
-                        coordinates: [120, 30],
-                    },
-                },
-                {
-                    type: 'Feature',
-                    properties: {},
-                    geometry: {
-                        type: 'Point',
-                        coordinates: [136, 30],
-                    },
-                },
+    const currentI = ref(0)
 
-            ],
-        },
-    });
-
-    mapR.addLayer({
-        id: 'wrjpoint',
-        type: 'symbol',
-        source: 'point',
-        layout: {
-            'icon-image': 'mwrj0',
-            'icon-size': 0.3,
-            'icon-anchor': 'bottom',
-            'icon-ignore-placement': true,
-            'icon-allow-overlap': true, // 图标允许压盖
-        },
-        paint: {},
-        filter: ['all', ['in', '$type', 'Point']],
-    });
-
-    requestAnimationFrame(updateTaiFengImage);
-}
-
-const currentI = ref(0)
-
-// 更新台风图片,实现gif功能
-const updateTaiFengImage = () => {
-    let layerId = "wrjpoint";
-    if (mapR.getLayer(layerId) != undefined) {
-        let currentImage = (currentI.value + 1) % 4;
-        mapR.setLayoutProperty(
-            layerId,
-            "icon-image",
-            "mwrj" + currentImage
-        );
-        currentI.value = currentImage;
+    // 更新台风图片,实现gif功能
+    const updateTaiFengImage = () => {
+        let layerId = "wrjpoint";
+        if (mapR.getLayer(layerId) != undefined) {
+            let currentImage = (currentI.value + 1) % 4;
+            mapR.setLayoutProperty(
+                layerId,
+                "icon-image",
+                "mwrj" + currentImage
+            );
+            currentI.value = currentImage;
+        }
+        requestAnimationFrame(updateTaiFengImage);
     }
-    requestAnimationFrame(updateTaiFengImage);
+
+
+    //方法三 ----- 实现
+    const threeMarker = () => {
+        const el = document.createElement('canvas')
+        el.style.width = '100px'
+        el.style.height = '100px'
+        el.style.backgroundImage = 'url(/images/fly.gif)'
+        el.style.backgroundSize = '100%';
+
+        new mapbox.Marker(el)
+            .setLngLat([120, 30])
+            .addTo(mapR);
+    }
+
+    const ctx = canvas.getContext('2d');
+
+    let x = 10; // 小球的初始 x 坐标
+    let y = 10; // 小球的初始 y 坐标
+    let dx = 2; // x 方向的速度
+    let dy = 2; // y 方向的速度
+    const radius = 5; // 小球半径
+
+    function drawBall() {
+        ctx?.clearRect(0, 0, canvas.width, canvas.height); // 清除画布
+        ctx?.beginPath();
+        ctx?.arc(x, y, radius, 0, Math.PI * 2); // 绘制圆形
+        ctx!.fillStyle = 'blue';
+        ctx?.fill();
+        ctx?.closePath();
+
+        // 更新小球位置
+        x += dx;
+        y += dy;
+
+        // 碰撞检测（反弹）
+        if (x + radius > canvas.width || x - radius < 0) {
+            dx = -dx;
+        }
+        if (y + radius > canvas.height || y - radius < 0) {
+            dy = -dy;
+        }
+
+        requestAnimationFrame(drawBall); // 递归调用动画
+    }
+
+    drawBall(); // 启动动画
+
+    return canvas; // 返回 canvas 对象
 }
 
+//绘制动态图像
+const draw = () => {
+    const domC = createMovingBallCanvas()
+    console.log(domC);
 
-//方法三 ----- 实现
-const threeMarker = () => {
-    const el = document.createElement('canvas')
-    el.style.width = '100px'
-    el.style.height = '100px'
-    el.style.backgroundImage = 'url(/images/fly.gif)'
-    el.style.backgroundSize = '100%';
-
-    new mapbox.Marker(el)
+    new mapbox.Marker(domC)
         .setLngLat([120, 30])
         .addTo(mapR);
 }
-
 </script>
 
 <style lang="scss" scoped>
