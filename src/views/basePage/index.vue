@@ -2,7 +2,9 @@
 <template>
     <h2>基础空白页面</h2>
     <hr>
-    <div></div>
+    <div>
+        <img src="/images/fly.gif" alt="" srcset="">
+    </div>
 </template>
 
 <script setup lang='ts'>

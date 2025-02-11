@@ -29,8 +29,10 @@ const baseConfig = () => {
     mapR = getMap()!
     mapR.on('load', () => {
         // addGif()
-        initWrj()
-        addWrj()
+        // initWrj()
+        // addWrj()
+
+        threeMarker()
     })
 
     mapR.on('mousemove', (e: { lngLat: { lat: number, lng: number } }) => {
@@ -240,6 +242,19 @@ const updateTaiFengImage = () => {
     requestAnimationFrame(updateTaiFengImage);
 }
 
+
+//方法三 ----- 实现
+const threeMarker = () => {
+    const el = document.createElement('canvas')
+    el.style.width = '100px'
+    el.style.height = '100px'
+    el.style.backgroundImage = 'url(/images/fly.gif)'
+    el.style.backgroundSize = '100%';
+
+    new mapbox.Marker(el)
+        .setLngLat([120, 30])
+        .addTo(mapR);
+}
 
 </script>
 
