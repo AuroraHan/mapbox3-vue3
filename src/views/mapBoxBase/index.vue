@@ -49,10 +49,6 @@ const baseConfig = () => {
         //自定义点击图层
         const hdFeatures = mapR!.queryRenderedFeatures(bbox)
         console.log(hdFeatures);
-        if (hdFeatures.length) {
-            getSiteInfo(hdFeatures[0])
-        }
-
     })
 
     mapR.on('zoom', () => {
@@ -63,6 +59,8 @@ const baseConfig = () => {
     })
 }
 
+
+//添加点图层
 const addPoint = () => {
     mapR.addSource('china', {
         type: 'geojson',
@@ -120,8 +118,6 @@ const addGeoJson = () => {
     //     }
     // });
 }
-
-
 
 //根据第三方来绘制无人机
 const drawWrjByJs = (marker: any) => {
@@ -462,7 +458,7 @@ const addWrjByJs = () => {
     });
 }
 
-//获取监测点详细信息
+//添加自定义弹出框
 const getSiteInfo = (data: any) => {
     if (data?.properties) {
         const container = document.createElement('div')
@@ -471,8 +467,6 @@ const getSiteInfo = (data: any) => {
         //@ts-ignore
         popup.setLngLat(data.geometry.coordinates).setDOMContent(container).addTo(mapR!)
     }
-
-
 }
 </script>
 
