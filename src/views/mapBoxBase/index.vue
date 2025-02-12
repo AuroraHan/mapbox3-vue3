@@ -41,7 +41,7 @@ const baseConfig = () => {
         jw.value = e.lngLat;
     })
 
-    mapR.on('click', (e) => {
+    mapR.on('click', ['wrjpoint'], (e) => {
         const bbox = [
             [e.point.x - 5, e.point.y - 5],
             [e.point.x + 5, e.point.y + 5]
@@ -134,7 +134,7 @@ const drawWrjByJs = (marker: any) => {
         console.log(marker, 'lll');
 
         getSiteInfo(marker)
-    })
+    }, { passive: true })
 
     document.body.appendChild(el);
     let stage = new Konva.Stage({
@@ -361,6 +361,71 @@ const addWrjByJs = () => {
                 'geometry': {
                     'type': 'Point',
                     'coordinates': [100, 30]
+                }
+            },
+            {
+                'type': 'Feature',
+                'properties': {
+                    'id': 'container2',
+                    'className': 'marker',
+                    'imageId': 1012,
+                    'iconSize': [60, 60]
+                },
+                'geometry': {
+                    'type': 'Point',
+                    'coordinates': [100, 35]
+                }
+            },
+            {
+                'type': 'Feature',
+                'properties': {
+                    'id': 'container3',
+                    'className': 'marker',
+                    'imageId': 1012,
+                    'iconSize': [60, 60]
+                },
+                'geometry': {
+                    'type': 'Point',
+                    'coordinates': [120, 35]
+                }
+            },
+            {
+                'type': 'Feature',
+                'properties': {
+                    'id': 'container4',
+                    'className': 'marker',
+                    'imageId': 1012,
+                    'iconSize': [60, 60]
+                },
+                'geometry': {
+                    'type': 'Point',
+                    'coordinates': [120, 40]
+                }
+            },
+            {
+                'type': 'Feature',
+                'properties': {
+                    'id': 'container5',
+                    'className': 'marker',
+                    'imageId': 1012,
+                    'iconSize': [60, 60]
+                },
+                'geometry': {
+                    'type': 'Point',
+                    'coordinates': [120, 20]
+                }
+            },
+            {
+                'type': 'Feature',
+                'properties': {
+                    'id': 'container6',
+                    'className': 'marker',
+                    'imageId': 1012,
+                    'iconSize': [60, 60]
+                },
+                'geometry': {
+                    'type': 'Point',
+                    'coordinates': [110, 25]
                 }
             },
         ]
