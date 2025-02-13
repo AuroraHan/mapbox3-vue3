@@ -295,7 +295,7 @@ const loadParticHight = () => {
   } as mapboxgl.CustomLayerInterface;
 
   // 添加到地图
-  mapR?.addLayer(particleLayer);
+  //   mapR?.addLayer(particleLayer);
 };
 
 // 创建随机粒子数据
@@ -438,7 +438,7 @@ const singularLoadParticHight = () => {
   } as mapboxgl.CustomLayerInterface;
 
   // 添加到地图
-  mapR?.addLayer(particleLayer);
+  //   mapR?.addLayer(particleLayer);
 };
 
 // 创建粒子数据
@@ -593,5 +593,5 @@ const animationLoadPartic = () => {
   } as mapboxgl.CustomLayerInterface;
 
   // 添加到地图
-  mapR?.addLayer(particleLayer);
+  //   mapR?.addLayer(particleLayer);
 };
