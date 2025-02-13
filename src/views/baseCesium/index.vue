@@ -12,7 +12,7 @@ const { getCesiumViewer } = useCesium({ container: 'cesiumContainer' })
 
 onMounted(() => {
     cesiumV = getCesiumViewer()
-    addBuilding()
+
 
 })
 

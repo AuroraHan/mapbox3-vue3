@@ -9,7 +9,7 @@ export function useCesium(options: options) {
   let cesiumV: Cesium.Viewer;
 
   //初始化
-  const initCesium = () => {
+  const initCesium = async () => {
     Cesium.Ion.defaultAccessToken =
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJlYTQ2ZjdjNS1jM2E0LTQ1M2EtOWM0My1mODMzNzY3YjYzY2YiLCJpZCI6MjkzMjcsInNjb3BlcyI6WyJhc3IiLCJnYyJdLCJpYXQiOjE1OTE5NDIzNjB9.RzKlVTVDTQ9r7cqCo-PDydgUh8Frgw0Erul_BVxiS9c";
 
@@ -25,6 +25,22 @@ export function useCesium(options: options) {
       geocoder: false, //地址查询
       navigationHelpButton: false, //是否现在帮助按钮
     });
+
+    // const customTilingScheme = new Cesium.WebMercatorTilingScheme({
+    //   numberOfLevelZeroTilesX: 1,
+    //   numberOfLevelZeroTilesY: 1,
+    // });
+
+    // const provider = await Cesium.TileMapServiceImageryProvider.fromUrl(
+    //   "/tile",
+    //   {
+    //     fileExtension: "jpg",
+    //     tilingScheme: customTilingScheme,
+    //     rectangle: Cesium.Rectangle.fromDegrees(-180, -85.06, 180, 85.06),
+    //   }
+    // );
+
+    // cesiumV.imageryLayers.addImageryProvider(provider);
 
     //隐藏logo
     //@ts-ignore
