@@ -43,6 +43,7 @@ export function useMapbox(options: options) {
     });
 
     mapR = map;
+    mapR.removeControl(mapR._logoControl);
   };
 
   onMounted(() => {
