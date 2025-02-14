@@ -97,32 +97,5 @@ const getSiteInfo = (data: any) => {
 </script>
 
 <style lang="scss" scoped>
-.map {
-    height: 100vh;
-}
-
-.lonlat {
-    z-index: 9;
-    width: 320px;
-    font-size: 15px;
-    line-height: 35px;
-    padding: 0 3px;
-    height: 35px;
-    background-color: rgb(191, 192, 192);
-    position: absolute;
-    bottom: 3%;
-    left: 3%;
-    text-align: center;
-}
-
-.box {
-    width: 50px;
-    height: 50px;
-    text-align: center;
-    position: absolute;
-    left: 1%;
-    bottom: 10%;
-    z-index: 9;
-    background-color: red;
-}
+@import './index.scss';
 </style>

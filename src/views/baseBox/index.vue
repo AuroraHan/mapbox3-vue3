@@ -20,7 +20,10 @@ const routsList = ref([
         path: 'mapBoxBase'
     },
     {
-
+        name: 'mapbox各种效果',
+        path: 'mapboxLayer'
+    },
+    {
         name: '基础Cesium',
         path: 'baseCesium'
     },
@@ -31,10 +34,6 @@ const routsList = ref([
     {
         name: '弹出框',
         path: 'popup'
-    },
-    {
-        name: 'webGL粒子效果',
-        path: 'mapboxLayer'
     },
     {
         name: '图层切换',
