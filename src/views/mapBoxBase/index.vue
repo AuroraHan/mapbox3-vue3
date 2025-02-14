@@ -1,18 +1,23 @@
 <template>
     <div id="map" class="map"></div>
-    <pre
-        class="lonlat">经度:{{ Number(jw?.lng).toFixed(5) }} 纬度:{{ Number(jw?.lat).toFixed(5) }} 层级:{{ zoom.toFixed(1) }}</pre>
+    <pre class="lonlat"
+        @click="onOpenDrawer">经度:{{ Number(jw?.lng).toFixed(5) }} 纬度:{{ Number(jw?.lat).toFixed(5) }} 层级:{{ zoom.toFixed(1) }}</pre>
     <!-- <div class="box" @click="addPoint">json</div> -->
+    <el-drawer title="设备管理器" v-model="drawerValue" direction="ltr" :modal="false" size="20%">
+        <EquipmentManage @selectBox="selectBox"></EquipmentManage>
+    </el-drawer>
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref, createApp } from 'vue'
-import mapbox, { PointLike } from 'mapbox-gl';
+import mapbox, { Marker, PointLike } from 'mapbox-gl';
 import GlobeMinimap from "mapbox-gl-globe-minimap";
 import MapboxDraw from "@mapbox/mapbox-gl-draw";
 import { AnimatedGIF, CanvasIcon } from '@sakitam-gis/viz-mapbox-gl';
 import { useMapbox } from '../../hooks/useMapBox'
 import Popup from './components/popup.vue';
+import { createImg } from '../../utils/mapTools'
+import EquipmentManage from '../../components/equipmentManage/index.vue'
 
 let mapR: mapboxgl.Map;
 
@@ -33,6 +38,8 @@ const popup = new mapbox.Popup({
     closeButton: false,
 });
 
+
+//基础配置
 const baseConfig = () => {
     mapR = getMap()!
 
@@ -83,6 +90,32 @@ const baseConfig = () => {
 }
 
 
+//打开、关闭抽屉弹出框
+const drawerValue = ref(false)
+const onOpenDrawer = () => {
+    drawerValue.value = !drawerValue.value
+}
+
+//获取设备列表
+const oldMarkerList: Array<Marker> = []
+const selectBox = (list) => {
+    // debugger
+    // console.log(list);
+    if (oldMarkerList.length) {
+        for (const element of oldMarkerList) {
+            element.remove()
+        }
+    }
+    const { lng, lat } = mapR.getCenter();
+    list.forEach((item) => {
+        const dom = createImg(item.svg);
+        const result = new mapbox.Marker({
+            element: dom,
+            draggable: true
+        }).setLngLat([lng, lat]).addTo(mapR);
+        oldMarkerList.push(result)
+    })
+}
 
 //添加自定义弹出框
 const getSiteInfo = (data: any) => {

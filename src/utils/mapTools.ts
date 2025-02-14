@@ -107,3 +107,15 @@ export const flyTo = (
     console.log("地图飞行方法错误!", error);
   }
 };
+
+//创建图片dom
+export const createImg = (url) => {
+  const domI = document.createElement("div");
+  domI.style.width = "50px";
+  domI.style.height = "50px";
+  domI.style.backgroundImage = `url(${url})`;
+  domI.style.backgroundRepeat = "no-repeat";
+  domI.style.backgroundSize = "100%";
+
+  return domI;
+};

@@ -19,3 +19,26 @@ export const antGeojson = {
     },
   ],
 };
+
+export const equipmentList = [
+  {
+    id: 1,
+    name: "红旗",
+    svg: "/images/equipment/hongqi.svg",
+  },
+  {
+    id: 2,
+    name: "监测站",
+    svg: "/images/equipment/jiancezhan.svg",
+  },
+  {
+    id: 3,
+    name: "降落伞",
+    svg: "/images/equipment/jiangluosan.svg",
+  },
+  {
+    id: 4,
+    name: "空投",
+    svg: "/images/equipment/kongtou.svg",
+  },
+];
