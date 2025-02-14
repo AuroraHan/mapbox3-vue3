@@ -9,6 +9,7 @@
 import { onMounted, ref, createApp } from 'vue'
 import mapbox, { PointLike } from 'mapbox-gl';
 import GlobeMinimap from "mapbox-gl-globe-minimap";
+import MapboxDraw from "@mapbox/mapbox-gl-draw";
 import { AnimatedGIF, CanvasIcon } from '@sakitam-gis/viz-mapbox-gl';
 import { useMapbox } from '../../hooks/useMapBox'
 import Popup from './components/popup.vue';
@@ -35,16 +36,28 @@ const popup = new mapbox.Popup({
 const baseConfig = () => {
     mapR = getMap()!
 
+    //加载地球仪组件
+    mapR?.addControl(
+        //@ts-ignore
+        new GlobeMinimap({
+            globeSize: 150,
+            landColor: "#4ebf6e",
+            waterColor: "#8dcbe3"
+        }),
+        "bottom-right"
+    );
+
+    //加载绘制组件
+    let Draw = new MapboxDraw({
+        controls: {
+            'combine_features': false,
+            'uncombine_features': false,
+        }
+    });
+    mapR.addControl(Draw, 'top-right');
+
     mapR.on('load', () => {
-        mapR?.addControl(
-            //@ts-ignore
-            new GlobeMinimap({
-                globeSize: 150,
-                landColor: "#4ebf6e",
-                waterColor: "#8dcbe3"
-            }),
-            "bottom-right"
-        );
+
     })
 
     mapR.on('mousemove', (e: { lngLat: { lat: number, lng: number } }) => {
