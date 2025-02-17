@@ -1,11 +1,6 @@
 <!-- 设备管理器 -->
 <template>
     <div>
-        <!-- <el-checkbox-group class="group-checkbox" v-model="iconLists" @change="onChange">
-            <el-checkbox class="item-checkbox" :value="item.id" v-for="(item) in equipmentList">
-                <img width="70" height="70" :src="item.svg" :alt="item.name">
-            </el-checkbox>
-        </el-checkbox-group> -->
         <div class="my-group">
             <div class="my-flex" v-for="(item) in equipmentList">
                 <img width="70" height="70" :src="item.svg" :alt="item.name">
@@ -22,14 +17,6 @@ import { equipmentList } from '../../assets/const'
 const emits = defineEmits(['selectBox'])
 
 const onChange = (item) => {
-    // const list: Array<any> = []
-    // iconLists.value.forEach((item) => {
-    //     const result = equipmentList.filter((ele) => {
-    //         return ele.id == item
-    //     })
-
-    //     list.push(...result)
-    // })
     emits('selectBox', item)
 }
 
@@ -49,17 +36,5 @@ const onChange = (item) => {
     width: 100px;
     border: 1px solid rgb(247, 25, 73);
     margin-bottom: 5px;
-}
-
-.group-checkbox {
-    display: flex;
-    flex-wrap: wrap;
-    // justify-content: space-between;
-    align-items: center;
-
-    .item-checkbox {
-        width: 120px;
-        height: 120px;
-    }
 }
 </style>
