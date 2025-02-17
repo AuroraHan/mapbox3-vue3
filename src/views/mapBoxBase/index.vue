@@ -98,23 +98,35 @@ const onOpenDrawer = () => {
 
 //获取设备列表
 const oldMarkerList: Array<Marker> = []
-const selectBox = (list) => {
+const selectBox = (item) => {
     // debugger
     // console.log(list);
-    if (oldMarkerList.length) {
-        for (const element of oldMarkerList) {
-            element.remove()
-        }
-    }
+    //获取当前地图的中心点
     const { lng, lat } = mapR.getCenter();
-    list.forEach((item) => {
+    if (item.enable) {
+        //添加图标
         const dom = createImg(item.svg);
         const result = new mapbox.Marker({
             element: dom,
             draggable: true
-        }).setLngLat([lng, lat]).addTo(mapR);
-        oldMarkerList.push(result)
-    })
+        }).setLngLat([lng, lat]).setPopup(new mapbox.Popup().setHTML(`<h2>${item.name}</h2>`)).addTo(mapR);
+    } else {
+        //移除图标
+    }
+    // if (oldMarkerList.length) {
+    //     for (const element of oldMarkerList) {
+    //         element.remove()
+    //     }
+    // }
+    // const { lng, lat } = mapR.getCenter();
+    // list.forEach((item) => {
+    //     const dom = createImg(item.svg);
+    //     const result = new mapbox.Marker({
+    //         element: dom,
+    //         draggable: true
+    //     }).setLngLat([lng, lat]).addTo(mapR);
+    //     oldMarkerList.push(result)
+    // })
 }
 
 //添加自定义弹出框

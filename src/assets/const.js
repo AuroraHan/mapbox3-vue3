@@ -1,3 +1,4 @@
+import { ref } from "vue";
 export const antGeojson = {
   type: "FeatureCollection",
   features: [
@@ -20,25 +21,29 @@ export const antGeojson = {
   ],
 };
 
-export const equipmentList = [
+export const equipmentList = ref([
   {
     id: 1,
     name: "红旗",
     svg: "/images/equipment/hongqi.svg",
+    enable: false,
   },
   {
     id: 2,
     name: "监测站",
     svg: "/images/equipment/jiancezhan.svg",
+    enable: false,
   },
   {
     id: 3,
     name: "降落伞",
     svg: "/images/equipment/jiangluosan.svg",
+    enable: false,
   },
   {
     id: 4,
     name: "空投",
     svg: "/images/equipment/kongtou.svg",
+    enable: false,
   },
-];
+]);
