@@ -288,10 +288,9 @@ const rotateCamera = (timestamp) => {
 //添加聚合效果
 const clusterFlag = ref(false)
 const addCluster = () => {
+    //添加数据源
     mapR?.addSource('earthquakes', {
         type: 'geojson',
-        // Point to GeoJSON data. This example visualizes all M1.0+ earthquakes
-        // from 12/22/15 to 1/21/16 as logged by USGS' Earthquake hazards program.
         data: 'https://docs.mapbox.com/mapbox-gl-js/assets/earthquakes.geojson',
         cluster: true,
         clusterMaxZoom: 14, // 最大聚类缩放级别，超过则显示单个点
@@ -300,34 +299,24 @@ const addCluster = () => {
 
     mapR?.addLayer({
         id: 'clusters',
-        type: 'circle',
+        type: 'symbol',
         source: 'earthquakes',
         filter: ['has', 'point_count'],
-        paint: {
-            // Use step expressions (https://docs.mapbox.com/style-spec/reference/expressions/#step)
-            // with three steps to implement three types of circles:
-            //   * Blue, 20px circles when point count is less than 100
-            //   * Yellow, 30px circles when point count is between 100 and 750
-            //   * Pink, 40px circles when point count is greater than or equal to 750
-            'circle-color': [
+        layout: {
+            'icon-image': 'rocket',
+            'icon-size': [
                 'step',
-                ['get', 'point_count'],
-                '#51bbd6',
-                100,
-                '#f1f075',
-                750,
-                '#f28cb1'
+                ['get', 'point_count'], // 根据点数调整图标大小
+                1, 100,   // <10 点：图标大小为 0.5
+                1.6, 750,   // 10-50 点：图标大小为 0.8
+                2.2        // >50 点：图标大小为 1.2
             ],
-            'circle-radius': [
-                'step',
-                ['get', 'point_count'],
-                20,
-                100,
-                30,
-                750,
-                40
-            ]
+            'icon-allow-overlap': true // 允许图标重叠
+        },
+        paint: {
+            'icon-opacity': 1 // 图标透明度
         }
+
     });
     mapR?.addLayer({
         id: 'cluster-count',
@@ -337,21 +326,26 @@ const addCluster = () => {
         layout: {
             'text-field': ['get', 'point_count_abbreviated'],
             'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
-            'text-size': 12
+            'text-size': 12,
+            'text-offset': [0, 1.6],
         }
     });
 
     mapR?.addLayer({
         id: 'unclustered-point',
-        type: 'circle',
+        type: 'symbol',
         source: 'earthquakes',
         filter: ['!', ['has', 'point_count']],
-        paint: {
-            'circle-color': '#11b4da',
-            'circle-radius': 4,
-            'circle-stroke-width': 1,
-            'circle-stroke-color': '#fff'
-        }
+        layout: {
+            'icon-image': 'rocket',
+            'icon-size': 1.5
+        },
+        // paint: {
+        //     'circle-color': '#11b4da',
+        //     'circle-radius': 4,
+        //     'circle-stroke-width': 1,
+        //     'circle-stroke-color': '#fff'
+        // }
     });
 }
 
