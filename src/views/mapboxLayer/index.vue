@@ -294,9 +294,14 @@ const addCluster = () => {
         data: 'https://docs.mapbox.com/mapbox-gl-js/assets/earthquakes.geojson',
         cluster: true,
         clusterMaxZoom: 14, // 最大聚类缩放级别，超过则显示单个点
-        clusterRadius: 50 // 聚类半径（像素，默认50）
+        clusterRadius: 50, // 聚类半径（像素，默认50）
+        // clusterMinPoints: 2, // 形成聚类的最小点数（可选）
+        // clusterProperties: { // 自定义聚合属性（可选）
+        //     'sum_field': ['+', ['get', 'field_name']] // 累加字段值
+        // }
     });
 
+    //聚合时的图标信息
     mapR?.addLayer({
         id: 'clusters',
         type: 'symbol',
@@ -318,6 +323,8 @@ const addCluster = () => {
         }
 
     });
+
+    //记录聚合时数量大小
     mapR?.addLayer({
         id: 'cluster-count',
         type: 'symbol',
@@ -328,9 +335,13 @@ const addCluster = () => {
             'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
             'text-size': 12,
             'text-offset': [0, 1.6],
+        },
+        paint: {
+            // 'text-color': '#ffffff'
         }
     });
 
+    //单个不聚合时的显示
     mapR?.addLayer({
         id: 'unclustered-point',
         type: 'symbol',
