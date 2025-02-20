@@ -11,6 +11,11 @@
             <div>蚂蚁线效果</div>
             <el-switch v-model="antFlag" @change="controlAnt" />
         </div>
+
+        <div class="map-item">
+            <div>旋转效果</div>
+            <el-switch v-model="rotateFlag" @change="addRotateCamera" />
+        </div>
     </div>
 </template>
 
@@ -249,6 +254,29 @@ const addAntLine = () => {
 
     // 开启效果
     animateDashArray(0);
+}
+
+//添加旋转效果
+const rotateFlag = ref(false)
+let rotateC;
+const addRotateCamera = () => {
+    if (rotateFlag.value) {
+        mapR?.setPitch(45)
+        mapR?.flyTo({ center: [112, 31], zoom: 15 })
+        setTimeout(() => {
+            rotateCamera(0)
+        }, 4000);
+    } else {
+        cancelAnimationFrame(rotateC)
+    }
+}
+
+const rotateCamera = (timestamp) => {
+    // clamp the rotation between 0 -360 degrees
+    // Divide timestamp by 100 to slow rotation to ~10 degrees / sec
+    mapR?.rotateTo((timestamp / 500) % 360, { duration: 0 });
+    // Request the next frame of the animation.
+    rotateC = requestAnimationFrame(rotateCamera);
 }
 
 
