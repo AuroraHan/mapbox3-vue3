@@ -358,6 +358,42 @@ const addCluster = () => {
         //     'circle-stroke-color': '#fff'
         // }
     });
+
+
+    //对于聚合点的监听事件
+    mapR?.on('click', 'clusters', (e) => {
+        const features = mapR?.queryRenderedFeatures(e.point, {
+            layers: ['clusters']
+        });
+
+        //如果不存在之间返回
+        if (!features?.length) return
+
+        //获取源数据
+        const source = mapR?.getSource('earthquakes');
+
+        const clusterId = features[0].properties?.cluster_id;
+
+        // 获取子元素（递归展开）
+        //@ts-ignore
+        source?.getClusterLeaves(clusterId, Infinity, 0, (err, children) => {
+            console.log('子元素:', children);
+        });
+
+        //缩放至聚类范围
+        //@ts-ignore
+        mapR?.getSource('earthquakes')?.getClusterExpansionZoom(
+            clusterId,
+            (err, zoom) => {
+                if (err) return;
+
+                mapR?.easeTo({
+                    center: features[0].geometry.coordinates,
+                    zoom: zoom
+                });
+            }
+        );
+    });
 }
 
 
