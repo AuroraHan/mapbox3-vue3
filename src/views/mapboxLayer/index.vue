@@ -19,7 +19,7 @@
 
         <div class="map-item">
             <div>聚合效果</div>
-            <el-switch v-model="clusterFlag" @change="addCluster" />
+            <el-switch v-model="clusterFlag" @change="addClusterHandle" />
         </div>
     </div>
 </template>
@@ -189,6 +189,8 @@ const controlAnt = () => {
 //添加蚂蚁线
 const addAntLine = () => {
     flyTo(mapR!, [113.9, 35.2], 6)
+
+    //数据中的顺序控制蚂蚁线的流向
     mapR?.addSource('ant-line', {
         type: 'geojson',
         data: antGeojson as GeoJSON.GeoJSON
@@ -285,8 +287,20 @@ const rotateCamera = (timestamp) => {
     rotateC = requestAnimationFrame(rotateCamera);
 }
 
-//添加聚合效果
+
 const clusterFlag = ref(false)
+const addClusterHandle = () => {
+    if (clusterFlag.value) {
+        addCluster()
+    } else {
+        removeLayerAndSource(mapR!, 'clusters', 1)
+        removeLayerAndSource(mapR!, 'cluster-count', 1)
+        removeLayerAndSource(mapR!, 'unclustered-point', 1)
+        removeLayerAndSource(mapR!, 'earthquakes', 0)
+    }
+}
+
+//添加聚合效果
 const addCluster = () => {
     //添加数据源
     mapR?.addSource('earthquakes', {
