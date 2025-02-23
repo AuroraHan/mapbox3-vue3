@@ -45,6 +45,8 @@ export function useCesium(options: options) {
     //隐藏logo
     //@ts-ignore
     cesiumV.cesiumWidget.creditContainer.style.display = "none";
+    //开启帧率
+    cesiumV.scene.debugShowFramesPerSecond = true;
   };
 
   //获取Viewer

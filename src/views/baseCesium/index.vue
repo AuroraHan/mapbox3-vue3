@@ -1,6 +1,6 @@
 <template>
     <div id="cesiumContainer"></div>
-    <div class="lnglat">
+    <div class="lnglat" @click="flyTo">
         经度:{{ lnglat.longitude }} &nbsp;纬度:{{ lnglat.latitude }}
     </div>
 </template>
@@ -43,6 +43,32 @@ const getLngLat = () => {
 const addBuilding = async () => {
     const tilesetBuild = await Cesium.createOsmBuildingsAsync()
     cesiumV.scene.primitives.add(tilesetBuild)
+}
+
+//飞行动画
+const flyTo = () => {
+    //平滑过渡到目标位置	需要动画效果的场景（如飞行、漫游）
+    cesiumV.camera.flyTo({
+        destination: Cesium.Cartesian3.fromDegrees(109.85, 19.21, 100000),
+        //用这个，不卡顿，否则会在终点卡顿！！
+        easingFunction: Cesium.EasingFunction.LINEAR_NONE,
+        //持续时间
+        duration: 5,
+        //飞行动画完成的回调
+        complete: () => {
+            console.log('kkkk');
+        }
+    })
+
+    //立即设置相机位置和方向	初始化、快速切换视角
+    // cesiumV.camera.setView({
+    //     destination: Cesium.Cartesian3.fromDegrees(116.39, 39.9, 80000), // 经度, 纬度, 高度
+    //     orientation: {
+    //         heading: Cesium.Math.toRadians(45), // 朝向东北
+    //         pitch: Cesium.Math.toRadians(-30),  // 俯仰角
+    //         roll: 0                             // 无翻滚
+    //     }
+    // });
 }
 
 </script>
