@@ -17,6 +17,7 @@ const { getCesiumViewer } = useCesium({ container: 'cesiumContainer' })
 onMounted(() => {
     cesiumV = getCesiumViewer()
     getLngLat()
+    addPoint()
 })
 
 //根据鼠标获取经纬度
@@ -39,11 +40,31 @@ const getLngLat = () => {
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE)
 }
 
-//添加建筑物
-const addBuilding = async () => {
-    const tilesetBuild = await Cesium.createOsmBuildingsAsync()
-    cesiumV.scene.primitives.add(tilesetBuild)
+//添加点数据
+const addPoint = () => {
+    cesiumV.entities.add({
+        name: 'dian',
+        position: Cesium.Cartesian3.fromDegrees(112, 31),
+        point: {
+            pixelSize: 5,
+            color: Cesium.Color.RED,
+            outlineColor: Cesium.Color.WHITE,
+            outlineWidth: 2,
+            //根据相机与点的距离动态调整点的透明度。
+            translucencyByDistance: new Cesium.NearFarScalar(1000, 1.0, 10000, 0.5),
+            //根据相机与点的距离控制点的显示条件 表示在距离1000米到10000米之间时显示点。
+            distanceDisplayCondition: new Cesium.DistanceDisplayCondition(1000, 10000)
+        },
+        label: {
+            text: 'aaa',
+            font: '18px',
+            showBackground: true,
+            backgroundColor: Cesium.Color.RED
+        }
+    })
 }
+
+
 
 //飞行动画
 const flyTo = () => {
