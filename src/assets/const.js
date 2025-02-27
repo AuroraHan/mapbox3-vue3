@@ -51,3 +51,44 @@ export const equipmentList = ref([
     enable: false,
   },
 ]);
+
+export const windList = [
+  {
+    id: 1,
+    code: "F1513",
+    name: "浦口镇",
+    latitude: 25.4828,
+    longitude: 119.3231,
+    // 风力级别
+    jibie: 1,
+    // 风向
+    fengxiang: 153,
+  },
+  {
+    id: 2,
+    code: "F8910",
+    name: "济阳乡",
+    latitude: 25.5059,
+    longitude: 119.3202,
+    jibie: 2,
+    fengxiang: 34,
+  },
+  {
+    id: 3,
+    code: "F8212",
+    name: "济村乡",
+    latitude: 25.4685,
+    longitude: 119.3011,
+    jibie: 3,
+    fengxiang: 225,
+  },
+  {
+    id: 4,
+    code: "F1813",
+    name: "流水中学",
+    latitude: 25.4399,
+    longitude: 119.3037,
+    jibie: 4,
+    fengxiang: 56,
+  },
+];
