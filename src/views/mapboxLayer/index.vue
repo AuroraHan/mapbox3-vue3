@@ -19,7 +19,7 @@
 
         <div class="map-item">
             <div>聚合效果</div>
-            <el-switch v-model="clusterFlag" @change="addClusterHandle" />
+            <el-switch v-model="clusterFlag" @change="addPoint" />
         </div>
     </div>
 </template>
@@ -38,7 +38,24 @@ onMounted(() => {
     mapR = getMap()
 })
 
+//添加点图层
+const addPoint = () => {
+    mapR?.addSource('china', {
+        type: 'geojson',
+        data: './geojson/shandong.geojson',
+    })
 
+    mapR?.addLayer({
+        id: 'china',
+        source: 'china',
+        type: 'line',
+        minzoom: 2,
+        maxzoom: 18,
+        'paint': {
+            'line-color': '#ff0000', // blue color fill
+        }
+    })
+}
 
 //控制粒子
 const particFlag = ref(false)
