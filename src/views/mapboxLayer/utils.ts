@@ -595,3 +595,13 @@ const animationLoadPartic = () => {
   // 添加到地图
   //   mapR?.addLayer(particleLayer);
 };
+
+export const addWindIcon = (map: mapboxgl.Map) => {
+  for (let i = 1; i < 11; i++) {
+    map.loadImage("/images/wind/fl_" + i + ".png", (error, image) => {
+      if (error || !image) return;
+      map.addImage("wind" + i, image);
+    });
+  }
+  console.log("风力图标加载完成");
+};

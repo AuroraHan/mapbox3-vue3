@@ -21,6 +21,11 @@
             <div>聚合效果</div>
             <el-switch v-model="clusterFlag" @change="addClusterHandle" />
         </div>
+
+        <div class="map-item">
+            <div>风场加载</div>
+            <el-switch v-model="windFlag" @change="addWindHandle" />
+        </div>
     </div>
 </template>
 
@@ -29,14 +34,24 @@ import { ref, onMounted } from 'vue'
 import mapbox, { CustomLayerInterface } from 'mapbox-gl';
 import { useMapbox } from '../../hooks/useMapBox'
 import { removeLayerAndSource, flyTo } from '../../utils/mapTools'
-import { antGeojson } from '../../assets/const'
+import { antGeojson, windList } from '../../assets/const'
+import { addWindIcon } from './utils'
 
 let mapR: mapboxgl.Map | null = null;
 const { getMap } = useMapbox({ container: 'map' })
 
 onMounted(() => {
     mapR = getMap()
+    proConfig()
 })
+
+//预加载功能
+const proConfig = () => {
+    mapR?.on('load', () => {
+        addPoint()
+        addWindIcon(mapR!)
+    })
+}
 
 //添加点图层
 const addPoint = () => {
@@ -427,6 +442,105 @@ const addCluster = () => {
     });
 }
 
+
+//风场加载和创建
+const windFlag = ref(false)
+const layerName = 'wind-data';
+let interval
+const addWindHandle = () => {
+    if (windFlag.value) {
+        //加载风场
+        addWindArea()
+    } else {
+        //卸载
+        clearInterval(interval)
+        removeLayerAndSource(mapR!, layerName, 1)
+        removeLayerAndSource(mapR!, layerName + "-text", 1)
+        removeLayerAndSource(mapR!, layerName, 0)
+    }
+}
+
+const addWindArea = () => {
+    flyTo(mapR!, [119.3231, 25.4828], 12)
+
+    interval = setInterval(() => {
+        generalHandle()
+    }, 2000)
+
+}
+
+const generalHandle = () => {
+    const geojson = createWind()
+    //原图层已经存在只需要更新数据
+    if (mapR?.getLayer(layerName)) {
+        //@ts-ignore
+        mapR?.getSource(layerName)?.setData(geojson);
+    } else {
+        mapR?.addSource(layerName, {
+            type: 'geojson',
+            data: geojson as any
+        })
+        mapR?.addLayer({
+            id: layerName,
+            source: layerName,
+            type: 'symbol',
+            layout: {
+                // 图标id
+                "icon-image": ['get', 'img'],
+                "icon-size": 0.5,
+                "icon-rotate": ["get", "rotate"],
+                "icon-rotation-alignment": "map",
+                "icon-allow-overlap": true,
+                "icon-ignore-placement": true,
+            },
+        })
+
+        // 添加风场文本图层
+        mapR?.addLayer({
+            id: layerName + "-text",
+            source: layerName,
+            type: "symbol",
+            layout: {
+                "text-field": ["get", "name"],
+                // "text-font": ["Microsoft YaHei Bold"],
+                "text-offset": [0, 1.4],
+                "text-anchor": "top",
+                "text-size": 15,
+            },
+            paint: {
+                // 文字颜色
+                "text-color": "aqua",
+            },
+        });
+    }
+}
+
+//创建风场数据
+const createWind = () => {
+    const geojson = {
+        "type": "FeatureCollection",
+        "features": [] as any
+    }
+
+    for (const item of windList) {
+        let size = Math.floor(Math.random() * 10) + 1
+        geojson.features.push({
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [Number(item.longitude), Number(item.latitude)]
+            },
+            "properties": {
+                name: `${size}区`,
+                rotate: Math.floor(Math.random() * 360),
+                size: size,
+                img: `wind${size}`
+            }
+        })
+    }
+
+    return geojson
+}
 
 </script>
 
