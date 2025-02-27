@@ -19,7 +19,7 @@
 
         <div class="map-item">
             <div>聚合效果</div>
-            <el-switch v-model="clusterFlag" @change="addPoint" />
+            <el-switch v-model="clusterFlag" @change="addClusterHandle" />
         </div>
     </div>
 </template>
