@@ -17,7 +17,6 @@ const { getCesiumViewer } = useCesium({ container: 'cesiumContainer' })
 onMounted(() => {
     cesiumV = getCesiumViewer()
     getLngLat()
-    chinaGeo()
     addPoint()
 })
 
