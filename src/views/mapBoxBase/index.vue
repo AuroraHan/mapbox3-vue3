@@ -6,6 +6,9 @@
     <el-drawer title="设备管理器" v-model="drawerValue" direction="ltr" :modal="false" size="20%">
         <EquipmentManage @selectBox="selectBox"></EquipmentManage>
     </el-drawer>
+    <div class="desc" v-show="desc">
+        {{ desc }}
+    </div>
 </template>
 
 <script setup lang="ts">
@@ -63,6 +66,8 @@ const baseConfig = () => {
     });
     mapR.addControl(Draw, 'top-right');
 
+    drawPlugin()
+
     mapR.on('load', () => {
 
     })
@@ -87,6 +92,29 @@ const baseConfig = () => {
 
     mapR.on('moveend', () => {
     })
+}
+
+//插件操作部分
+const desc = ref()
+const drawPlugin = () => {
+    // @ts-ignore
+    mapR.on('draw.create', updateArea);
+    // @ts-ignore
+    mapR.on('draw.delete', updateArea);
+    // @ts-ignore
+    mapR.on('draw.update', updateArea);
+
+    function updateArea(e: any) {
+        console.log(e, 'eeeee');
+        desc.value = e.features[0]
+        // console.log(e.features[0])
+
+        if (e.type == 'draw.delete') {
+            desc.value = null
+        } else {
+
+        }
+    }
 }
 
 
