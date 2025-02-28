@@ -26,6 +26,11 @@
             <div>风场加载</div>
             <el-switch v-model="windFlag" @change="addWindHandle" />
         </div>
+
+        <div class="map-item">
+            <div>特征值属性</div>
+            <el-switch v-model="stateFlag" @change="stateHandle" />
+        </div>
     </div>
 </template>
 
@@ -50,6 +55,7 @@ const proConfig = () => {
     mapR?.on('load', () => {
         addPoint()
         addWindIcon(mapR!)
+        aa()
     })
 }
 
@@ -542,6 +548,81 @@ const createWind = () => {
     return geojson
 }
 
+const stateFlag = ref(false)
+const stateHandle = () => {
+    if (stateFlag.value) {
+        addStates()
+    } else {
+        removeLayerAndSource(mapR!, 'state-fills', 1)
+        removeLayerAndSource(mapR!, 'state-borders', 1)
+        removeLayerAndSource(mapR!, 'states', 0)
+    }
+}
+
+//添加特征值属性，优化用户界面操作
+const addStates = () => {
+    let hoveredPolygonId;
+    mapR?.addSource('states', {
+        'type': 'geojson',
+        'data': '/geojson/state.geojson',
+        generateId: false
+    });
+
+    mapR?.addLayer({
+        'id': 'state-fills',
+        'type': 'fill',
+        'source': 'states',
+        'layout': {},
+        'paint': {
+            'fill-color': '#627BC1',
+            'fill-opacity': [
+                'case',
+                ['boolean', ['feature-state', 'hover'], false],
+                1,
+                0.5
+            ]
+        }
+    });
+
+    mapR?.addLayer({
+        'id': 'state-borders',
+        'type': 'line',
+        'source': 'states',
+        'layout': {},
+        'paint': {
+            'line-color': '#627BC1',
+            'line-width': 2
+        }
+    });
+
+    mapR?.on('mousemove', 'state-fills', (e) => {
+        if (e.features!.length > 0) {
+            if (hoveredPolygonId !== null) {
+                mapR?.setFeatureState(
+                    { source: 'states', id: hoveredPolygonId },
+                    { hover: false }
+                );
+            }
+            hoveredPolygonId = e.features![0].id;
+            mapR?.setFeatureState(
+                { source: 'states', id: hoveredPolygonId },
+                { hover: true }
+            );
+        }
+    });
+
+
+    mapR?.on('mouseleave', 'state-fills', () => {
+        if (hoveredPolygonId !== null) {
+            mapR?.setFeatureState(
+                { source: 'states', id: hoveredPolygonId },
+                { hover: false }
+            );
+        }
+        hoveredPolygonId = null;
+    });
+
+}
 </script>
 
 <style scoped>
