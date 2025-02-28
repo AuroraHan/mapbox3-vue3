@@ -55,7 +55,6 @@ const proConfig = () => {
     mapR?.on('load', () => {
         addPoint()
         addWindIcon(mapR!)
-        aa()
     })
 }
 

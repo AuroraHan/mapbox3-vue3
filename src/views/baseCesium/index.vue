@@ -17,6 +17,7 @@ const { getCesiumViewer } = useCesium({ container: 'cesiumContainer' })
 onMounted(() => {
     cesiumV = getCesiumViewer()
     getLngLat()
+    chinaGeo()
 })
 
 //根据鼠标获取经纬度
@@ -69,6 +70,53 @@ const flyTo = () => {
     //         roll: 0                             // 无翻滚
     //     }
     // });
+}
+
+//添加geojson数据
+const chinaGeo = () => {
+    // var hello = cesiumV.entities.add({
+    //     name: '贴地',
+    //     position: Cesium.Cartesian3.fromDegrees(-75.166493, 39.9060534),
+    //     point: {
+    //         pixelSize: 5,
+    //         color: Cesium.Color.RED,
+    //         outlineColor: Cesium.Color.WHITE,
+    //         outlineWidth: 2,
+    //         // verticalOrigin: Cesium.VerticalOrigin.TOP,
+    //         heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+    //         disableDepthTestDistance: Number.POSITIVE_INFINITY,
+
+    //     },
+    //     label: {
+    //         text: '贴地',
+    //         font: '14pt monospace',
+    //         outlineWidth: 2,
+    //         verticalOrigin: Cesium.VerticalOrigin.TOP,
+    //         heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+    //         disableDepthTestDistance: Number.POSITIVE_INFINITY,
+    //         showBackground: true,
+    //         backgroundColor: Cesium.Color.RED
+    //     }
+    // })
+    const data = Cesium.GeoJsonDataSource.load('/geojson/fusc1.geojson', {
+        stroke: Cesium.Color.HOTPINK,
+        fill: Cesium.Color.PINK.withAlpha(0.1),
+    })
+
+    data.then((data) => {
+        cesiumV.dataSources.add(data)
+        // const entities = data.entities.values
+        // for (const entity of entities) {
+        //     //@ts-ignore
+        //     entity.polygon.extrudedHeight = Math.random() * 100000
+
+        //     entity.polygon.material = Cesium.Color.RED
+        // }
+        // console.log(data.entities.values);
+    })
+
+    cesiumV.flyTo(data);
+
 }
 
 </script>
