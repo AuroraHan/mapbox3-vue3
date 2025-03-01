@@ -122,10 +122,7 @@ const addTextPopups = () => {
                     left: canvasPosition.x + 'px'
                 }
                 showCustomPopup(position, test)
-
             }
-
-
         }
 
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK)
@@ -234,6 +231,9 @@ const showCustomPopup = (position, content) => {
     position: absolute;
     z-index: 99;
     pointer-events: none;
+    width: 300px;
+    color: #fff;
+    /* height: 180px; */
     /* display: block; */
 }
 
