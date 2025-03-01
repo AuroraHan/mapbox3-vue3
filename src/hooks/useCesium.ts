@@ -3,6 +3,7 @@ import * as Cesium from "cesium";
 
 interface options {
   container: string | HTMLElement;
+  infoBox?: boolean
 }
 
 export function useCesium(options: options) {
@@ -21,7 +22,7 @@ export function useCesium(options: options) {
       61.2
     );
     cesiumV = new Cesium.Viewer(options.container, {
-      infoBox: true,
+      infoBox: options.infoBox,
       geocoder: false, //地址查询
       navigationHelpButton: false, //是否现在帮助按钮
     });
