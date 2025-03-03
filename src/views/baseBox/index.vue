@@ -40,6 +40,10 @@ const routsList = ref([
         path: 'cesiumPopup'
     },
     {
+        name: 'Cesium标绘',
+        path: 'cesiumMeasure'
+    },
+    {
         name: 'threeBox烟雾',
         path: 'baseThreeBox'
     },

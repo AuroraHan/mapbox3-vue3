@@ -67,6 +67,11 @@ const routes = [
     name: "cesiumPopup",
     component: () => import("@/views/cesiumPopup/index.vue"),
   },
+  {
+    path: "/cesiumMeasure",
+    name: "cesiumMeasure",
+    component: () => import("@/views/cesiumMeasure/index.vue"),
+  },
 ];
 
 const router = createRouter({
