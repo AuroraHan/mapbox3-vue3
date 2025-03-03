@@ -16,36 +16,35 @@ const routsList = ref([
         path: 'basePage'
     },
     {
-        name: '基础mapbox',
+        name: '基础Mapbox',
         path: 'mapBoxBase'
     },
     {
-        name: 'mapbox各种效果',
+        name: 'Mapbox各种效果',
         path: 'mapboxLayer'
+    },
+    {
+        name: 'Mapbox弹出框',
+        path: 'popup'
+    },
+    {
+        name: 'Mapbox图层切换',
+        path: 'mapboxVector'
     },
     {
         name: '基础Cesium',
         path: 'baseCesium'
     },
     {
-        name: 'three火焰',
-        path: 'baseThree'
-    },
-    {
-        name: '弹出框',
-        path: 'popup'
-    },
-    {
-        name: '图层切换',
-        path: 'mapboxVector'
+        name: 'Cesium弹出框',
+        path: 'cesiumPopup'
     },
     {
         name: 'threeBox烟雾',
         path: 'baseThreeBox'
     },
-
     {
-        name: '飞机飞行',
+        name: 'Mapbox飞机飞行',
         path: 'mapBoxAircraft'
     },
     {
@@ -53,13 +52,14 @@ const routsList = ref([
         path: 'mapboxL7'
     },
     {
-        name: '风场加载',
+        name: 'Mapbox风场加载',
         path: 'mapboxWind'
     },
     {
-        name: 'cesium弹出框',
-        path: 'cesiumPopup'
+        name: 'three火焰',
+        path: 'baseThree'
     },
+
 ])
 
 
