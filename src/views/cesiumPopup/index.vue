@@ -101,6 +101,7 @@ const addTextPopups = () => {
     })
 
     let handle = new Cesium.ScreenSpaceEventHandler(cesiumV.scene.canvas)
+    const popup = document.getElementById('pops')!;
 
     handle.setInputAction((clickEvent) => {
         console.log(clickEvent);
@@ -113,34 +114,37 @@ const addTextPopups = () => {
 
             let data = pickEd.id.data;
             const test = data.name;
-
-            var position = new Cesium.Cartesian3(pickEd.primitive.position.x, pickEd.primitive.position.y, pickEd.primitive.position.z);
-            var canvasPosition = cesiumV.scene.cartesianToCanvasCoordinates(position, scratch);
-            if (Cesium.defined(canvasPosition)) {
-                const position = {
-                    top: canvasPosition.y + 'px',
-                    left: canvasPosition.x + 'px'
+            cesiumV.scene.preRender.addEventListener(() => {
+                var position = new Cesium.Cartesian3(pickEd.primitive.position.x, pickEd.primitive.position.y, pickEd.primitive.position.z);
+                var canvasPosition = cesiumV.scene.cartesianToCanvasCoordinates(position, scratch);
+                if (Cesium.defined(canvasPosition)) {
+                    const pos = {
+                        top: canvasPosition.y + 'px',
+                        left: canvasPosition.x + 'px'
+                    }
+                    popup.style.top = pos.top;
+                    popup.style.left = pos.left;
                 }
-                showCustomPopup(position, test)
-            }
+            })
+            showCustomPopup(test)
         }
 
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK)
 
     const close = document.getElementById('close');
-    const popup = document.getElementById('pops')!;
+
     close?.addEventListener('click', () => {
         popup.style.display = 'none'
     })
 }
 
 // 示例：简单的自定义弹窗函数
-const showCustomPopup = (position, content) => {
+const showCustomPopup = (content) => {
     const con = document.getElementById('con')!;
     const popup = document.getElementById('pops')!;
     popup.style.display = 'block'
-    popup.style.top = position.top;
-    popup.style.left = position.left;
+    // popup.style.top = position.top;
+    // popup.style.left = position.left;
     con.innerHTML = content;
 }
 
