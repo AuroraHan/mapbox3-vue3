@@ -1,21 +1,23 @@
 <template>
+    <!-- 工具集 -->
     <div id="cesiumContainer"></div>
     <div class="tools">
         <div class="item">
             <div class="title">直线距离计算</div>
             <el-switch />
         </div>
-
     </div>
+    <Coordinates></Coordinates>
 </template>
 
 <script setup lang="ts">
 import { onMounted, reactive } from 'vue';
 import * as Cesium from 'cesium';
 import { useCesium } from '../../hooks/useCesium'
+import Coordinates from './components/coordinates/index.vue'
 
 let cesiumV: Cesium.Viewer;
-const { getCesiumViewer } = useCesium({ container: 'cesiumContainer' })
+const { getCesiumViewer } = useCesium({ container: 'cesiumContainer', timeline: false, animation: false })
 
 onMounted(() => {
     cesiumV = getCesiumViewer()
@@ -93,18 +95,12 @@ const measure = () => {
     }, Cesium.ScreenSpaceEventType.RIGHT_CLICK)
 }
 
-class Measure {
-    constructor(option) {
-
-    }
-}
-
-
 </script>
 
 <style lang="scss" scoped>
 #cesiumContainer {
     height: 100vh;
+    width: 100%;
 }
 
 .tools {
