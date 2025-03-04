@@ -37,6 +37,7 @@ const ellipsoid = () => {
     provider.minBounds.z = 0.0;
     provider.maxBounds.z = 1000000.0;
     const primitive = createPrimitive(provider, customShaderColor, modelMatrix);
+    console.log(primitive);
 }
 
 const customShaderColor = new Cesium.CustomShader({
@@ -58,27 +59,35 @@ const modelMatrix = Cesium.Matrix4.fromScale(
     ),
 );
 
+//定义颜色
 const scratchColor = new Cesium.Color();
+//创建体要素
 class ProceduralSingleTileVoxelProvider {
+    //表示体素的形状
     shape: any;
     minBounds: any;
     maxBounds: any;
+    // 表示体素的维度（如 8x8x8）定义体素数据的网格大小
     dimensions: Cesium.Cartesian3;
+    //表示体素数据的属性名称 如 ["color"]
     names: string[];
+    // 表示体素数据的类型.定义体素数据的结构（如 VEC4 表示 4 个浮点数组成的向量
     types: Cesium.MetadataType[];
+    //示体素数据的分量类型.定义体素数据的存储格式（如 FLOAT32 表示 32 位浮点数）。
     componentTypes: Cesium.MetadataComponentType[];
     constructor(shape) {
         this.shape = shape
-        this.minBounds = Cesium.VoxelShapeType.getMinBounds(shape).clone();
-        this.maxBounds = Cesium.VoxelShapeType.getMaxBounds(shape).clone();
+        //设定最小范围
+        this.minBounds = new Cesium.Cartesian3(1.12, 0.24, 0);
+        //设定最大范围
+        this.maxBounds = new Cesium.Cartesian3(2.4, 0.94, 1000000);
         this.dimensions = new Cesium.Cartesian3(8, 8, 8);
         this.names = ["color"];
         this.types = [Cesium.MetadataType.VEC4];
         this.componentTypes = [Cesium.MetadataComponentType.FLOAT32];
-        console.log(this.minBounds);
-        console.log(this.maxBounds);
     }
 
+    // 生成体素数据并返回
     requestData(options) {
         if (options.tileLevel >= 1) {
             return Promise.reject(`No tiles available beyond level 0`);
@@ -94,19 +103,23 @@ class ProceduralSingleTileVoxelProvider {
         Cesium.Math.setRandomNumberSeed(randomSeed);
         const hue = Cesium.Math.nextRandomNumber();
 
+        // 遍历体素网格，为每个体素生成颜色值
         for (let z = 0; z < dimensions.z; z++) {
             for (let y = 0; y < dimensions.y; y++) {
                 const indexZY = z * dimensions.y * dimensions.x + y * dimensions.x;
                 for (let x = 0; x < dimensions.x; x++) {
+                    //计算归一化坐标（lerperX、lerperY、lerperZ）
                     const lerperX = x / (dimensions.x - 1);
                     const lerperY = y / (dimensions.y - 1);
                     const lerperZ = z / (dimensions.z - 1);
 
+                    // 使用随机种子生成基础色调
                     const h = hue + lerperX * 0.5 - lerperY * 0.3 + lerperZ * 0.2;
                     const s = 1.0 - lerperY * 0.2;
                     const v = 0.5 + 2.0 * (lerperZ - 0.5) * 0.2;
                     const color = Cesium.Color.fromHsl(h, s, v, 1.0, scratchColor);
 
+                    //将颜色值存储到 dataColor 数组中
                     const index = (indexZY + x) * channelCount;
                     dataColor[index + 0] = color.red;
                     dataColor[index + 1] = color.green;
@@ -115,13 +128,13 @@ class ProceduralSingleTileVoxelProvider {
                 }
             }
         }
-        // 在版本1.127中不需要进行转换
-        // const content = Cesium.VoxelContent.fromMetadataArray([dataColor]);
-        return Promise.resolve([dataColor]);
+        // 在版本1.127中需要进行转换 这里容易报错
+        const content = Cesium.VoxelContent.fromMetadataArray([dataColor]);
+        return Promise.resolve(content);
     }
 }
 
-//创建自定义
+//创建自定义材质
 const createPrimitive = (provider, customShader, modelMatrix) => {
     cesiumV.scene.primitives.removeAll();
 
