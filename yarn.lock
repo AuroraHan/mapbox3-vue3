@@ -228,10 +228,10 @@
     "@babel/helper-validator-identifier" "^7.25.7"
     to-fast-properties "^2.0.0"
 
-"@cesium/engine@^12.0.1":
-  version "12.0.1"
-  resolved "https://registry.npmmirror.com/@cesium/engine/-/engine-12.0.1.tgz#7dbecb3137e3877506f0bb1723c6ccb6ca4a280c"
-  integrity sha512-ou/Vu/tthTHDa2GbCrPiVWgue9AhPevWRk8hOQiEmwd1gy8aQCeMfCAfN3DXfBu7uj4wcw0+AeM7ObQgfVjjdg==
+"@cesium/engine@^15.0.0":
+  version "15.0.0"
+  resolved "https://registry.npmmirror.com/@cesium/engine/-/engine-15.0.0.tgz#e5c43684919537715787f8593d4963d48c9d6849"
+  integrity sha512-jimj7khIf/mBkejsMZ+n6Y9PPvXh4QmWKkz2ekFz59icDCeGj8ZJrzl5p0caqiK/372mnHOwmYFWYEwThEw2ew==
   dependencies:
     "@tweenjs/tween.js" "^25.0.0"
     "@zip.js/zip.js" "^2.7.34"
@@ -243,7 +243,7 @@
     grapheme-splitter "^1.0.4"
     jsep "^1.3.8"
     kdbush "^4.0.1"
-    ktx-parse "^0.7.0"
+    ktx-parse "^1.0.0"
     lerc "^2.0.0"
     mersenne-twister "^1.1.0"
     meshoptimizer "^0.22.0"
@@ -253,12 +253,12 @@
     topojson-client "^3.1.0"
     urijs "^1.19.7"
 
-"@cesium/widgets@^9.0.1":
-  version "9.0.1"
-  resolved "https://registry.npmmirror.com/@cesium/widgets/-/widgets-9.0.1.tgz#3044908a3f1dfb8b87e1673a95b6d8712db40e05"
-  integrity sha512-qSm5c97zsGk1IWJKkPhsPNLWTcBqn9RdtumTm5dJCCtpOtJw05H/Uywr5Jz93H7QXs9ClygxLwe5nshNaa+6ig==
+"@cesium/widgets@^11.0.0":
+  version "11.0.0"
+  resolved "https://registry.npmmirror.com/@cesium/widgets/-/widgets-11.0.0.tgz#c30e5aae67f1e1f134a720a4992285ceafecfd70"
+  integrity sha512-4ELgFuU2uwkvD6NI9MHIWNFKjmyI9wlDzZ9NuoPFSnUhf9XfVBI8sJekGx5dijxjK2S3aCuxB3dtUkdDZEsQmA==
   dependencies:
-    "@cesium/engine" "^12.0.1"
+    "@cesium/engine" "^15.0.0"
     nosleep.js "^0.12.0"
 
 "@ctrl/tinycolor@^3.4.1":
@@ -2607,13 +2607,13 @@ bytewise@^1.1.0:
     bytewise-core "^1.2.2"
     typewise "^1.0.3"
 
-cesium@^1.123.1:
-  version "1.123.1"
-  resolved "https://registry.npmmirror.com/cesium/-/cesium-1.123.1.tgz#ec184f80143c01b09b89159b8ce443b9eef20456"
-  integrity sha512-3BMru4i1aNa98YhaA9pLbJkc1Ghpt6BZjJMsSLkD1UVUZzxu3xTYe/3/woKNRmMtBzvx13wyiS5QADyns2w5qA==
+cesium@^1.127.0:
+  version "1.127.0"
+  resolved "https://registry.npmmirror.com/cesium/-/cesium-1.127.0.tgz#e6835b507ad57c3f3a6b14693acc6623be439985"
+  integrity sha512-MRGkPb3ClEkAI9viZxxdD3LCu7ydOzOKdJ6/iPtBx1GUsPCZNbgB0IH7wmhwgbxA5sjv4/a90+mvR9CoLP1PWQ==
   dependencies:
-    "@cesium/engine" "^12.0.1"
-    "@cesium/widgets" "^9.0.1"
+    "@cesium/engine" "^15.0.0"
+    "@cesium/widgets" "^11.0.0"
 
 cheap-ruler@^4.0.0:
   version "4.0.0"
@@ -3464,10 +3464,10 @@ kind-of@^6.0.2:
   resolved "https://registry.npmmirror.com/kind-of/-/kind-of-6.0.3.tgz#07c05034a6c349fa06e24fa35aa76db4580ce4dd"
   integrity sha512-dcS1ul+9tmeD95T+x28/ehLgd9mENa3LsvDTtzm3vyBEO7RPptvAD+t44WVXaUjTBRcrpFeFlC8WCruUR456hw==
 
-ktx-parse@^0.7.0:
-  version "0.7.1"
-  resolved "https://registry.npmmirror.com/ktx-parse/-/ktx-parse-0.7.1.tgz#d41514256d7d63acb8ef6ae62dc66f16efc1c39c"
-  integrity sha512-FeA3g56ksdFNwjXJJsc1CCc7co+AJYDp6ipIp878zZ2bU8kWROatLYf39TQEd4/XRSUvBXovQ8gaVKWPXsCLEQ==
+ktx-parse@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.npmmirror.com/ktx-parse/-/ktx-parse-1.0.0.tgz#61a5eccdf085dbbd44374e2d0073ace9018e0e1a"
+  integrity sha512-Z31kVizz4DF/6vo9YiSYVBhuXAfyQy9bGxlW3+mB5OELoZjfXVZQpRoctsx8IEDKxBd6SagXKo7qRvu38i8Jfg==
 
 lerc@^2.0.0:
   version "2.0.0"
