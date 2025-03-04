@@ -72,6 +72,11 @@ const routes = [
     name: "cesiumMeasure",
     component: () => import("@/views/cesiumMeasure/index.vue"),
   },
+  {
+    path: "/cesiumVoxel",
+    name: "cesiumVoxel",
+    component: () => import("@/views/cesiumVoxel/index.vue"),
+  },
 ];
 
 const router = createRouter({

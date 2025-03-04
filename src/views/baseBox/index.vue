@@ -44,6 +44,10 @@ const routsList = ref([
         path: 'cesiumMeasure'
     },
     {
+        name: 'Cesium体渲染',
+        path: 'cesiumVoxel'
+    },
+    {
         name: 'threeBox烟雾',
         path: 'baseThreeBox'
     },
