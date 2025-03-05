@@ -28,18 +28,23 @@ watch(() => props.viewer, (newV) => {
     cViewer = newV
 }, { immediate: true })
 
+
+// 存储起点和终点
+let points = [] as any;
+// 存储测量距离的事件函数
+let measureHandler: Cesium.ScreenSpaceEventHandler;
 //测距离
 const measure = () => {
     if (!cViewer) return
     let cesiumV = cViewer
-    let points = [] as any; // 存储起点和终点
+
     let distanceLabel; // 显示距离的标签
     let pointEntity;
     let lineEntity; // 存储两点之间的连线
 
     // 监听点击事件
-    const handler = new Cesium.ScreenSpaceEventHandler(cesiumV.scene.canvas);
-    handler.setInputAction((click) => {
+    measureHandler = new Cesium.ScreenSpaceEventHandler(cesiumV.scene.canvas);
+    measureHandler.setInputAction((click) => {
         // 获取点击位置的笛卡尔坐标
         const ray = cesiumV.camera.getPickRay(click.position);
         const cartesian = cesiumV.scene.globe.pick(ray!, cesiumV.scene);
@@ -55,7 +60,7 @@ const measure = () => {
         }
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
-    handler.setInputAction((click) => {
+    measureHandler.setInputAction((click) => {
         // 当选择两个点时计算距离
         if (points.length === 2) {
             const distance = Cesium.Cartesian3.distance(points[0], points[1]);
@@ -103,6 +108,8 @@ const measure = () => {
 
 const onClear = () => {
     cViewer?.entities.removeAll()
+    points = []
+    measureHandler.destroy()
 }
 
 </script>

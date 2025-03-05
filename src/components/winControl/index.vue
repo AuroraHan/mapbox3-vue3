@@ -5,7 +5,7 @@
         classNameActive="classNameActive">
         <div class="tools">
             <div>工具栏</div>
-            <div class="close" @click="onClose">X</div>
+            <!-- <div class="close" @click="onClose">X</div> -->
         </div>
 
         <slot></slot>
