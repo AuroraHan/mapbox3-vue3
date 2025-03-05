@@ -7,25 +7,27 @@
             <el-switch />
         </div>
     </div>
-    <Coordinates></Coordinates>
+    <Coordinates :viewer="cesiumV"></Coordinates>
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive } from 'vue';
+import { onMounted, ref, provide } from 'vue';
 import * as Cesium from 'cesium';
 import { useCesium } from '../../hooks/useCesium'
 import Coordinates from './components/coordinates/index.vue'
 
-let cesiumV: Cesium.Viewer;
+let cesiumV = ref<Cesium.Viewer>();
 const { getCesiumViewer } = useCesium({ container: 'cesiumContainer', timeline: false, animation: false })
 
+const flag = ref(false)
+
 onMounted(() => {
-    cesiumV = getCesiumViewer()
-    measure()
+    cesiumV.value = getCesiumViewer()
+    // measure()
 })
 
 //标绘信息
-const measure = () => {
+const measure = (cesiumV: Cesium.Viewer) => {
     let points = [] as any; // 存储起点和终点
     let distanceLabel; // 显示距离的标签
     let pointEntity;
