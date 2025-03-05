@@ -1,6 +1,16 @@
 <!--  -->
 <template>
-    <div @click="test">点位标注</div>
+    <div>
+        <div class="title">图上量算</div>
+        <div class="btns">
+            <el-button type="success">测距离</el-button>
+            <el-button disabled type="success">测距离</el-button>
+            <el-button disabled type="success">测高程</el-button>
+            <el-button disabled type="success">测高差</el-button>
+            <el-button disabled type="success">测面积</el-button>
+            <el-button disabled type="success">测角度</el-button>
+        </div>
+    </div>
 </template>
 
 <script setup lang='ts'>
@@ -11,8 +21,6 @@ const props = defineProps({
         type: Cesium.Viewer
     }
 })
-
-
 let cViewer = props.viewer
 
 watch(() => props.viewer, (newV) => {
@@ -36,4 +44,23 @@ const test = () => {
     })
 }
 </script>
-<style scoped lang='scss'></style>
+<style scoped lang='scss'>
+.title {
+    text-align: center;
+    font-size: 17px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.btns {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-evenly;
+    align-items: center;
+
+    :deep(.el-button) {
+        margin-left: 0px;
+        margin-bottom: 4px;
+    }
+}
+</style>

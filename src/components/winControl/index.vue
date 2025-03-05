@@ -3,7 +3,11 @@
     <Vue3DraggableResizable :initW="w" :initH="h" v-model:x="x" v-model:y="y" v-model:w="w" v-model:h="h"
         v-model:active="active" :draggable="true" :resizable="false" :parent="true" class="def-class"
         classNameActive="classNameActive">
-        <div class="close" @click="onClose">X</div>
+        <div class="tools">
+            <div>工具栏</div>
+            <div class="close" @click="onClose">X</div>
+        </div>
+
         <slot></slot>
     </Vue3DraggableResizable>
 </template>
@@ -58,11 +62,18 @@ const onClose = () => {
     border-radius: 5px;
 }
 
-.close {
+.tools {
     display: flex;
-    justify-content: end;
-    cursor: pointer;
+    align-items: center;
+    justify-content: space-between;
     border-bottom: 1px solid;
     margin-bottom: 4px;
+    padding-bottom: 5px;
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.close {
+    cursor: pointer;
 }
 </style>
