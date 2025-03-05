@@ -3,12 +3,13 @@
     <div>
         <div class="title">图上量算</div>
         <div class="btns">
-            <el-button type="success">测距离</el-button>
+            <el-button type="success" @click="measure">测距离</el-button>
             <el-button disabled type="success">测距离</el-button>
-            <el-button disabled type="success">测高程</el-button>
+            <!-- <el-button disabled type="success">测高程</el-button> -->
             <el-button disabled type="success">测高差</el-button>
             <el-button disabled type="success">测面积</el-button>
             <el-button disabled type="success">测角度</el-button>
+            <el-button type="danger" @click="onClear">全清空</el-button>
         </div>
     </div>
 </template>
@@ -27,22 +28,83 @@ watch(() => props.viewer, (newV) => {
     cViewer = newV
 }, { immediate: true })
 
+//测距离
+const measure = () => {
+    if (!cViewer) return
+    let cesiumV = cViewer
+    let points = [] as any; // 存储起点和终点
+    let distanceLabel; // 显示距离的标签
+    let pointEntity;
+    let lineEntity; // 存储两点之间的连线
 
-const test = () => {
-    cViewer?.camera.flyTo({
-        // 从以度为单位的经度和纬度值返回笛卡尔3位置。
-        destination: Cesium.Cartesian3.fromDegrees(120.36, 36.09, 40000),
-        orientation: {
-            // heading：默认方向为正北，正角度为向东旋转，即水平旋转，也叫偏航角。
-            // pitch：默认角度为-90，即朝向地面，正角度在平面之上，负角度为平面下，即上下旋转，也叫俯仰角。
-            // roll：默认旋转角度为0，左右旋转，正角度向右，负角度向左，也叫翻滚角
-            heading: Cesium.Math.toRadians(0.0), // 正东，默认北
-            pitch: Cesium.Math.toRadians(-90), // 向正下方看
-            roll: 0.0, // 左右
-        },
-        duration: 3, // 飞行时间（s）
-    })
+    // 监听点击事件
+    const handler = new Cesium.ScreenSpaceEventHandler(cesiumV.scene.canvas);
+    handler.setInputAction((click) => {
+        // 获取点击位置的笛卡尔坐标
+        const ray = cesiumV.camera.getPickRay(click.position);
+        const cartesian = cesiumV.scene.globe.pick(ray!, cesiumV.scene);
+
+        if (cartesian && points.length < 2) {
+            // 添加点实体
+            pointEntity = cesiumV.entities.add({
+                position: cartesian,
+                point: { pixelSize: 10, color: Cesium.Color.RED }
+            });
+
+            points.push(cartesian);
+        }
+    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+    handler.setInputAction((click) => {
+        // 当选择两个点时计算距离
+        if (points.length === 2) {
+            const distance = Cesium.Cartesian3.distance(points[0], points[1]);
+
+            // 绘制两点之间的实线
+            if (lineEntity) {
+                cesiumV.entities.remove(lineEntity); // 移除之前的线
+            }
+            lineEntity = cesiumV.entities.add({
+                polyline: {
+                    positions: points,
+                    width: 3,
+                    material: Cesium.Color.YELLOW
+                }
+            });
+
+
+            // 显示距离标签
+            if (!distanceLabel) {
+                distanceLabel = cesiumV.entities.add({
+                    position: Cesium.Cartesian3.midpoint(points[0], points[1], new Cesium.Cartesian3()),
+                    label: {
+                        text: `直线距离: ${Number(distance / 1000).toFixed(2)} 千米`,
+                        font: '20px Arial',
+                        fillColor: Cesium.Color.WHITE,
+                        outlineColor: Cesium.Color.BLACK,
+                        outlineWidth: 2,
+                        style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+                        heightReference: Cesium.HeightReference.RELATIVE_TO_GROUND,
+                        pixelOffset: new Cesium.Cartesian2(0, 20) // 调整像素偏移
+                    },
+                });
+            } else {
+                distanceLabel.position = Cesium.Cartesian3.midpoint(points[0], points[1], new Cesium.Cartesian3());
+                distanceLabel.label.text = `直线距离: ${distance.toFixed(2)} 米`;
+            }
+
+
+            // 重置点集合，允许重新测量
+            // points = [];
+            // cesiumV.entities.remove(pointEntity); // 移除临时点
+        }
+    }, Cesium.ScreenSpaceEventType.RIGHT_CLICK)
 }
+
+const onClear = () => {
+    cViewer?.entities.removeAll()
+}
+
 </script>
 <style scoped lang='scss'>
 .title {
