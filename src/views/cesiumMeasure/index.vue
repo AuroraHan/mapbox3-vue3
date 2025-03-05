@@ -3,11 +3,16 @@
     <div id="cesiumContainer"></div>
     <div class="tools">
         <div class="item">
-            <div class="title">工具集</div>
-            <el-switch v-model="flag" />
+            <div class="title">标记集</div>
+            <el-switch v-model="flagCoordinates" />
+        </div>
+        <div class="item">
+            <div class="title">测绘集</div>
+            <el-switch v-model="flagMeasureTool" />
         </div>
     </div>
-    <Coordinates v-if="flag" :viewer="cesiumV"></Coordinates>
+    <Coordinates v-if="flagCoordinates"></Coordinates>
+    <MeasureTool v-if="flagMeasureTool"></MeasureTool>
 </template>
 
 <script setup lang="ts">
@@ -15,15 +20,17 @@ import { onMounted, ref } from 'vue';
 import * as Cesium from 'cesium';
 import { useCesium } from '../../hooks/useCesium'
 import Coordinates from './components/coordinates/index.vue'
+import MeasureTool from './components/measureTool/index.vue'
+import { useCesiumS } from '@/stores/cesiumStore'
 
-let cesiumV = ref<Cesium.Viewer>();
+let cesiumV: Cesium.Viewer;
 const { getCesiumViewer } = useCesium({ container: 'cesiumContainer', timeline: false, animation: false })
 
-const flag = ref(false)
-
+const flagCoordinates = ref(false)
+const flagMeasureTool = ref(false)
 onMounted(() => {
-    cesiumV.value = getCesiumViewer()
-    // measure()
+    cesiumV = getCesiumViewer()
+    useCesiumS().setCesiumS(cesiumV)
 })
 
 
