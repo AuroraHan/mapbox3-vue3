@@ -24,8 +24,10 @@ const w = ref(280)
 
 const props = defineProps({
     initCss: Object as PropType<{
-        width: number,
-        height: number
+        width?: number,
+        height?: number,
+        x?: number,
+        y?: number
     }>
 })
 
@@ -39,6 +41,14 @@ onMounted(() => {
 
     if (initCss && initCss.value?.height) {
         h.value = initCss.value.height
+    }
+
+    if (initCss && initCss.value?.x) {
+        x.value = initCss.value.x
+    }
+
+    if (initCss && initCss.value?.y) {
+        y.value = initCss.value.y
     }
 })
 

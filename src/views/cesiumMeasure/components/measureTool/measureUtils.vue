@@ -17,6 +17,7 @@
 <script setup lang='ts'>
 import * as Cesium from 'cesium';
 import { defineProps, watch, unref, isProxy } from 'vue'
+//@ts-ignore
 import { useCesiumS } from '@/stores/cesiumStore'
 
 const { viewer } = useCesiumS()
