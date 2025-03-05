@@ -15,8 +15,8 @@ import 'vue3-draggable-resizable/dist/Vue3DraggableResizable.css'
 
 const x = ref(100)
 const y = ref(100)
-const h = ref(300)
-const w = ref(250)
+const h = ref(340)
+const w = ref(280)
 
 const props = defineProps({
     initCss: Object as PropType<{
@@ -46,14 +46,15 @@ const onClose = () => {
 </script>
 <style scoped lang='scss'>
 .def-class {
-    background-color: aquamarine;
+    background-color: rgba(55, 59, 58, 0.7);
     user-select: none;
     padding: 4px;
+    color: #fff;
 }
 
 
 .classNameActive {
-    // border-color: #a1a9af;
+    border-color: #9aa9b4;
     border-radius: 5px;
 }
 
@@ -61,5 +62,7 @@ const onClose = () => {
     display: flex;
     justify-content: end;
     cursor: pointer;
+    border-bottom: 1px solid;
+    margin-bottom: 4px;
 }
 </style>
