@@ -7,6 +7,7 @@
 
 <script setup lang='ts'>
 import coordPlot from './coordPlot.vue';
+import * as Cesium from 'cesium';
 //@ts-ignore
 import WinControl from '@/components/winControl/index.vue'
 

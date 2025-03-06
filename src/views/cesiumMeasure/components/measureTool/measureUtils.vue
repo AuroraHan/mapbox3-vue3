@@ -16,13 +16,13 @@
 
 <script setup lang='ts'>
 import * as Cesium from 'cesium';
-import { defineProps, watch, unref, isProxy } from 'vue'
+import { inject } from 'vue'
 //@ts-ignore
 import { useCesiumS } from '@/stores/cesiumStore'
 
-const { viewer } = useCesiumS()
+// const { viewer } = useCesiumS()
 
-let cViewer = viewer
+let cViewer = inject('myViewer') as Cesium.Viewer
 
 // 存储起点和终点
 let points = [] as any;
@@ -102,9 +102,14 @@ const measure = () => {
 }
 
 const onClear = () => {
-    cViewer?.entities.removeAll()
-    points = []
-    measureHandler.destroy()
+    try {
+        cViewer?.entities.removeAll()
+        points = []
+        measureHandler.destroy()
+    } catch (error) {
+        console.error(error)
+    }
+
 }
 
 </script>

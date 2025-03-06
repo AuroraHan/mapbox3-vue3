@@ -16,12 +16,12 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, provide } from 'vue';
 import * as Cesium from 'cesium';
 import { useCesium } from '../../hooks/useCesium'
 import Coordinates from './components/coordinates/index.vue'
 import MeasureTool from './components/measureTool/index.vue'
-import { useCesiumS } from '@/stores/cesiumStore'
+// import { useCesiumS } from '@/stores/cesiumStore'
 
 let cesiumV: Cesium.Viewer;
 const { getCesiumViewer } = useCesium({ container: 'cesiumContainer', timeline: false, animation: false })
@@ -30,7 +30,8 @@ const flagCoordinates = ref(false)
 const flagMeasureTool = ref(false)
 onMounted(() => {
     cesiumV = getCesiumViewer()
-    useCesiumS().setCesiumS(cesiumV)
+    provide('myViewer', cesiumV)
+    // useCesiumS().setCesiumS(unref(cesiumV))
 })
 
 
