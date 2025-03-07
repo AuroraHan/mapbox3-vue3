@@ -40,6 +40,7 @@ const ellipsoid = () => {
     console.log(primitive);
 }
 
+//自定义shader
 const customShaderColor = new Cesium.CustomShader({
     fragmentShaderText: `void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
   {

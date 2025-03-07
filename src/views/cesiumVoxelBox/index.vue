@@ -31,7 +31,7 @@ onMounted(() => {
 
 //创建球面的体渲染
 const ellipsoid = () => {
-    const provider = new ProceduralSingleTileVoxelProvider(Cesium.VoxelShapeType.BOX);
+    const provider = new ProceduralSingleTileVoxelProvider(Cesium.VoxelShapeType.ELLIPSOID);
 
     const voxelPrimitive = cesiumV.scene.primitives.add(
         new Cesium.VoxelPrimitive({
@@ -143,9 +143,9 @@ class ProceduralSingleTileVoxelProvider {
         this.shape = shape;
         this.dimensions = new Cesium.Cartesian3(4, 4, 4);
         //设定最小范围
-        // this.minBounds = new Cesium.Cartesian3(1.12, 0.24, 0);
-        // //设定最大范围
-        // this.maxBounds = new Cesium.Cartesian3(2.4, 0.94, 1000000);
+        this.minBounds = new Cesium.Cartesian3(1.12, 0.24, 0);
+        //设定最大范围
+        this.maxBounds = new Cesium.Cartesian3(2.4, 0.94, 1000000);
         this.names = ["color"];
         this.types = [Cesium.MetadataType.VEC4];
         this.componentTypes = [Cesium.MetadataComponentType.FLOAT32];
