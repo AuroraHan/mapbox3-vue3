@@ -52,6 +52,10 @@ const routsList = ref([
         path: 'cesiumVoxelBox'
     },
     {
+        name: 'Cesium聚合',
+        path: 'cesiumCluster'
+    },
+    {
         name: 'threeBox烟雾',
         path: 'baseThreeBox'
     },
