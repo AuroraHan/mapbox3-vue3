@@ -21,6 +21,12 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/tile/, ""),
       },
+      // 地图文件代理
+      "/dem": {
+        target: "http://10.30.222.7:7788/dem",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/dem/, ""),
+      },
       "/geoserverApi": {
         target: "http://192.168.0.108:10002/",
         changeOrigin: true,
