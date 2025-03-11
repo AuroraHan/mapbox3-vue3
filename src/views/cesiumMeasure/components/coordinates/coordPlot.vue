@@ -2,112 +2,46 @@
 <template>
     <div>
         <div class="title">图上标绘</div>
+        <div class="list">
+            <div class="name">标绘:</div>
+            <el-radio-group v-model="models.plotType">
+                <el-radio-button label="点" value="New York" />
+                <el-radio-button label="线" value="Washington" />
+                <el-radio-button label="面" value="Los Angeles" />
+                <el-radio-button label="自定义" value="Chicago" />
+            </el-radio-group>
+        </div>
+        <div class="list">
+            <div class="name">材质:</div>
+            <el-select v-model="models.textureType" placeholder="材质" style="width: 180px">
+                <el-option label="医院" value="医院" />
+                <el-option label="学校" value="学校" />
+            </el-select>
+        </div>
+        <div class="list">
+            <div class="name">连续标注:</div>
+            <el-switch v-model="models.continu" inline-prompt active-text="是" inactive-text="否" />
+        </div>
+
         <div class="btns">
-            <el-button type="success" @click="measure">标点位</el-button>
-            <el-button type="danger" @click="onClear">全清空</el-button>
+            <el-button type="primary">绘制</el-button>
+            <el-button type="danger">删除</el-button>
         </div>
     </div>
 </template>
 
 <script setup lang='ts'>
 import * as Cesium from 'cesium';
-import { defineProps, watch, inject, provide } from 'vue'
-// const props = defineProps({
-//     viewer: {
-//         type: Cesium.Viewer
-//     }
-// })
+import { reactive, watch, inject, provide } from 'vue'
+
 
 let cViewer = inject('myViewer') as Cesium.Viewer
 
-// 存储起点和终点
-let points = [] as any;
-// 存储测量距离的事件函数
-let measureHandler: Cesium.ScreenSpaceEventHandler;
-//测距离
-const measure = () => {
-    if (!cViewer) return
-    let cesiumV = cViewer
-
-    let distanceLabel; // 显示距离的标签
-    let pointEntity;
-    let lineEntity; // 存储两点之间的连线
-
-    // 监听点击事件
-    measureHandler = new Cesium.ScreenSpaceEventHandler(cesiumV.scene.canvas);
-    measureHandler.setInputAction((click) => {
-        // 获取点击位置的笛卡尔坐标
-        const ray = cesiumV.camera.getPickRay(click.position);
-        const cartesian = cesiumV.scene.globe.pick(ray!, cesiumV.scene);
-
-        if (cartesian && points.length < 2) {
-            // 添加点实体
-            pointEntity = cesiumV.entities.add({
-                position: cartesian,
-                point: { pixelSize: 10, color: Cesium.Color.RED }
-            });
-
-            points.push(cartesian);
-        }
-    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
-
-    measureHandler.setInputAction((click) => {
-        // 当选择两个点时计算距离
-        if (points.length === 2) {
-            const distance = Cesium.Cartesian3.distance(points[0], points[1]);
-
-            // 绘制两点之间的实线
-            if (lineEntity) {
-                cesiumV.entities.remove(lineEntity); // 移除之前的线
-            }
-            lineEntity = cesiumV.entities.add({
-                polyline: {
-                    positions: points,
-                    width: 3,
-                    material: Cesium.Color.YELLOW
-                }
-            });
-
-
-            // 显示距离标签
-            if (!distanceLabel) {
-                distanceLabel = cesiumV.entities.add({
-                    position: Cesium.Cartesian3.midpoint(points[0], points[1], new Cesium.Cartesian3()),
-                    label: {
-                        text: `直线距离: ${Number(distance / 1000).toFixed(2)} 千米`,
-                        font: '20px Arial',
-                        fillColor: Cesium.Color.WHITE,
-                        outlineColor: Cesium.Color.BLACK,
-                        outlineWidth: 2,
-                        style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-                        heightReference: Cesium.HeightReference.RELATIVE_TO_GROUND,
-                        pixelOffset: new Cesium.Cartesian2(0, 20) // 调整像素偏移
-                    },
-                });
-            } else {
-                distanceLabel.position = Cesium.Cartesian3.midpoint(points[0], points[1], new Cesium.Cartesian3());
-                distanceLabel.label.text = `直线距离: ${distance.toFixed(2)} 米`;
-            }
-
-
-            // 重置点集合，允许重新测量
-            // points = [];
-            // cesiumV.entities.remove(pointEntity); // 移除临时点
-        }
-    }, Cesium.ScreenSpaceEventType.RIGHT_CLICK)
-}
-
-const onClear = () => {
-    try {
-        cViewer?.entities.removeAll()
-        points = []
-        measureHandler.destroy()
-    } catch (error) {
-        console.error(error)
-    }
-
-}
-
+const models = reactive({
+    plotType: '',
+    textureType: '',
+    continu: false
+})
 
 </script>
 <style scoped lang='scss'>
@@ -118,15 +52,20 @@ const onClear = () => {
     margin-bottom: 10px;
 }
 
+.list {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+
+    .name {
+        font-size: 17px;
+        font-weight: bold;
+        margin-right: 8px;
+    }
+}
+
 .btns {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: space-evenly;
-    align-items: center;
-
-    :deep(.el-button) {
-        margin-left: 0px;
-        margin-bottom: 4px;
-    }
+    justify-content: center;
 }
 </style>

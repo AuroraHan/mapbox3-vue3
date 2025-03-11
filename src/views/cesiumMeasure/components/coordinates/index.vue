@@ -1,6 +1,6 @@
 <!--  -->
 <template>
-    <WinControl :initCss="{ width: 300, height: 200, x: 300, y: 200 }">
+    <WinControl :initCss="{ width: 300, height: 260, x: 300, y: 200 }">
         <coordPlot></coordPlot>
     </WinControl>
 </template>
