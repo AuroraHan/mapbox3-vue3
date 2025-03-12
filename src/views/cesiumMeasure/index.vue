@@ -25,7 +25,7 @@ import { rotateGlobe } from '../../utils/cesiumTools'
 // import { useCesiumS } from '@/stores/cesiumStore'
 
 let cesiumV: Cesium.Viewer;
-const { getCesiumViewer } = useCesium({ container: 'cesiumContainer', timeline: false, animation: false })
+const { getCesiumViewer } = useCesium({ container: 'cesiumContainer', timeline: false, animation: false, infoBox: false })
 
 const flagCoordinates = ref(false)
 const flagMeasureTool = ref(false)

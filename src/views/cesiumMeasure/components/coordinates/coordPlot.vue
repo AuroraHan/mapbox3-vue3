@@ -25,7 +25,7 @@
         <div class="btns">
             <el-button type="primary" @click="draw">绘制</el-button>
             <el-button type="info" @click="endDraw">结束绘制</el-button>
-            <el-button type="danger">删除</el-button>
+            <el-button type="danger" @click="delDraw">删除</el-button>
         </div>
     </div>
 </template>
@@ -34,6 +34,7 @@
 import * as Cesium from 'cesium';
 import { reactive, inject, ref } from 'vue'
 import { IconList } from '../../const/icon'
+import LineDraw from './LineDraw'
 
 const iconList = IconList
 
@@ -56,7 +57,7 @@ const draw = () => {
             drawPoint()
             break;
         case 'line':
-
+            drawLine()
             break;
         case 'polygon':
 
@@ -75,6 +76,23 @@ const endDraw = () => {
             break;
         case 'line':
 
+            break;
+        case 'polygon':
+
+            break;
+        default:
+            break;
+    }
+}
+
+//删除方法
+const delDraw = () => {
+    switch (models.plotType) {
+        case 'point':
+
+            break;
+        case 'line':
+            lineDrawI.clear()
             break;
         case 'polygon':
 
@@ -116,17 +134,10 @@ const drawPoint = () => {
 }
 
 //绘制线的方法
-const pointList = ref<Array<Cesium.Cartesian3>>([])
+let lineDrawI: LineDraw
 const drawLine = () => {
-    lineHandler = new Cesium.ScreenSpaceEventHandler(cViewer.scene.canvas);
-    lineHandler.setInputAction((click) => {
-        const ray = cViewer.camera.getPickRay(click.position);
-        const cartesian = cViewer.scene.globe.pick(ray!, cViewer.scene);
-        if (Cesium.defined(cartesian)) {
-            pointList.value.push(cartesian)
-        }
-
-    }, Cesium.ScreenSpaceEventType.LEFT_CLICK)
+    lineDrawI = new LineDraw(cViewer)
+    lineDrawI.openDraw()
 }
 
 
