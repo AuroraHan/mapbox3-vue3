@@ -90,3 +90,11 @@ export const rotateGlobe = (cesiumV: Cesium.Viewer) => {
   // 加载完地球后执行动画
   cesiumV.scene.globe.tileLoadProgressEvent.addEventListener(progressCb);
 };
+
+//定义唯一值
+export const uuid = () => {
+  const id = URL.createObjectURL(new Blob());
+
+  URL.revokeObjectURL(id);
+  return id.substring(5 + location.origin.length + 1);
+};
