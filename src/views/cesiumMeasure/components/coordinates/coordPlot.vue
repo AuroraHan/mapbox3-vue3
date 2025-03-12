@@ -98,8 +98,8 @@ const drawPoint = () => {
                 position: cartesian,
                 billboard: {
                     image: models.textureType,
-                    width: 50, // 图标宽度（像素）
-                    height: 50, // 图标高度（像素）
+                    width: 40, // 图标宽度（像素）
+                    height: 40, // 图标高度（像素）
                     scale: 1.0, // 缩放比例
                     color: Cesium.Color.WHITE, // 图标颜色
                     eyeOffset: new Cesium.Cartesian3(0, 0, -10), // 图标偏移

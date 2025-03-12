@@ -21,6 +21,7 @@ import * as Cesium from 'cesium';
 import { useCesium } from '../../hooks/useCesium'
 import Coordinates from './components/coordinates/index.vue'
 import MeasureTool from './components/measureTool/index.vue'
+import { rotateGlobe } from '../../utils/cesiumTools'
 // import { useCesiumS } from '@/stores/cesiumStore'
 
 let cesiumV: Cesium.Viewer;
@@ -28,10 +29,14 @@ const { getCesiumViewer } = useCesium({ container: 'cesiumContainer', timeline: 
 
 const flagCoordinates = ref(false)
 const flagMeasureTool = ref(false)
+
 onMounted(() => {
     cesiumV = getCesiumViewer()
     provide('myViewer', cesiumV)
     // useCesiumS().setCesiumS(unref(cesiumV))
+
+    //旋转地球效果
+    rotateGlobe(cesiumV)
 })
 
 
