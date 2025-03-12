@@ -32,7 +32,7 @@
 
 <script setup lang='ts'>
 import * as Cesium from 'cesium';
-import { reactive, inject, } from 'vue'
+import { reactive, inject, ref } from 'vue'
 import { IconList } from '../../const/icon'
 
 const iconList = IconList
@@ -46,7 +46,8 @@ const models = reactive({
 })
 
 //点处理函数事件
-let pointHandler: Cesium.ScreenSpaceEventHandler
+let pointHandler: Cesium.ScreenSpaceEventHandler | null
+let lineHandler: Cesium.ScreenSpaceEventHandler | null
 
 //绘制方法
 const draw = () => {
@@ -83,6 +84,7 @@ const endDraw = () => {
     }
 }
 
+//标记点的方法
 const drawPoint = () => {
     pointHandler = new Cesium.ScreenSpaceEventHandler(cViewer.scene.canvas);
     pointHandler.setInputAction((click) => {
@@ -108,6 +110,20 @@ const drawPoint = () => {
                     verticalOrigin: Cesium.VerticalOrigin.BOTTOM // 垂直对齐
                 }
             });
+        }
+
+    }, Cesium.ScreenSpaceEventType.LEFT_CLICK)
+}
+
+//绘制线的方法
+const pointList = ref<Array<Cesium.Cartesian3>>([])
+const drawLine = () => {
+    lineHandler = new Cesium.ScreenSpaceEventHandler(cViewer.scene.canvas);
+    lineHandler.setInputAction((click) => {
+        const ray = cViewer.camera.getPickRay(click.position);
+        const cartesian = cViewer.scene.globe.pick(ray!, cViewer.scene);
+        if (Cesium.defined(cartesian)) {
+            pointList.value.push(cartesian)
         }
 
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK)

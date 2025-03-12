@@ -55,6 +55,9 @@ export const getCurrentPositionByMouse = (
  * @param cesiumV cesium实例
  */
 export const rotateGlobe = (cesiumV: Cesium.Viewer) => {
+  //如果不是3D球则不能旋转
+  if (cesiumV.scene.mode !== Cesium.SceneMode.SCENE3D) return;
+
   let isRotating = true;
   let totalRotation = 0;
   const rotationSpeed = Cesium.Math.toRadians(4);
