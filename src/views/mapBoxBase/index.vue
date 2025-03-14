@@ -1,7 +1,10 @@
 <template>
+    <div class="top-controls">
+        <div class="lonlat">
+            经度:{{ Number(jw?.lng).toFixed(5) }} 纬度:{{ Number(jw?.lat).toFixed(5) }} 层级:{{ zoom.toFixed(1) }}
+        </div>
+    </div>
     <div id="map" class="map"></div>
-    <pre class="lonlat"
-        @click="onOpenDrawer">经度:{{ Number(jw?.lng).toFixed(5) }} 纬度:{{ Number(jw?.lat).toFixed(5) }} 层级:{{ zoom.toFixed(1) }}</pre>
 
     <!-- 下拉列表  -->
     <div class="oparate">
@@ -39,7 +42,7 @@ import DrawTools from './components/drawTools.vue';
 let mapR: mapboxgl.Map;
 let Draw;
 
-const { getMap } = useMapbox({ container: 'map', isOffline: true })
+const { getMap } = useMapbox({ container: 'map', isOffline: false })
 
 //当前经纬度
 const jw = ref<{ lat: number, lng: number }>({ lat: 0, lng: 0 });

@@ -1,21 +1,34 @@
+.top-controls{
+    position: absolute;
+    z-index: 9;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 35px;
+    background-color: #93c9df;
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    box-sizing: border-box;
+    // justify-content: center;
+
+    .lonlat{
+        width: 310px;
+        height: 30px;
+        line-height: 26px;
+        background-color: #fff;
+        border-radius: 6px;
+        margin-right: 10px;
+        font-size: 15px;
+        text-align: center;
+        line-height: 30px;
+    }
+}
+
 .map {
     height: 100vh;
 }
 
-.lonlat {
-    z-index: 9;
-    width: 320px;
-    font-size: 15px;
-    line-height: 35px;
-    padding: 0 3px;
-    height: 35px;
-    background-color: rgb(191, 192, 192);
-    position: absolute;
-    bottom: 3%;
-    left: 3%;
-    text-align: center;
-    cursor: pointer;
-}
 
 .box {
     width: 50px;
