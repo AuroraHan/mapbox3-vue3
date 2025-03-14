@@ -24,7 +24,7 @@
 
         <div class="btns">
             <el-button type="primary" @click="draw">绘制</el-button>
-            <el-button type="info" @click="endDraw">结束绘制</el-button>
+            <!-- <el-button type="info" @click="endDraw">结束绘制</el-button> -->
             <el-button type="danger" @click="delDraw">删除</el-button>
         </div>
     </div>
@@ -35,6 +35,7 @@ import * as Cesium from 'cesium';
 import { reactive, inject, ref } from 'vue'
 import { IconList } from '../../const/icon'
 import LineDraw from './LineDraw'
+import PolygonDraw from './PolygonDraw'
 
 const iconList = IconList
 
@@ -48,7 +49,6 @@ const models = reactive({
 
 //点处理函数事件
 let pointHandler: Cesium.ScreenSpaceEventHandler | null
-let lineHandler: Cesium.ScreenSpaceEventHandler | null
 
 //绘制方法
 const draw = () => {
@@ -60,7 +60,7 @@ const draw = () => {
             drawLine()
             break;
         case 'polygon':
-
+            drawPolygon()
             break;
         default:
             break;
@@ -75,10 +75,9 @@ const endDraw = () => {
             pointHandler = null
             break;
         case 'line':
-
+            lineDrawI.closeDraw()
             break;
         case 'polygon':
-
             break;
         default:
             break;
@@ -95,7 +94,7 @@ const delDraw = () => {
             lineDrawI.clear()
             break;
         case 'polygon':
-
+            polygonDrawI.clear()
             break;
         default:
             break;
@@ -140,6 +139,12 @@ const drawLine = () => {
     lineDrawI.openDraw()
 }
 
+//绘制面的方法
+let polygonDrawI: PolygonDraw
+let drawPolygon = () => {
+    polygonDrawI = new PolygonDraw(cViewer)
+    polygonDrawI.openDraw()
+}
 
 
 </script>
