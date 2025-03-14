@@ -3,11 +3,15 @@
         <div class="lonlat">
             经度:{{ Number(jw?.lng).toFixed(5) }} 纬度:{{ Number(jw?.lat).toFixed(5) }} 层级:{{ zoom.toFixed(1) }}
         </div>
+        <div class="operate">
+            <div>工具集</div>
+            <el-switch v-model="controls.isOprate" />
+        </div>
     </div>
     <div id="map" class="map"></div>
 
     <!-- 下拉列表  -->
-    <div class="oparate">
+    <div v-if="controls.isOprate" class="oparate">
         <el-collapse accordion>
             <el-collapse-item title="工具集" name="1">
                 <div class="tools">
@@ -15,16 +19,20 @@
                         <div class="title">测量工具</div>
                         <el-switch v-model="controls.isDraw" />
                     </div>
+                    <div class="item">
+                        <div class="title">标绘</div>
+                        <el-switch v-model="controls.isEquipment" />
+                    </div>
                 </div>
             </el-collapse-item>
         </el-collapse>
     </div>
 
-    <el-drawer title="设备管理器" v-model="drawerValue" direction="ltr" :modal="false" size="20%">
-        <EquipmentManage @selectBox="selectBox"></EquipmentManage>
-    </el-drawer>
     <!-- 测量工具组件 -->
     <DrawTools v-if="controls.isDraw" :drawI="Draw" :mapI="mapR"></DrawTools>
+
+    <!-- 装备类 -->
+    <EquipmentManage v-if="controls.isEquipment" :mapI="mapR"></EquipmentManage>
 </template>
 
 <script setup lang="ts">
@@ -36,8 +44,8 @@ import { AnimatedGIF, CanvasIcon } from '@sakitam-gis/viz-mapbox-gl';
 import { useMapbox } from '../../hooks/useMapBox'
 import Popup from './components/popup.vue';
 import { createImg } from '../../utils/mapTools'
-import EquipmentManage from '../../components/equipmentManage/index.vue'
 import DrawTools from './components/drawTools.vue';
+import EquipmentManage from './components/equipmentManage.vue'
 
 let mapR: mapboxgl.Map;
 let Draw;
@@ -62,7 +70,9 @@ const popup = new mapbox.Popup({
 
 //控制工具类
 const controls = reactive({
-    isDraw: false
+    isDraw: false,
+    isEquipment: false,
+    isOprate: false
 })
 
 //基础配置
@@ -123,31 +133,6 @@ const baseConfig = () => {
 }
 
 
-//打开、关闭抽屉弹出框
-const drawerValue = ref(false)
-const onOpenDrawer = () => {
-    drawerValue.value = !drawerValue.value
-}
-
-//选择设备
-const selectBox = (item) => {
-    //获取当前地图的中心点
-    const { lng, lat } = mapR.getCenter();
-    if (item.enable) {
-        //添加图标
-        const dom = createImg(item.svg);
-        const result = new mapbox.Marker({
-            element: dom,
-            draggable: true
-        }).setLngLat([lng, lat]).setPopup(new mapbox.Popup().setHTML(`<h2>${item.name}</h2>`)).addTo(mapR);
-        //把实例添加到对象中
-        item.intanst = result
-    } else {
-        //移除图标
-        item.intanst.remove()
-        item.intanst = null
-    }
-}
 
 //添加自定义弹出框
 const getSiteInfo = (data: any) => {

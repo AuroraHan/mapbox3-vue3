@@ -5,7 +5,7 @@
     top: 0;
     width: 100%;
     height: 35px;
-    background-color: #93c9df;
+    background-color: rgba(147, 201, 223,0.6);
     display: flex;
     align-items: center;
     padding: 0 8px;
@@ -22,6 +22,15 @@
         font-size: 15px;
         text-align: center;
         line-height: 30px;
+    }
+
+    .operate{
+        display: flex;
+        align-items: center;
+        font-weight: 800;
+        div{
+            margin-right: 5px;
+        }
     }
 }
 
@@ -54,9 +63,9 @@
 .oparate{
     z-index:9;
     position: absolute;
-    left: 3%;
+    left: 1%;
     top: 5%;
-    width: 210px;
+    width: 200px;
     cursor: pointer;
 
     :deep(.el-collapse){
@@ -76,6 +85,7 @@
                 padding-left: 20px;
                 text-align: center;
                 font-weight: bold;
+                height: 36px;
             }
 
             .el-collapse-item__wrap{
