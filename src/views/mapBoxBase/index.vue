@@ -2,17 +2,30 @@
     <div id="map" class="map"></div>
     <pre class="lonlat"
         @click="onOpenDrawer">经度:{{ Number(jw?.lng).toFixed(5) }} 纬度:{{ Number(jw?.lat).toFixed(5) }} 层级:{{ zoom.toFixed(1) }}</pre>
-    <!-- <div class="box" @click="addPoint">json</div> -->
+
+    <!-- 下拉列表  -->
+    <div class="oparate">
+        <el-collapse accordion>
+            <el-collapse-item title="工具集" name="1">
+                <div class="tools">
+                    <div class="item">
+                        <div class="title">测量工具</div>
+                        <el-switch v-model="controls.isDraw" />
+                    </div>
+                </div>
+            </el-collapse-item>
+        </el-collapse>
+    </div>
+
     <el-drawer title="设备管理器" v-model="drawerValue" direction="ltr" :modal="false" size="20%">
         <EquipmentManage @selectBox="selectBox"></EquipmentManage>
     </el-drawer>
-    <div class="desc" v-show="desc">
-        {{ desc }}
-    </div>
+    <!-- 测量工具组件 -->
+    <DrawTools v-if="controls.isDraw" :drawI="Draw" :mapI="mapR"></DrawTools>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, createApp } from 'vue'
+import { onMounted, ref, createApp, reactive } from 'vue'
 import mapbox, { Marker, PointLike } from 'mapbox-gl';
 import GlobeMinimap from "mapbox-gl-globe-minimap";
 import MapboxDraw from "@mapbox/mapbox-gl-draw";
@@ -21,10 +34,12 @@ import { useMapbox } from '../../hooks/useMapBox'
 import Popup from './components/popup.vue';
 import { createImg } from '../../utils/mapTools'
 import EquipmentManage from '../../components/equipmentManage/index.vue'
+import DrawTools from './components/drawTools.vue';
 
 let mapR: mapboxgl.Map;
+let Draw;
 
-const { getMap } = useMapbox({ container: 'map' })
+const { getMap } = useMapbox({ container: 'map', isOffline: true })
 
 //当前经纬度
 const jw = ref<{ lat: number, lng: number }>({ lat: 0, lng: 0 });
@@ -42,6 +57,11 @@ const popup = new mapbox.Popup({
 });
 
 
+//控制工具类
+const controls = reactive({
+    isDraw: false
+})
+
 //基础配置
 const baseConfig = () => {
     mapR = getMap()!
@@ -58,15 +78,20 @@ const baseConfig = () => {
     );
 
     //加载绘制组件
-    let Draw = new MapboxDraw({
+    Draw = new MapboxDraw({
         controls: {
             'combine_features': false,
             'uncombine_features': false,
         }
     });
     mapR.addControl(Draw, 'top-right');
+    // 将元素隐藏起来
+    const dom = document.getElementsByClassName('mapbox-gl-draw_ctrl-draw-btn')
+    for (let i = 0; i < dom.length; i++) {
+        //@ts-ignore
+        dom[i].style.display = 'none';
+    }
 
-    drawPlugin()
 
     mapR.on('load', () => {
 
@@ -92,29 +117,6 @@ const baseConfig = () => {
 
     mapR.on('moveend', () => {
     })
-}
-
-//插件操作部分
-const desc = ref()
-const drawPlugin = () => {
-    // @ts-ignore
-    mapR.on('draw.create', updateArea);
-    // @ts-ignore
-    mapR.on('draw.delete', updateArea);
-    // @ts-ignore
-    mapR.on('draw.update', updateArea);
-
-    function updateArea(e: any) {
-        console.log(e, 'eeeee');
-        desc.value = e.features[0]
-        // console.log(e.features[0])
-
-        if (e.type == 'draw.delete') {
-            desc.value = null
-        } else {
-
-        }
-    }
 }
 
 

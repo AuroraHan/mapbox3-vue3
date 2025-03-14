@@ -1,6 +1,6 @@
 <!-- 工具类绘制 -->
 <template>
-    <WinControl :initCss="{ width: 250, height: 200, x: 300, y: 200 }">
+    <WinControl :initCss="{ width: 250, height: 200, x: 400, y: 400 }">
         <div>
             <div class="list">
                 <div class="name">标绘:</div>
