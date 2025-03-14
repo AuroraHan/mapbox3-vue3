@@ -98,3 +98,26 @@ export const uuid = () => {
   URL.revokeObjectURL(id);
   return id.substring(5 + location.origin.length + 1);
 };
+
+/**
+ * 屏幕坐标转经纬度坐标
+ * @param cViewer
+ * @param position
+ * @returns
+ */
+export const postionTransfrom = (
+  cViewer: Cesium.Viewer,
+  position: Cesium.Cartesian2
+) => {
+  const ray = cViewer.camera.getPickRay(position);
+  const cartesian = cViewer.scene.globe.pick(ray!, cViewer.scene);
+  var cartographic = Cesium.Cartographic.fromCartesian(cartesian!);
+  const latitude = Number(
+    Cesium.Math.toDegrees(cartographic.latitude).toFixed(3)
+  );
+  const longitude = Number(
+    Cesium.Math.toDegrees(cartographic.longitude).toFixed(3)
+  );
+
+  return [longitude, latitude];
+};

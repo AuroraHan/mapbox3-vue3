@@ -1,25 +1,30 @@
 import * as Cesium from "cesium";
-
 import DrawBase from "../../../../utils/drawBase";
 import { uuid, postionTransfrom } from "../../../../utils/cesiumTools";
 
-//折线数据
-type LineDataType = {
+//多边形数据
+type PolygonDataType = {
   positions: number[][];
   id: string;
-  line: Cesium.Entity | null;
+  polygon: Cesium.Entity | null;
   point: { [n: string]: number };
 };
 
-class LineDraw extends DrawBase {
+class PolygonDraw extends DrawBase {
   //当前数据
-  currentData: LineDataType | null = null;
-  //折线数据
-  lineMap = new Map<string, LineDataType>();
-  //当前绘制折线id
+  currentData: PolygonDataType | null = null;
+  //多边形数据
+  polygonMap = new Map<string, PolygonDataType>();
+  //当前多边形id
   currentId: string = "";
-  //当前绘制折线坐标点
+  //当前绘制多边形坐标点
   positions: number[][] = [];
+  //多边形样式
+  polygonStyle = {
+    material: Cesium.Color.RED.withAlpha(0.5),
+    //贴地面
+    classificationType: Cesium.ClassificationType.BOTH,
+  };
   //折线样式
   lineStyle = {
     width: 5,
@@ -36,50 +41,63 @@ class LineDraw extends DrawBase {
     //点贴地
     heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
   };
+
   constructor(v: Cesium.Viewer) {
     super(v);
   }
 
-  //开启绘制
   openDraw() {
     this.currentId = uuid();
     this.onListener();
   }
-  //关闭绘制，置空数据
   closeDraw() {
     this.currentId = "";
     this.currentData = null;
     this.positions = [];
     this.offListener();
   }
-  //绘制折线
-  drawLine(positions: number[][]) {
-    const line = this.lineMap.get(this.currentId);
-    if (!line) return;
-    //更新折线坐标，折线至少2个坐标点
-    line.positions =
-      positions?.length === 1 ? [positions[0], positions[0]] : [...positions];
-    //没有绘制则新增绘制折线
-    if (!line.line) {
-      line.line = new Cesium.Entity({
+  drawPolygon(positions: number[][]) {
+    const polygon = this.polygonMap.get(this.currentId);
+    if (!polygon) return;
+    //更新多边形坐标，多边形至少3个坐标点
+    polygon.positions =
+      positions.length === 1
+        ? [positions[0], positions[0], positions[0]]
+        : positions.length === 2
+        ? [positions[0], positions[1], positions[0]]
+        : [...positions];
+    if (!polygon.polygon) {
+      polygon.polygon = new Cesium.Entity({
         id: this.currentId,
         polyline: {
           //利用CallbackProperty，自动更新绘制
           positions: new Cesium.CallbackProperty(() => {
-            return Cesium.Cartesian3.fromDegreesArray(line.positions.flat(1));
+            //封闭形状
+            return Cesium.Cartesian3.fromDegreesArray(
+              [...polygon.positions, polygon.positions[0]].flat(1)
+            );
           }, false),
           ...this.lineStyle,
         },
+        polygon: {
+          //利用CallbackProperty，自动更新绘制
+          hierarchy: new Cesium.CallbackProperty(() => {
+            return {
+              positions: Cesium.Cartesian3.fromDegreesArray(
+                polygon.positions.flat(1)
+              ),
+            };
+          }, false),
+          ...this.polygonStyle,
+        },
       });
-      this.viewer.entities.add(line.line);
+      this.viewer.entities.add(polygon.polygon);
     }
-    //绘制点，对比新旧点坐标，进行更新
-    const oldMap = { ...line.point };
-    const newMap: LineDataType["point"] = {};
+    const oldMap = { ...polygon.point };
+    const newMap: PolygonDataType["point"] = {};
     for (let i = 0; i < positions.length; i++) {
       const p = [positions[i][0], positions[i][1]];
       const id = this.currentId + p.join("_");
-      //添加新点
       if (!oldMap[id]) {
         this.viewer.entities.add({
           id,
@@ -91,86 +109,73 @@ class LineDraw extends DrawBase {
       }
       newMap[id] = 1;
     }
-    //删除没有的点
     for (let k in oldMap) {
       if (!newMap[k]) {
         this.viewer.entities.removeById(k);
       }
     }
-    line.point = newMap;
+    polygon.point = newMap;
   }
-  //鼠标移动过程中绘制折线
   onMouseMove(ev: Cesium.ScreenSpaceEventHandler.MotionEvent) {
     if (this.isDraw && this.currentData) {
       const p = postionTransfrom(this.viewer, ev.endPosition);
       if (p) {
-        this.drawLine([...this.positions, [p[0], p[1]]]);
+        this.drawPolygon([...this.positions, [p[0], p[1]]]);
       }
     }
   }
-  //右点击收集点
   onRightClick(ev: Cesium.ScreenSpaceEventHandler.PositionedEvent) {
     if (this.isDraw && this.currentData) {
       const p = postionTransfrom(this.viewer, ev.position);
       if (p) {
         this.positions.push([p[0], p[1]]);
-        this.drawLine(this.positions);
+        this.drawPolygon(this.positions);
       }
-      //关闭绘制
       this.closeDraw();
     }
   }
-  //左点击收集点
+
   onLeftClick(ev: Cesium.ScreenSpaceEventHandler.PositionedEvent) {
     if (this.isDraw) {
       const p = postionTransfrom(this.viewer, ev.position);
 
       if (p) {
-        //初始化数据
         if (!this.currentData) {
-          const line = {
+          const polygon = {
             id: this.currentId,
             positions: [],
 
-            line: null,
+            polygon: null,
             point: {},
           };
-          this.lineMap.set(this.currentId, line);
+
+          this.polygonMap.set(this.currentId, polygon);
           this.positions = [];
-          this.currentData = line;
+          this.currentData = polygon;
         }
         this.positions.push([p[0], p[1]]);
-        this.drawLine(this.positions);
+        this.drawPolygon(this.positions);
       }
     }
   }
-
-  //根据id删除折线数据
   removeItem(id: string) {
-    const item = this.lineMap.get(id);
+    const item = this.polygonMap.get(id);
     if (!item) return;
-    //删除折线
     this.viewer.entities.removeById(item.id);
-    //删除折线点
     for (let k in item.point) {
       this.viewer.entities.removeById(k);
     }
-    //删除折线数据
-    this.lineMap.delete(item.id);
+    this.polygonMap.delete(item.id);
   }
-  //清空折线
   clear() {
-    this.lineMap.forEach((item) => {
-      //删除折线
+    this.polygonMap.forEach((item) => {
       this.viewer.entities.removeById(item.id);
-      //删除折线点
       for (let k in item.point) {
         this.viewer.entities.removeById(k);
       }
     });
-    //清空数据
-    this.lineMap.clear();
+    this.polygonMap.clear();
   }
 }
 
-export default LineDraw;
+export default PolygonDraw;

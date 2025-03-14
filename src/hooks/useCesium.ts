@@ -6,6 +6,7 @@ interface options {
   infoBox?: boolean;
   timeline?: boolean;
   animation?: boolean;
+  addTerrain?: boolean;
 }
 
 export function useCesium(options: options) {
@@ -30,6 +31,15 @@ export function useCesium(options: options) {
       timeline: options.timeline,
       animation: options.animation,
     });
+
+    //添加地形
+    if (options.addTerrain) {
+      const provider = await Cesium.createWorldTerrainAsync({
+        requestVertexNormals: true,
+        requestWaterMask: true,
+      });
+      cesiumV.terrainProvider = provider;
+    }
 
     // const customTilingScheme = new Cesium.WebMercatorTilingScheme({
     //   numberOfLevelZeroTilesX: 1,
