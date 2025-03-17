@@ -6,7 +6,7 @@
         <img src="/images/fly.gif" alt="" srcset="">
     </div>
 
-    <MapPopup @exportMap="exportMap" :mapId="'map-popup'" :show="resultDialog" />
+    <MapPopup @exportMap="exportMap" mapId='map-popup' :show="resultDialog" />
 </template>
 
 <script setup lang='ts'>
@@ -24,7 +24,7 @@ const open = () => {
     resultDialog.value = !resultDialog.value
 }
 
-const exportMap = (mapR) => {
+const exportMap = (mapR, b) => {
     console.log(mapR, 'kkkk');
     addPoint(mapR)
 }

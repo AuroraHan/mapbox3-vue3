@@ -9,16 +9,20 @@
 <script setup lang='ts'>
 import { onActivated, toRefs, ref, PropType } from 'vue'
 import mapboxgl, { StyleSpecification } from "mapbox-gl";
+import { Scene, Map } from '@antv/l7'
 
 const props = defineProps({
+    //唯一值
     mapId: {
         type: String,
         required: true
     },
+    //控制显示和隐藏
     show: {
         type: Boolean,
         default: false
     },
+    //弹出框里面地图的大小
     boxSize: {
         type: Object as PropType<{ width: String, height: String }>,
         default: {
@@ -28,11 +32,12 @@ const props = defineProps({
     }
 })
 
-const emits = defineEmits(['exportMap'])
+const emits = defineEmits(['exportMap', 'exportSceneL7'])
 
 const { show, boxSize, mapId } = toRefs(props)
 
 let mapR: mapboxgl.Map | null;
+let sceneL7: Scene
 
 onActivated(() => {
     mapR?.resize()
@@ -78,7 +83,7 @@ const initMap = () => {
         ],
     } as StyleSpecification
     mapboxgl.accessToken =
-        "pk.eyJ1IjoidTEwaW50IiwiYSI6InQtMnZvTkEifQ.c8mhXquPE7_xoB3P4Ag8cA";
+        "J1IjoidTEwaW50IiwiYSI6InQtMnZvTkEifQ.c8mhXquPE7_xoB3P4Ag8cA";
     const map = new mapboxgl.Map({
         container: mapId.value,
         projection: "mercator",
@@ -86,6 +91,15 @@ const initMap = () => {
         center: [120, 30],
         zoom: 2,
     });
+
+    // 创建l7场景实例
+    sceneL7 = new Scene({
+        id: mapId.value,
+        map: new Map({
+            mapInstance: map,
+        }),
+        logoVisible: false,
+    })
 
     mapR = map;
     mapR.removeControl(mapR._logoControl);
@@ -98,16 +112,18 @@ const removeMap = () => {
     observer.unobserve(domMy!)
 }
 
+//打开弹出框的回调
 const onOpenDialog = () => {
     initMap()
     listenerMyMain()
 
+    //加载完成之后暴露出去
     mapR?.on('load', () => {
-        emits('exportMap', mapR)
+        emits('exportMap', mapR, sceneL7)
     })
-
 }
 
+//关闭弹出框的回调
 const onCloseDialog = () => {
     removeMap()
 }
