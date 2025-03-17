@@ -10,6 +10,7 @@ import { onMounted, reactive } from 'vue';
 import * as Cesium from 'cesium';
 import { useCesium } from '../../hooks/useCesium'
 import { getCurrentPositionByMouse } from '../../utils/cesiumTools'
+import * as Turf from '@turf/turf'
 
 let cesiumV: Cesium.Viewer;
 const { getCesiumViewer } = useCesium({ container: 'cesiumContainer' })
@@ -17,7 +18,8 @@ const { getCesiumViewer } = useCesium({ container: 'cesiumContainer' })
 onMounted(() => {
     cesiumV = getCesiumViewer()
     getLngLat()
-    addPoint()
+    // addPoint()
+    add()
 })
 
 //根据鼠标获取经纬度
@@ -62,6 +64,36 @@ const addPoint = () => {
             backgroundColor: Cesium.Color.RED
         }
     })
+}
+
+const add = () => {
+    var point = Turf.point([120, 30.0]);
+    var distance = 1;
+    var bearing = 90;
+    var options = { units: "kilometers" };
+
+    var destination = Turf.destination(point, distance, bearing, options);
+    console.log(destination, 'kkkk');
+
+    const blueBox = cesiumV.entities.add({
+        name: "Blue box",
+        position: Cesium.Cartesian3.fromDegrees(120, 30.0, 100.0),
+        box: {
+            dimensions: new Cesium.Cartesian3(1000.0, 1000.0, 100.0),
+            material: Cesium.Color.BLUE,
+        },
+    });
+
+    const blueBox1 = cesiumV.entities.add({
+        name: "Blue box",
+        position: Cesium.Cartesian3.fromDegrees(120.01038445705325, 29.999999592511273, 100.0),
+        box: {
+            dimensions: new Cesium.Cartesian3(1000.0, 1000.0, 100.0),
+            material: Cesium.Color.RED,
+        },
+    });
+
+    cesiumV.zoomTo(cesiumV.entities)
 }
 
 

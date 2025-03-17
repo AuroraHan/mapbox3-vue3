@@ -35,30 +35,9 @@ onMounted(() => {
     // billboardsCollectionCombine = new Cesium.BillboardCollection();
     scene = cesiumV.scene;
     // onCluster()
-    add()
 })
 
-const add = () => {
-    const blueBox = cesiumV.entities.add({
-        name: "Blue box",
-        position: Cesium.Cartesian3.fromDegrees(120, 30.0, 300.0),
-        box: {
-            dimensions: new Cesium.Cartesian3(100.0, 100.0, 100.0),
-            material: Cesium.Color.BLUE,
-        },
-    });
 
-    const blueBox1 = cesiumV.entities.add({
-        name: "Blue box",
-        position: Cesium.Cartesian3.fromDegrees(120, 30.0, 200.0),
-        box: {
-            dimensions: new Cesium.Cartesian3(100.0, 100.0, 100.0),
-            material: Cesium.Color.RED,
-        },
-    });
-
-    cesiumV.zoomTo(cesiumV.entities)
-}
 
 //根据鼠标获取经纬度
 const lnglat = reactive({

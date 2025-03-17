@@ -13,6 +13,7 @@
 import { reactive, ref, onBeforeMount, onMounted } from 'vue'
 import * as Turf from '@turf/turf'
 import mapboxgl from "mapbox-gl";
+import { Scene, HeatmapLayer } from '@antv/l7'
 //@ts-ignore
 import MapPopup from '@/components/MapPopup/index.vue'
 
@@ -24,7 +25,7 @@ const open = () => {
     resultDialog.value = !resultDialog.value
 }
 
-const exportMap = (mapR, b) => {
+const exportMap = (mapR, sceneL7) => {
     console.log(mapR, 'kkkk');
     addPoint(mapR)
 }
