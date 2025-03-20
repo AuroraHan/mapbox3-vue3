@@ -13,7 +13,7 @@ export default defineConfig({
   },
   server: {
     hmr: true,
-    port: 4000,
+    port: 4001,
     open: true,
     proxy: {
       "/tile": {
@@ -28,7 +28,7 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/dem/, ""),
       },
       "/geoserverApi": {
-        target: "http://192.168.0.108:10002/",
+        target: "http://127.0.0.1:10002/",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/geoserverApi/, ""),
       },

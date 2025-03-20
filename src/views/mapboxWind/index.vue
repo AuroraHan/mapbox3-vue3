@@ -26,7 +26,7 @@ const addWind = async () => {
 
     //添加需要加载的范围
     const clip = await fetch('/geojson/china.geojson').then(res => res.json());
-
+    //geoserverApi/geoserver/gwc/service/tms/1.0.0/gxh%3Awind-mercator@EPSG%3A900913@jpeg/{z}/{x}/{y}.jpeg
     const source = new TileSource('wind', {
         url: '/2023111703/{z}/{x}/{y}/wind-surface.jpeg',
         tileSize: 256,
@@ -85,7 +85,7 @@ const addWind = async () => {
         },
         renderFrom: RenderFrom.rg,
         displayRange: [0, 104],
-        renderType: RenderType.colorize,
+        renderType: RenderType.particles,
         widthSegments: 1,
         heightSegments: 1,
         mask: { //设置要查看的范围之内
