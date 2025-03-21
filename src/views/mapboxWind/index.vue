@@ -5,7 +5,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useMapbox } from '../../hooks/useMapBox'
-import { Layer, TileSource, RenderType, DecodeType, RenderFrom, MaskType } from '@sakitam-gis/mapbox-wind';
+import { Layer, TileSource, RenderType, DecodeType, RenderFrom, MaskType, configDeps } from '@sakitam-gis/mapbox-wind';
 
 let mapR: mapboxgl.Map | null = null;
 const { getMap } = useMapbox({ container: 'map' })
@@ -13,6 +13,7 @@ const { getMap } = useMapbox({ container: 'map' })
 onMounted(() => {
     mapR = getMap()
     mapR?.on('load', () => {
+        configDeps(['https://unpkg.com/geotiff/dist-browser/geotiff.js']);
         addWind()
     })
 })
@@ -88,6 +89,7 @@ const addWind = async () => {
         renderType: RenderType.particles,
         widthSegments: 1,
         heightSegments: 1,
+        picking: true,
         mask: { //设置要查看的范围之内
             data: clip,
             // type: MaskType.outside,
@@ -96,6 +98,12 @@ const addWind = async () => {
     });
 
     mapR?.addLayer(layer);
+
+    mapR?.on('click', e => {
+        layer.picker(e.lngLat).then((v) => {
+            console.log(v)
+        })
+    });
 }
 
 </script>
