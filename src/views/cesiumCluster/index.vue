@@ -14,7 +14,7 @@ import { randomGeoJsonPoint } from './tools'
 import { FeatureCollection } from 'geojson';
 
 let cesiumV: Cesium.Viewer;
-const { getCesiumViewer } = useCesium({ container: 'cesiumContainer' })
+const { getCesiumViewer } = useCesium({ container: 'cesiumContainer', infoBox: true })
 
 
 onMounted(() => {
@@ -133,11 +133,6 @@ class Cluster {
                         cluster.billboard.image = _this.img;
                         cluster.billboard.scale = 0.2
                     } else {
-                        //   cluster.billboard.image = this_.drawImage(
-                        //     clusteredEntities.length,
-                        //     _this.colorArr[xx].size,
-                        //     _this.colorArr[xx].color
-                        //   );
                         cluster.billboard.image = await combineIconAndLabel('/images/school-icon.png', clusteredEntities.length, 70)
                         cluster.billboard.scale = 0.5
                     }

@@ -19,7 +19,8 @@ onMounted(() => {
     cesiumV = getCesiumViewer()
     getLngLat()
     // addPoint()
-    add()
+    // add()
+    primitiveBox()
 })
 
 //根据鼠标获取经纬度
@@ -145,6 +146,51 @@ const chinaGeo = () => {
 
     cesiumV.flyTo(data);
 
+}
+
+const primitiveBox = () => {
+    // 1. 定义正方体几何体（所有实例共享）
+    const boxGeometry = Cesium.BoxGeometry.fromDimensions({
+        vertexFormat: Cesium.VertexFormat.POSITION_AND_NORMAL,
+        dimensions: new Cesium.Cartesian3(100.0, 100.0, 100.0) // 正方体边长 100 米
+    });
+
+    // 2. 生成 3 万个实例的模型矩阵和颜色
+    const instances = [] as any;
+    for (let i = 0; i < 30000; i++) {
+        // 随机生成位置（示例代码，替换为你的经纬度和高度）
+        const position = Cesium.Cartesian3.fromDegrees(
+            Math.random() * (130 - 100) + 100, // 经度 [-180, 180)
+            Math.random() * (40 - 20) + 20,  // 纬度 [-90, 90)
+            Math.random() * 1000       // 高度 [0, 1000)
+        );
+
+        // 创建模型矩阵（平移 + 可选旋转/缩放）
+        const modelMatrix = Cesium.Matrix4.fromTranslation(position);
+
+        // 创建实例（每个实例共享几何体，仅模型矩阵不同）
+        instances.push(new Cesium.GeometryInstance({
+            geometry: boxGeometry,
+            modelMatrix: modelMatrix,
+            attributes: {
+                // 所有实例颜色相同（若需不同颜色，使用 ColorGeometryInstanceAttribute）
+                color: new Cesium.ColorGeometryInstanceAttribute(0.0, 1.0, 0.0, 1.0)
+            }
+        }));
+    }
+
+    // 3. 创建 Primitive 并批量渲染
+    const primitive = new Cesium.Primitive({
+        geometryInstances: instances,
+        appearance: new Cesium.PerInstanceColorAppearance({
+            translucent: false, // 不透明物体（性能更高）
+            flat: true          // 禁用光照（若不需要光照）
+        }),
+        asynchronous: false     // 同步加载（适合静态数据）
+    });
+
+    // 4. 添加到场景
+    cesiumV.scene.primitives.add(primitive);
 }
 
 </script>
