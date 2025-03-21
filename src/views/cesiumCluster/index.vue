@@ -10,31 +10,17 @@ import { onMounted, reactive, onUnmounted } from 'vue';
 import * as Cesium from 'cesium';
 import { useCesium } from '../../hooks/useCesium'
 import { getCurrentPositionByMouse } from '../../utils/cesiumTools'
-import PrimitiveCluster from "../../utils/primitiveCluster";
+import { randomGeoJsonPoint } from './tools'
+import { FeatureCollection } from 'geojson';
 
 let cesiumV: Cesium.Viewer;
 const { getCesiumViewer } = useCesium({ container: 'cesiumContainer' })
 
-// let billboardsCollection;
-let billboardsCollectionCombine;
-let primitives;
-let scene;
-let primitivesCollection
 
 onMounted(() => {
     cesiumV = getCesiumViewer()
     getLngLat()
-    // 先把广告牌实例化，然后再添加到场景中
-    // billboardsCollection = cesiumV.scene.primitives.add(
-    //     new Cesium.BillboardCollection()
-    // );
-    // 初始化实体
-    // primitives = cesiumV.scene.primitives.add(
-    //     new Cesium.PrimitiveCollection()
-    // );
-    // billboardsCollectionCombine = new Cesium.BillboardCollection();
-    scene = cesiumV.scene;
-    // onCluster()
+    onCluster()
 })
 
 
@@ -62,81 +48,112 @@ const getLngLat = () => {
 
 
 const onCluster = () => {
-    fetch('https://docs.mapbox.com/mapbox-gl-js/assets/earthquakes.geojson').then((res) => {
-        return res.json()
-    }).then((data) => {
-        const { features } = data;
-        // console.log(features);
-        formatClusterPoint(features);
-    })
+    const mock = randomGeoJsonPoint(100, 130, 20, 40, 10000)
+    // const data = Cesium.GeoJsonDataSource.load(mock, {
+    //     stroke: Cesium.Color.HOTPINK,
+    //     markerSize: 5,
+    // }).then((data) => {
+    //     cesiumV.dataSources.add(data)
+    // })
+
+    const aa = new Cluster({ viewer: cesiumV })
 };
-const formatClusterPoint = (features) => {
-    primitivesCollection = new Cesium.PrimitiveCollection();
-    billboardsCollectionCombine = new Cesium.BillboardCollection();
-    // var scene = cesiumV.scene;
-    let primitivecluster;
-    primitivecluster = new PrimitiveCluster();
 
-    //与entitycluster相同设置其是否聚合 以及最大最小值
-    primitivecluster.enabled = true;
-    primitivecluster.pixelRange = 60;
-    primitivecluster.minimumClusterSize = 2;
-    // primitivecluster._pointCollection = pointCollection;
-    // primitivecluster._labelCollection = labelCollection;
-
-    //后面设置聚合的距离及聚合后的图标颜色显示与官方案例一样
-    for (let i = 0; i < features.length; i++) {
-        const feature = features[i];
-
-        const coordinates = feature.geometry.coordinates;
-        const position = Cesium.Cartesian3.fromDegrees(
-            coordinates[0],
-            coordinates[1],
-            2000
-        );
-
-        // 带图片的点
-        billboardsCollectionCombine.add({
-            image: "/images/mark-icon.png",
-            width: 32,
-            height: 32,
-            position,
-        });
+class Cluster {
+    viewer: Cesium.Viewer;
+    geojson: null | FeatureCollection<GeoJSON.Point>;
+    dataSources: Cesium.DataSource;
+    colorArr = [
+        {
+            num: 1,
+            size: 30,
+            color: "#1c86d1cc",
+        },
+        {
+            num: 50,
+            size: 32,
+            color: "#67c23acc",
+        },
+        {
+            num: 100,
+            size: 34,
+            color: "#f56c6ccc",
+        },
+        {
+            num: 200,
+            size: 36,
+            color: "#e6a23ccc",
+        },
+    ]
+    img = "/images/icon.png"
+    constructor(options) {
+        this.viewer = options.viewer;
+        this.geojson = randomGeoJsonPoint(100, 130, 20, 40, 500)
+        this.loadJson()
     }
-    console.log(billboardsCollectionCombine);
 
-    primitivecluster._billboardCollection = billboardsCollectionCombine;
-    // 同时在赋值时调用_initialize方法
-    // debugger
-    // primitivecluster._initialize(cesiumV.scene);
-    // primitivesCollection.add(primitivecluster);
-    // primitives = cesiumV.scene.primitives.add(primitivesCollection);
+    loadJson() {
+        new Cesium.GeoJsonDataSource().load(this.geojson).then((data) => {
+            this.showCluster(data)
+        })
+    }
 
-    // primitivecluster.clusterEvent.addEventListener(
-    //     (clusteredEntities, cluster) => {
-    //         // console.log("clusteredEntities", clusteredEntities);
-    //         // console.log("cluster", cluster);
-    //         // 关闭自带的显示聚合数量的标签
-    //         cluster.label.show = false;
-    //         cluster.billboard.show = true;
-    //         cluster.billboard.verticalOrigin = Cesium.VerticalOrigin.BOTTOM;
+    showCluster(geoJsonDataSource) {
+        const _this = this
 
-    //         // 根据聚合数量的多少设置不同层级的图片以及大小
-    //         cluster.billboard.image = combineIconAndLabel(
-    //             "/images/school-icon.png",
-    //             clusteredEntities.length,
-    //             64
-    //         );
-    //         // cluster.billboard.image = "/images/school-icon.png";
-    //         cluster.billboard._imageHeight = 60;
-    //         cluster.billboard._imageWidth = 60;
-    //         cluster.billboard._dirty = false;
-    //         cluster.billboard.width = 40;
-    //         cluster.billboard.height = 40;
-    //     }
-    // );
-    return primitivecluster;
-};
+        this.dataSources = geoJsonDataSource
+        this.dataSources.clustering.enabled = true;
+        this.dataSources.clustering.pixelRange = 3;
+        this.dataSources.clustering.minimumClusterSize = 1;
+        this.viewer.dataSources.add(this.dataSources!);
+
+        let removeListener;
+
+        function customStyle() {
+
+            if (Cesium.defined(removeListener)) {
+                removeListener();
+                removeListener = undefined;
+            } else {
+                removeListener = _this.dataSources.clustering.clusterEvent.addEventListener(async (clusteredEntities, cluster) => {
+                    // console.log(clusteredEntities, cluster);
+                    cluster.label.show = false;
+                    cluster.billboard.show = true;
+                    cluster.billboard.id = cluster.label.id;
+                    cluster.billboard.verticalOrigin = Cesium.VerticalOrigin.CENTER;
+
+                    let xx = -1;
+                    for (let i = 0; i < _this.colorArr.length; i++) {
+                        if (
+                            clusteredEntities.length > _this.colorArr[i].num
+                        ) {
+                            xx = i;
+                        }
+                    }
+                    if (xx == -1) {
+                        cluster.billboard.image = _this.img;
+                        cluster.billboard.scale = 0.2
+                    } else {
+                        //   cluster.billboard.image = this_.drawImage(
+                        //     clusteredEntities.length,
+                        //     _this.colorArr[xx].size,
+                        //     _this.colorArr[xx].color
+                        //   );
+                        cluster.billboard.image = await combineIconAndLabel('/images/school-icon.png', clusteredEntities.length, 70)
+                        cluster.billboard.scale = 0.5
+                    }
+                })
+            }
+
+            var pixelRange = _this.dataSources.clustering.pixelRange;
+            _this.dataSources.clustering.pixelRange = 0;
+            _this.dataSources.clustering.pixelRange = pixelRange;
+        }
+
+        customStyle()
+    }
+}
+
 /**
  * @description: 将图片和文字合成新图标使用（参考Cesium源码）
  * @param {*} url：图片地址
@@ -162,7 +179,7 @@ const combineIconAndLabel = (url, label, size) => {
         // 渲染字体
         // font属性设置顺序：font-style, font-variant, font-weight, font-size, line-height, font-family
         ctx!.fillStyle = Cesium.Color.BLACK.toCssColorString();
-        ctx!.font = "bold 20px Microsoft YaHei";
+        ctx!.font = "bold 28px Microsoft YaHei";
         ctx!.textAlign = "center";
         ctx!.textBaseline = "middle";
         ctx!.fillText(label, size / 2, size / 2);
