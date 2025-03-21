@@ -103,7 +103,7 @@ class Cluster {
 
         this.dataSources = geoJsonDataSource
         this.dataSources.clustering.enabled = true;
-        this.dataSources.clustering.pixelRange = 3;
+        this.dataSources.clustering.pixelRange = 62;
         this.dataSources.clustering.minimumClusterSize = 1;
         this.viewer.dataSources.add(this.dataSources!);
 
@@ -116,7 +116,6 @@ class Cluster {
                 removeListener = undefined;
             } else {
                 removeListener = _this.dataSources.clustering.clusterEvent.addEventListener(async (clusteredEntities, cluster) => {
-                    // console.log(clusteredEntities, cluster);
                     cluster.label.show = false;
                     cluster.billboard.show = true;
                     cluster.billboard.id = cluster.label.id;
