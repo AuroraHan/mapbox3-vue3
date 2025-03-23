@@ -19,7 +19,8 @@ onMounted(() => {
     cesiumV = getCesiumViewer()
     getLngLat()
     // addPoint()
-    add()
+    // add()
+    createPrimitive()
 })
 
 //根据鼠标获取经纬度
@@ -147,6 +148,56 @@ const chinaGeo = () => {
 
 }
 
+
+//创建基础primitive
+const createPrimitive = () => {
+    const a = Cesium.BoxGeometry.fromDimensions({
+        vertexFormat: Cesium.VertexFormat.POSITION_AND_NORMAL,
+        dimensions: new Cesium.Cartesian3(1000.0, 1000.0, 100.0) // 正方体边长 100 米
+    })
+    const instance = new Cesium.GeometryInstance({
+        geometry: a,
+        id: 'object',
+        modelMatrix: Cesium.Matrix4.multiplyByTranslation(
+            Cesium.Transforms.eastNorthUpToFixedFrame(
+                Cesium.Cartesian3.fromDegrees(120, 30),
+            ),
+            new Cesium.Cartesian3(0.0, 0.0, 100),
+            new Cesium.Matrix4(),
+        ),
+        attributes: {
+            // 所有实例颜色相同（若需不同颜色，使用 ColorGeometryInstanceAttribute）
+            color: new Cesium.ColorGeometryInstanceAttribute(0.0, 1.0, 0.0, 1.0)
+        }
+    });
+
+    const instance1 = new Cesium.GeometryInstance({
+        geometry: a,
+        id: 'object',
+        modelMatrix: Cesium.Matrix4.multiplyByTranslation(
+            Cesium.Transforms.eastNorthUpToFixedFrame(
+                Cesium.Cartesian3.fromDegrees(120.01038445705325, 29.999999592511273),
+            ),
+            new Cesium.Cartesian3(0.0, 0.0, 100),
+            new Cesium.Matrix4(),
+        ),
+        attributes: {
+            // 所有实例颜色相同（若需不同颜色，使用 ColorGeometryInstanceAttribute）
+            color: new Cesium.ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
+        }
+    });
+
+    // 3. 创建 Primitive 并批量渲染
+    const primitive = new Cesium.Primitive({
+        geometryInstances: [instance, instance1],
+        appearance: new Cesium.PerInstanceColorAppearance(),
+        asynchronous: false     // 同步加载（适合静态数据）
+    });
+    cesiumV.scene.primitives.add(primitive);
+    cesiumV.camera.flyTo({
+        destination: Cesium.Cartesian3.fromDegrees(120, 30, 1000),
+    })
+}
 </script>
 
 <style scoped>
