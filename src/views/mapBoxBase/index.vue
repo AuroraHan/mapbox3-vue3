@@ -90,6 +90,9 @@ const baseConfig = () => {
         "bottom-right"
     );
 
+    const scale = new mapbox.ScaleControl();
+    mapR.addControl(scale);
+
     //加载绘制组件
     Draw = new MapboxDraw({
         controls: {
@@ -107,7 +110,7 @@ const baseConfig = () => {
 
 
     mapR.on('load', () => {
-
+        addPoint()
     })
 
     mapR.on('mousemove', (e: { lngLat: { lat: number, lng: number } }) => {
@@ -143,6 +146,23 @@ const getSiteInfo = (data: any) => {
         //@ts-ignore
         popup.setLngLat(data.geometry.coordinates).setDOMContent(container).addTo(mapR!)
     }
+}
+
+//
+const addPoint = () => {
+    mapR.addSource('test', {
+        type: 'geojson',
+        data: '/geojson/grid_points.geojson'
+    })
+
+    mapR.addLayer({
+        id: 'test',
+        source: 'test',
+        type: 'circle',
+        paint: {
+            'circle-color': '#ff0000',
+        },
+    })
 }
 </script>
 
