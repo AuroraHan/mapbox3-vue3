@@ -1,6 +1,6 @@
 <template>
     <div id="cesiumContainer"></div>
-    <div class="lnglat" @click="flyTo">
+    <div class="lnglat" @click="geojsonPri">
         经度:{{ lnglat.longitude }} &nbsp;纬度:{{ lnglat.latitude }}
     </div>
 </template>
@@ -20,7 +20,7 @@ onMounted(() => {
     getLngLat()
     // addPoint()
     // add()
-    createPrimitive()
+    // createPrimitive()
 })
 
 //根据鼠标获取经纬度
@@ -197,6 +197,51 @@ const createPrimitive = () => {
     cesiumV.camera.flyTo({
         destination: Cesium.Cartesian3.fromDegrees(120, 30, 1000),
     })
+}
+
+const geojsonPri = async () => {
+    const result = await fetch('/geojson/grid_points.geojson').then((data) => data.json())
+    // debugger
+    const instances: Cesium.GeometryInstance[] = [];
+
+    const boxGeometry = Cesium.BoxGeometry.fromDimensions({
+        vertexFormat: Cesium.VertexFormat.POSITION_AND_NORMAL,
+        dimensions: new Cesium.Cartesian3(1000.0, 1000.0, 500.0) // 正方体边长 100 米
+    })
+
+    for (let i = 0; i < 3; i++) {
+        const h = i * 500
+        const c = Math.random()
+        for (const item of result.features) {
+            instances.push(new Cesium.GeometryInstance({
+                geometry: boxGeometry,
+                modelMatrix: Cesium.Matrix4.multiplyByTranslation(
+                    Cesium.Transforms.eastNorthUpToFixedFrame(
+                        Cesium.Cartesian3.fromDegrees(item.geometry.coordinates[0], item.geometry.coordinates[1]),
+                    ),
+                    new Cesium.Cartesian3(0.0, 0.0, h),
+                    new Cesium.Matrix4(),
+                ),
+                attributes: {
+                    // 所有实例颜色相同（若需不同颜色，使用 ColorGeometryInstanceAttribute）
+                    // color: new Cesium.ColorGeometryInstanceAttribute(
+                    //     Cesium.Color.fromRandom().red,
+                    //     Cesium.Color.fromRandom().green,
+                    //     Cesium.Color.fromRandom().blue,
+                    //     1.0
+                    // )
+                    color: new Cesium.ColorGeometryInstanceAttribute(1.0, c, 0.0, 1.0)
+                }
+            }))
+        }
+    }
+    // 3. 创建 Primitive 并批量渲染
+    const primitive = new Cesium.Primitive({
+        geometryInstances: instances,
+        appearance: new Cesium.PerInstanceColorAppearance(),
+        asynchronous: false     // 同步加载（适合静态数据）
+    });
+    cesiumV.scene.primitives.add(primitive);
 }
 </script>
 
