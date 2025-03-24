@@ -49,16 +49,8 @@ const getLngLat = () => {
 
 
 const onCluster = () => {
-    // const mock = randomGeoJsonPoint(100, 130, 20, 40, 10000)
-    // const data = Cesium.GeoJsonDataSource.load(mock, {
-    //     stroke: Cesium.Color.HOTPINK,
-    //     markerSize: 5,
-    // }).then((data) => {
-    //     cesiumV.dataSources.add(data)
-    // })
-
-    const aa = new Cluster({ viewer: cesiumV })
-    aa.clickMouseLeft()
+    const cluster = new Cluster({ viewer: cesiumV })
+    cluster.clickMouseLeft()
 };
 
 class Cluster {
@@ -100,6 +92,7 @@ class Cluster {
         })
     }
 
+    //展示聚合数据
     showCluster(geoJsonDataSource) {
         const _this = this
 
@@ -153,10 +146,12 @@ class Cluster {
     clickMouseLeft() {
         // 首先需要定义弹窗实例
         const dialogs = ref();
-
         const _this = this
         const scene = this.viewer.scene
         const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+
+
+        //监听鼠标左击事件
         handler.setInputAction((e) => {
             // 获取点击的实体
             const pickedObject = scene.pick(e.position);
@@ -165,6 +160,7 @@ class Cluster {
                 const entity = pickedObject.id;
                 //如果在聚合点处则不打开弹出框
                 if (entity.length > 1) return
+
                 //获取属性信息
                 const desc = entity[0].properties.getValue()
                 const pos = pickedObject.primitive.position
@@ -184,9 +180,28 @@ class Cluster {
                 // 实例化弹窗
                 dialogs.value = new Dialog(opts);
 
+                //开启高度监测，存在一点问题
+                _this.watchCameraHeight(dialogs.value)
+
             }
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
+    }
+
+    //监听选中的实体根据相机高度的变化
+    watchCameraHeight(selectDialog: Dialog) {
+        const viewer = this.viewer
+        const HEIGHT_THRESHOLD = 1000000; // 相机高度阈值（单位：米）
+        const cameraChangedListener = viewer.camera.changed.addEventListener(() => {
+            const cameraHeight = viewer.camera.positionCartographic.height;
+
+            if (cameraHeight > HEIGHT_THRESHOLD) {
+                console.log('相机高度超过阈值，执行其他处理');
+                selectDialog.windowClose()
+                // 移除监听器（避免重复触发）
+                viewer.camera.changed.removeEventListener(cameraChangedListener);
+            }
+        });
     }
 }
 
