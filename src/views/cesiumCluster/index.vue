@@ -6,12 +6,13 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, onUnmounted } from 'vue';
+import { onMounted, reactive, ref } from 'vue';
 import * as Cesium from 'cesium';
 import { useCesium } from '../../hooks/useCesium'
 import { getCurrentPositionByMouse } from '../../utils/cesiumTools'
 import { randomGeoJsonPoint } from './tools'
 import { FeatureCollection } from 'geojson';
+import Dialog from '../../utils/cesiumDialog'
 
 let cesiumV: Cesium.Viewer;
 const { getCesiumViewer } = useCesium({ container: 'cesiumContainer', infoBox: true })
@@ -48,7 +49,7 @@ const getLngLat = () => {
 
 
 const onCluster = () => {
-    const mock = randomGeoJsonPoint(100, 130, 20, 40, 10000)
+    // const mock = randomGeoJsonPoint(100, 130, 20, 40, 10000)
     // const data = Cesium.GeoJsonDataSource.load(mock, {
     //     stroke: Cesium.Color.HOTPINK,
     //     markerSize: 5,
@@ -57,6 +58,7 @@ const onCluster = () => {
     // })
 
     const aa = new Cluster({ viewer: cesiumV })
+    aa.clickMouseLeft()
 };
 
 class Cluster {
@@ -133,6 +135,7 @@ class Cluster {
                         cluster.billboard.image = _this.img;
                         cluster.billboard.scale = 0.2
                     } else {
+                        //@ts-ignore
                         cluster.billboard.image = await combineIconAndLabel('/images/school-icon.png', clusteredEntities.length, 70)
                         cluster.billboard.scale = 0.5
                     }
@@ -145,6 +148,45 @@ class Cluster {
         }
 
         customStyle()
+    }
+
+    clickMouseLeft() {
+        // 首先需要定义弹窗实例
+        const dialogs = ref();
+
+        const _this = this
+        const scene = this.viewer.scene
+        const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+        handler.setInputAction((e) => {
+            // 获取点击的实体
+            const pickedObject = scene.pick(e.position);
+            // 判断点击的是不是点位
+            if (Cesium.defined(pickedObject) && Cesium.defined(pickedObject.id)) {
+                const entity = pickedObject.id;
+                //如果在聚合点处则不打开弹出框
+                if (entity.length > 1) return
+                //获取属性信息
+                const desc = entity[0].properties.getValue()
+                const pos = pickedObject.primitive.position
+                const opts = {
+                    viewer: _this.viewer, // cesium的场景
+                    position: {
+                        _value: pos,
+                    },
+                    title: desc.name, // 弹窗标题
+                    content: desc.value, // 弹窗内容
+                };
+
+                if (dialogs.value) {
+                    // 只允许一个弹窗出现
+                    dialogs.value.windowClose();
+                }
+                // 实例化弹窗
+                dialogs.value = new Dialog(opts);
+
+            }
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
     }
 }
 

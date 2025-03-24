@@ -22,7 +22,8 @@ export const randomGeoJsonPoint = (
     let point = {
       type: "Feature",
       properties: {
-        value: Number(Math.random() * 10000000),
+        value: Number(Math.random() * 100).toFixed(1),
+        name: "mack" + (Math.random() * num).toFixed(0),
       },
       geometry: {
         type: "Point",
