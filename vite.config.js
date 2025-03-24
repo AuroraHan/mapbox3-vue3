@@ -14,7 +14,7 @@ export default defineConfig({
   server: {
     hmr: true,
     port: 4001,
-    open: true,
+    open: false,
     proxy: {
       "/tile": {
         target: "http://10.30.222.7:7788/tile",
