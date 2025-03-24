@@ -45,7 +45,7 @@ const closeClick = () => {
 
 <style lang='scss' scoped>
 .popup-container {
-    width: 200px;
+    width: 230px;
     position: relative;
     bottom: 0;
     left: 0;
