@@ -22,8 +22,13 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/tile/, ""),
       },
       // 地图文件代理
+      // "/dem": {
+      //   target: "http://10.30.222.7:7788/dem",
+      //   changeOrigin: true,
+      //   rewrite: (path) => path.replace(/^\/dem/, ""),
+      // },
       "/dem": {
-        target: "http://10.30.222.7:7788/dem",
+        target: "http://127.0.0.1:8099/dem",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/dem/, ""),
       },

@@ -45,6 +45,36 @@ const addPoint = (mapR: mapboxgl.Map) => {
         }
     })
 }
+
+const cul = (height) => {
+    let value = Number((height + 10000) * 10)
+    let R = Math.floor(value / 65536)
+    let G = Math.floor((value % 65536) / 256)
+    let B = value % 256
+
+    return [R, G, B]
+}
+
+const dd = () => {
+    const h = [
+        0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000
+    ]
+
+    const result: any = []
+
+    for (let index = 0; index < h.length; index++) {
+        const element = h[index];
+        result.push({
+            name: element,
+            value: cul(element)
+        })
+    }
+
+    console.log(result);
+
+}
+
+dd()
 </script>
 <style scoped>
 h2 {
