@@ -100,16 +100,16 @@ const initMap = () => {
     const map = new mapboxgl.Map({
         container: "map",
         projection: 'globe',
-        // style: {
-        //     version: 8,
-        //     sources: sources,
-        //     // sprite: "http://localhost:5173/static/admin/mapboxoffline/images/sprite", //图标
-        //     // 字体文件
-        //     // glyphs: "http://192.168.138.172:8086/static/admin/mapboxoffline/font/{fontstack}/{range}.pbf",
-        //     glyphs: "../../static/glyphs/{fontstack}/{range}.pbf",
-        //     layers: layers,
-        // },
-        style: "mapbox://styles/mapbox/outdoors-v12",
+        style: {
+            version: 8,
+            sources: sources,
+            // sprite: "http://localhost:5173/static/admin/mapboxoffline/images/sprite", //图标
+            // 字体文件
+            // glyphs: "http://192.168.138.172:8086/static/admin/mapboxoffline/font/{fontstack}/{range}.pbf",
+            glyphs: "../../static/glyphs/{fontstack}/{range}.pbf",
+            layers: layers,
+        },
+        // style: "mapbox://styles/mapbox/outdoors-v12",
         center: [120.2191, 30.2202],
         zoom: 2,
         minZoom: 1,
@@ -133,6 +133,7 @@ const initMap = () => {
 
     })
 
+    // map.showTileBoundaries = true;
     map.on('mousemove', (e: { lngLat: { lat: number, lng: number } }) => {
         jw.value = e.lngLat;
     })
@@ -227,11 +228,19 @@ const addPbfServer = () => {
 const addDemData = () => {
     mapR?.addSource('dem', {
         type: 'raster-dem',
-        tiles: ['/dem/{z}/{x}/{y}.png'],
+        tiles: ['/dem/Mapnik/{z}/{x}/{y}.png'],
         tileSize: 256,
-        maxzoom: 13,
-        minzoom: 7
+        maxzoom: 12,
+        // minzoom: 7
     })
+
+    // mapR?.addSource('dem', {
+    //     'type': 'raster-dem',
+    //     'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
+    //     'tileSize': 512,
+    //     'maxzoom': 14
+    // });
+
 
     mapR?.addLayer({
         id: 'dem',
