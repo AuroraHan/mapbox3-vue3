@@ -32,9 +32,9 @@
             <el-switch v-model="stateFlag" @change="stateHandle" />
         </div>
 
-        <div class="map-item" @click="globalWind">
+        <div class="map-item">
             <div>全球风场</div>
-
+            <el-switch v-model="globalWindFlag" @change="globalWindHandle" />
         </div>
     </div>
 </template>
@@ -628,6 +628,18 @@ const addStates = () => {
 
 }
 
+const globalWindFlag = ref(false)
+
+//添加全球风场
+const globalWindHandle = () => {
+    if (globalWindFlag.value) {
+        globalWind()
+    } else {
+        //@ts-ignore
+        window.windLayer.remove()
+    }
+}
+
 //根据json添加全球风场数据
 const globalWind = async () => {
     const res = await fetch('/geojson/result.json').then((res) => res.json())
@@ -637,7 +649,7 @@ const globalWind = async () => {
 const loadWinds = async (data: any) => {
     const windList = data;
     //@ts-ignore
-    window.windLayer = new mapboxWind.WindLayer('wind', windList, {
+    window.windLayer = new mapboxWind.WindLayer('wind111', windList, {
         windOptions: {
             // colorScale: (m: any) => {
             //     // console.log(m);
@@ -678,7 +690,7 @@ const loadWinds = async (data: any) => {
             // 	return velocityScales[zoom] || 0.01
             // },
             // paths: 10000,
-            paths: 3782,
+            paths: 5000,
         },
         fieldOptions: {
             wrapX: true,
@@ -687,6 +699,7 @@ const loadWinds = async (data: any) => {
 
     //@ts-ignore
     window.windLayer.addTo(mapR)
+    // mapR?.addLayer(window.windLayer)
 }
 </script>
 
