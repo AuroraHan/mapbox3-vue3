@@ -56,6 +56,10 @@ const routsList = ref([
         path: 'cesiumCluster'
     },
     {
+        name: 'Cesium+shader',
+        path: 'cesiumShader'
+    },
+    {
         name: 'threeBox烟雾',
         path: 'baseThreeBox'
     },

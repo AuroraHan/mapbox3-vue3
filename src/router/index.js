@@ -87,6 +87,11 @@ const routes = [
     name: "cesiumCluster",
     component: () => import("@/views/cesiumCluster/index.vue"),
   },
+  {
+    path: "/cesiumShader",
+    name: "cesiumShader",
+    component: () => import("@/views/cesiumShader/index.vue"),
+  },
 ];
 
 const router = createRouter({
