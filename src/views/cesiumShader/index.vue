@@ -17,6 +17,7 @@ const { getCesiumViewer } = useCesium({ container: 'cesiumContainer' })
 onMounted(() => {
     cesiumV = getCesiumViewer()
     getLngLat()
+    shaderBox()
 })
 
 //根据鼠标获取经纬度
@@ -52,6 +53,43 @@ const shaderSource = `
 		return material;
 	}
 `
+
+
+const myMaterial = new Cesium.Material({
+    translucent: false,
+    fabric: {
+        type: 'test',
+        uniforms: {
+            color: new Cesium.Color(1, 0, 0, 1),
+        },
+        source: shaderSource
+    }
+})
+
+const appearance = new Cesium.MaterialAppearance({
+    material: myMaterial,
+})
+
+
+const boxPrimitive = new Cesium.Primitive({
+    geometryInstances: new Cesium.GeometryInstance({
+        geometry: Cesium.BoxGeometry.fromDimensions({
+            dimensions: new Cesium.Cartesian3(1000, 1000, 1000)
+        }),
+        modelMatrix: Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(112, 31, 1000))
+    }),
+    appearance
+})
+
+const shaderBox = () => {
+
+    cesiumV.scene.primitives.add(boxPrimitive)
+    cesiumV.camera.flyTo({
+        destination: Cesium.Cartesian3.fromDegrees(112, 31, 10000),
+        duration: 0
+    })
+}
+
 
 </script>
 
