@@ -12,6 +12,9 @@ import { useCesium } from '../../hooks/useCesium'
 import { getCurrentPositionByMouse } from '../../utils/cesiumTools'
 import * as Turf from '@turf/turf'
 
+import krigingExport from 'kriging'
+const { kriging } = krigingExport
+
 let cesiumV: Cesium.Viewer;
 const { getCesiumViewer } = useCesium({ container: 'cesiumContainer' })
 
@@ -21,6 +24,7 @@ onMounted(() => {
     // addPoint()
     // add()
     // createPrimitive()
+    stainRain()
 })
 
 //根据鼠标获取经纬度
@@ -243,6 +247,165 @@ const geojsonPri = async () => {
     });
     cesiumV.scene.primitives.add(primitive);
 }
+
+//-----------------色斑图--------------
+
+
+// 平均年降水量，单位mm。适用范围：江西
+const jxPrecipitationColors = [
+    { min: 0, max: 1000, color: "#7fffff" },
+    { min: 1000, max: 1100, color: "#23b7ff" },
+    { min: 1100, max: 1200, color: "#0177b4" },
+    { min: 1200, max: 1400, color: "#0052ca" },
+    { min: 1400, max: 1600, color: "#0310d8" },
+    { min: 1600, max: 1800, color: "#9601f9" },
+    { min: 1800, max: 2000, color: "#6f00b8" },
+    { min: 2000, max: 10000, color: "#4c0082" }
+]
+
+//降雨色斑图
+const stainRain = async () => {
+    // 绘制色斑图需要的数据
+    const lngs: number[] = []  	//经度数组
+    const lats: number[] = []  	//纬度数组
+    const vals: number[] = []		//数值数组
+    const mode: 'gaussian' | 'exponential' | 'spherical' = 'exponential' //变异函数模型
+    const sigma2 = 0  					// (σ2)高斯过程的方差参数
+    const alpha = 100 					// (α)变异函数模型的先验
+    const gridDivideNum = 500		// 根据格网的宽度/该数量划分格网单元大小
+
+    // 加载江西省各县年平均降水量数据
+    const precipitationProm = await fetch('/geojson/jxPrecipitation.geojson')
+    const precipitationData = await precipitationProm.json()
+    precipitationData.features.forEach((item: any) => {
+        const geom = item.geometry
+        const prop = item.properties
+        lngs.push(geom.coordinates[0])
+        lats.push(geom.coordinates[1])
+        vals.push(prop.y2020)
+
+        cesiumV.entities.add({
+            position: Cesium.Cartesian3.fromDegrees(geom.coordinates[0], geom.coordinates[1]),
+            point: {
+                pixelSize: 6,
+                color: Cesium.Color.YELLOW,
+                outlineColor: Cesium.Color.BLACK,
+                outlineWidth: 2
+            },
+            label: {
+                text: Number(prop.y2020).toFixed(0),
+                fillColor: Cesium.Color.BLACK,
+                horizontalOrigin: Cesium.HorizontalOrigin.LEFT,
+                pixelOffset: new Cesium.Cartesian2(6, 0),
+                font: '16px TimesNewRoman',
+            }
+        })
+    })
+    // 加载江西省矢量
+    const jxProm = await fetch('/geojson/jiangxi.geojson')
+    const jxData = await jxProm.json()
+    const jxPolygon = jxData.features[0].geometry.coordinates[0] as [number, number][][]
+    const polygonCartesians = Cesium.Cartesian3.fromDegreesArray(jxPolygon[0].flat())
+    // 绘制矢量
+    cesiumV.entities.add({
+        polygon: {
+            hierarchy: polygonCartesians,
+            fill: false,
+            outline: true,
+            outlineWidth: 4,
+            outlineColor: Cesium.Color.YELLOW
+        }
+    })
+
+    const polygonExtentRect = Cesium.PolygonGeometry.computeRectangleFromPositions(polygonCartesians)
+    const minx = Cesium.Math.toDegrees(polygonExtentRect.west)
+    const miny = Cesium.Math.toDegrees(polygonExtentRect.south)
+    const maxx = Cesium.Math.toDegrees(polygonExtentRect.east)
+    const maxy = Cesium.Math.toDegrees(polygonExtentRect.north)
+    // 训练并得到格网
+    console.time('训练模型')
+    const variogram = kriging.train(vals, lngs, lats, mode, sigma2, alpha)
+    console.timeEnd('训练模型')
+    console.time('生成格网')
+    const grid = kriging.grid(jxPolygon, variogram, (maxx - minx) / gridDivideNum)
+    console.timeEnd('生成格网')
+
+    // 进行绘图
+    const canvas = document.createElement('canvas')
+    canvas.width = 1000
+    canvas.height = 1000
+    canvas.style.display = 'block'
+    canvas.getContext('2d')!.globalAlpha = 1.0
+    console.time('绘图')
+    newPlot(canvas, grid, grid.xlim, grid.ylim, jxPrecipitationColors)
+    console.timeEnd('绘图')
+    // 下载绘制出的图片进行查看
+    // const imgUrl = canvas.toDataURL('image/jpeg')
+    // const link = document.createElement('a')
+    // link.href = imgUrl
+    // link.download = 'scene.jpeg'
+    // link.click()
+
+    const polygonGeom = new Cesium.PolygonGeometry({
+        polygonHierarchy: new Cesium.PolygonHierarchy(polygonCartesians),
+    })
+    const primitive = new Cesium.GroundPrimitive({
+        geometryInstances: new Cesium.GeometryInstance({
+            geometry: polygonGeom
+        }),
+        appearance: new Cesium.Appearance({
+            material: Cesium.Material.fromType('Image', {
+                image: canvas
+            })
+        })
+    })
+    cesiumV.scene.primitives.add(primitive)
+}
+
+const newPlot = (canvas: HTMLCanvasElement, grid: any, xlim: number[], ylim: number[], colors: any) => {
+    let ctx = canvas.getContext("2d")!
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+    let range = [xlim[1] - xlim[0], ylim[1] - ylim[0], grid.zlim[1] - grid.zlim[0]]
+    let i, j, x, y, z
+    let n = grid.length
+    let m = grid[0].length
+    let wx = Math.ceil(grid.width * canvas.width / (xlim[1] - xlim[0]))
+    let wy = Math.ceil(grid.width * canvas.height / (ylim[1] - ylim[0]))
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < m; j++) {
+            if (grid[i][j] == undefined) continue;
+            x = canvas.width * (i * grid.width + grid.xlim[0] - xlim[0]) / range[0]
+            y = canvas.height * (1 - (j * grid.width + grid.ylim[0] - ylim[0]) / range[1])
+            z = (grid[i][j] - grid.zlim[0]) / range[2]
+            if (z < 0.0) z = 0.0
+            if (z > 1.0) z = 1.0
+            ctx.fillStyle = getColor(colors, grid[i][j])
+            ctx.fillRect(Math.round(x - wx / 2), Math.round(y - wy / 2), wx, wy)
+        }
+    }
+}
+
+type ColorOpt = { min: number, max: number, color: string }
+
+
+const getColor = (colors: ColorOpt[], z: number) => {
+    const len = colors.length
+    let minVal = colors[0].min
+    for (var i = 0; i < len; i++) {
+        minVal = Math.min(minVal, colors[i].min)
+        if (z >= colors[i].min && z < colors[i].max) return colors[i].color
+    }
+    if (z <= minVal) {
+        return colors[0].color
+    }
+    else {
+        return colors[len - 1].color
+    }
+
+}
+
+
 </script>
 
 <style scoped>
