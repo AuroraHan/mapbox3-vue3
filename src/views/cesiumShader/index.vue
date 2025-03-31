@@ -48,8 +48,12 @@ const shaderSource = `
 	{
 		vec4 outColor = color;
 		czm_material material = czm_getDefaultMaterial(materialInput);
+
+        vec2 st = materialInput.st;
+        outColor.r = st.t;
+
 		material.diffuse = czm_gammaCorrect(outColor.rgb);
-		material.alpha = outColor.a;
+		material.alpha = st.t;
 		return material;
 	}
 `

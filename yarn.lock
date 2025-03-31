@@ -3513,6 +3513,11 @@ kind-of@^6.0.2:
   resolved "https://registry.npmmirror.com/kind-of/-/kind-of-6.0.3.tgz#07c05034a6c349fa06e24fa35aa76db4580ce4dd"
   integrity sha512-dcS1ul+9tmeD95T+x28/ehLgd9mENa3LsvDTtzm3vyBEO7RPptvAD+t44WVXaUjTBRcrpFeFlC8WCruUR456hw==
 
+kriging@^0.1.12:
+  version "0.1.12"
+  resolved "https://registry.npmmirror.com/kriging/-/kriging-0.1.12.tgz#a2e0aa8462a3d6b643932afa0318b30404a53a20"
+  integrity sha512-P+5flOfIoG3ZuQUruuJNdEu+JiB8yPRRBYGMLOnngXmoSXnP63lU5ORvWey89pF9/K5BJK08guKeVEF2qzEwAQ==
+
 ktx-parse@^1.0.0:
   version "1.0.0"
   resolved "https://registry.npmmirror.com/ktx-parse/-/ktx-parse-1.0.0.tgz#61a5eccdf085dbbd44374e2d0073ace9018e0e1a"
