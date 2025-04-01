@@ -50,7 +50,7 @@ import EquipmentManage from './components/equipmentManage.vue'
 let mapR: mapboxgl.Map;
 let Draw;
 
-const { getMap } = useMapbox({ container: 'map', isOffline: false })
+const { getMap } = useMapbox({ container: 'map' })
 
 //当前经纬度
 const jw = ref<{ lat: number, lng: number }>({ lat: 0, lng: 0 });
@@ -112,6 +112,7 @@ const baseConfig = () => {
     mapR.on('load', () => {
         // addPoint()
         point()
+        fillImage()
     })
 
     mapR.on('mousemove', (e: { lngLat: { lat: number, lng: number } }) => {
@@ -164,6 +165,47 @@ const addPoint = () => {
             'circle-color': '#ff0000',
         },
     })
+}
+
+//在面上填充图片
+const fillImage = () => {
+    const geojson = {
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "type": "Feature",
+                "properties": {},
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [
+                        [
+                            [114.37572837947951, 30.575221013547498],
+                            [114.3757270588289, 30.590323321294157],
+                            [114.39163798378583, 30.590311111419275],
+                            [114.3916393065189, 30.57520880452885],
+                            [114.37572837947951, 30.575221013547498]
+                        ]
+                    ]
+                }
+            }
+        ]
+    }
+
+    mapR.addSource('fill1', {
+        type: 'geojson',
+        data: geojson
+    })
+
+    mapR.addLayer({
+        id: 'outline',
+        type: 'fill',
+        source: 'fill1',
+        layout: {},
+        paint: {
+            // 'fill-color': '#c62457',
+            'fill-pattern': 'rocket'
+        },
+    });
 }
 
 const point = () => {

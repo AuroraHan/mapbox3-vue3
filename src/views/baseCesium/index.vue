@@ -317,6 +317,7 @@ const stainRain = async () => {
         }
     })
 
+    //寻找4个边界框的值
     const polygonExtentRect = Cesium.PolygonGeometry.computeRectangleFromPositions(polygonCartesians)
     const minx = Cesium.Math.toDegrees(polygonExtentRect.west)
     const miny = Cesium.Math.toDegrees(polygonExtentRect.south)
@@ -327,7 +328,10 @@ const stainRain = async () => {
     const variogram = kriging.train(vals, lngs, lats, mode, sigma2, alpha)
     console.timeEnd('训练模型')
     console.time('生成格网')
-    const grid = kriging.grid(jxPolygon, variogram, (maxx - minx) / gridDivideNum)
+    // const grid = kriging.grid(jxPolygon, variogram, (maxx - minx) / gridDivideNum)
+
+    const polygonExtentCoords = [[[minx, miny], [maxx, miny], [maxx, maxy], [minx, maxy]]] as [number, number][][]
+    const grid = kriging.grid(polygonExtentCoords, variogram, (maxx - minx) / gridDivideNum)
     console.timeEnd('生成格网')
 
     // 进行绘图

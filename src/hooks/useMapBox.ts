@@ -25,6 +25,7 @@ export function useMapbox(options: options) {
         },
       },
       glyphs: "../../static/glyphs/{fontstack}/{range}.pbf",
+      // sprite: "http://127.0.0.1:4000/static/sprite",
       layers: [
         {
           id: "m_mono",
