@@ -1,6 +1,6 @@
 <template>
     <div class="top-controls">
-        <div class="lonlat">
+        <div class="lonlat" @click="canvasToImage">
             经度:{{ Number(jw?.lng).toFixed(5) }} 纬度:{{ Number(jw?.lat).toFixed(5) }} 层级:{{ zoom.toFixed(1) }}
         </div>
         <div class="operate">
@@ -53,7 +53,7 @@ import EquipmentManage from './components/equipmentManage.vue'
 let mapR: mapboxgl.Map;
 let Draw;
 
-const { getMap } = useMapbox({ container: 'map', isOffline: true })
+const { getMap } = useMapbox({ container: 'map', isOffline: false })
 
 //当前经纬度
 const jw = ref<{ lat: number, lng: number }>({ lat: 0, lng: 0 });
@@ -113,8 +113,9 @@ const baseConfig = () => {
 
 
     mapR.on('load', () => {
-        // addPoint()
-        stainRain()
+        addPoint()
+        // stainRain()
+        fillImage()
     })
 
     mapR.on('mousemove', (e: { lngLat: { lat: number, lng: number } }) => {
@@ -137,6 +138,25 @@ const baseConfig = () => {
 
     mapR.on('moveend', () => {
     })
+}
+
+//生成截图
+const canvasToImage = () => {
+
+    // preserveDrawingBuffer
+    // mapR.getConfigProperty('preserveDrawingBuffer', 'true');
+    // mapR._preserveDrawingBuffer = true
+    // 获取地图 Canvas 元素
+    const canvas = mapR.getCanvas();
+
+    // 将 Canvas 转换为 Base64 格式的 PNG 图片
+    const dataURL = canvas.toDataURL('image/png');
+
+    // 创建下载链接
+    const link = document.createElement('a');
+    link.download = 'map-snapshot.png';
+    link.href = dataURL;
+    link.click();
 }
 
 // 平均年降水量，单位mm。适用范围：江西
@@ -240,7 +260,8 @@ const stainRain = async () => {
         source: 'fill1',
         layout: {},
         paint: {
-            'line-color': '#c62457'
+            'line-color': '#c62457',
+            'line-width': 2
             // 'fill-color': '#c62457',
             // 'fill-pattern': 'rocket'
         },
@@ -320,6 +341,13 @@ const addPoint = () => {
 
 //在面上填充图片
 const fillImage = () => {
+
+    mapR?.loadImage('/images/single1.png', (error, image) => {
+        if (error) throw error;
+        // Add the loaded image to the style's sprite with the ID 'kitten'.
+        mapR?.addImage('single', image!);
+    });
+
     const geojson = {
         "type": "FeatureCollection",
         "features": [
@@ -354,9 +382,21 @@ const fillImage = () => {
         layout: {},
         paint: {
             // 'fill-color': '#c62457',
-            'fill-pattern': 'rocket'
+            'fill-pattern': 'single',
+            'fill-outline-color': '#c62457'
         },
     });
+
+    // mapR.addLayer({
+    //     id: 'outline1',
+    //     type: 'line',
+    //     source: 'fill1',
+    //     layout: {},
+    //     paint: {
+    //         'line-color': '#c62457',
+    //         // 'fill-pattern': 'single'
+    //     },
+    // });
 }
 
 const point = () => {

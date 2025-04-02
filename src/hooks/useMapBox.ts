@@ -51,6 +51,7 @@ export function useMapbox(options: options) {
       // style: "mapbox://styles/mapbox/satellite-streets-v12",
       center: [120, 30],
       zoom: 2,
+      preserveDrawingBuffer: true,
     });
 
     mapR = map;
