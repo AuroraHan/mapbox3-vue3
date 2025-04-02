@@ -306,6 +306,7 @@ const stainRain = async () => {
     const jxData = await jxProm.json()
     const jxPolygon = jxData.features[0].geometry.coordinates[0] as [number, number][][]
     const polygonCartesians = Cesium.Cartesian3.fromDegreesArray(jxPolygon[0].flat())
+
     // 绘制矢量
     cesiumV.entities.add({
         polygon: {
@@ -323,6 +324,7 @@ const stainRain = async () => {
     const miny = Cesium.Math.toDegrees(polygonExtentRect.south)
     const maxx = Cesium.Math.toDegrees(polygonExtentRect.east)
     const maxy = Cesium.Math.toDegrees(polygonExtentRect.north)
+    debugger
     // 训练并得到格网
     console.time('训练模型')
     const variogram = kriging.train(vals, lngs, lats, mode, sigma2, alpha)
