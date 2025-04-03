@@ -317,6 +317,7 @@ const stainRain = async () => {
             outlineColor: Cesium.Color.YELLOW
         }
     })
+
     const grid = await generateGrid({
         lngs,
         lats,
@@ -335,9 +336,9 @@ const stainRain = async () => {
     canvas.height = 1000
     canvas.style.display = 'block'
     canvas.getContext('2d')!.globalAlpha = 1.0
-    console.time('绘图')
+    // console.time('绘图')
     newPlot(canvas, grid, grid.xlim, grid.ylim, jxPrecipitationColors)
-    console.timeEnd('绘图')
+    // console.timeEnd('绘图')
     // 下载绘制出的图片进行查看
     // const imgUrl = canvas.toDataURL('image/jpeg')
     // const link = document.createElement('a')
