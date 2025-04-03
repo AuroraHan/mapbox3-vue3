@@ -294,10 +294,11 @@ const stainRain = async () => {
             },
             label: {
                 text: Number(prop.y2020).toFixed(0),
-                fillColor: Cesium.Color.BLACK,
+                fillColor: Cesium.Color.WHEAT,
                 horizontalOrigin: Cesium.HorizontalOrigin.LEFT,
                 pixelOffset: new Cesium.Cartesian2(6, 0),
                 font: '16px TimesNewRoman',
+                distanceDisplayCondition: new Cesium.DistanceDisplayCondition(2000, 2000000)
             }
         })
     })

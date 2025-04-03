@@ -26,39 +26,10 @@ onMounted(() => {
     initCesium()
     cesiumV.extend(Cesium.viewerVoxelInspectorMixin);
     cesiumV.scene.debugShowFramesPerSecond = true;
-    // ellipsoid()
-    add3DTiles()
+    ellipsoid()
 
 })
 
-const add3DTiles = async () => {
-    const tileset = await Cesium.Cesium3DTileset.fromUrl('/3dTiles/china.json', {
-        enableDebugWireframe: true,
-    });
-
-    cesiumV.scene.primitives.add(tileset);
-    cesiumV.zoomTo(
-        tileset,
-    );
-
-    const properties = tileset.properties;
-    debugger
-    if (Cesium.defined(properties) && Cesium.defined(properties.Height)) {
-        tileset.style = new Cesium.Cesium3DTileStyle({
-            color: {
-                conditions: [
-                    ["${Height} >= 83", "color('purple', 0.5)"],
-                    ["${Height} >= 80", "color('red')"],
-                    ["${Height} >= 70", "color('orange')"],
-                    ["${Height} >= 12", "color('yellow')"],
-                    ["${Height} >= 7", "color('lime')"],
-                    ["${Height} >= 1", "color('cyan')"],
-                    ["true", "color('blue')"],
-                ],
-            },
-        });
-    }
-}
 
 //创建球面的体渲染
 const ellipsoid = () => {
