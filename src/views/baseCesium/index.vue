@@ -317,24 +317,17 @@ const stainRain = async () => {
             outlineColor: Cesium.Color.YELLOW
         }
     })
-
-    //寻找4个边界框的值
-    const polygonExtentRect = Cesium.PolygonGeometry.computeRectangleFromPositions(polygonCartesians)
-    const minx = Cesium.Math.toDegrees(polygonExtentRect.west)
-    const miny = Cesium.Math.toDegrees(polygonExtentRect.south)
-    const maxx = Cesium.Math.toDegrees(polygonExtentRect.east)
-    const maxy = Cesium.Math.toDegrees(polygonExtentRect.north)
-    debugger
-    // 训练并得到格网
-    console.time('训练模型')
-    const variogram = kriging.train(vals, lngs, lats, mode, sigma2, alpha)
-    console.timeEnd('训练模型')
-    console.time('生成格网')
-    // const grid = kriging.grid(jxPolygon, variogram, (maxx - minx) / gridDivideNum)
-
-    const polygonExtentCoords = [[[minx, miny], [maxx, miny], [maxx, maxy], [minx, maxy]]] as [number, number][][]
-    const grid = kriging.grid(polygonExtentCoords, variogram, (maxx - minx) / gridDivideNum)
-    console.timeEnd('生成格网')
+    const grid = await generateGrid({
+        lngs,
+        lats,
+        vals,
+        polygon: jxPolygon[0],
+        asynchronous: true,
+        mode: 'exponential',
+        sigma2: 0,
+        alpha: 100,
+        gridDivideNum: 500,
+    })
 
     // 进行绘图
     const canvas = document.createElement('canvas')
@@ -410,6 +403,53 @@ const getColor = (colors: ColorOpt[], z: number) => {
     }
 
 }
+
+//灵活使用webworke
+type GridOptions = {
+    lngs: number[]
+    lats: number[]
+    vals: number[]
+    polygon: [number, number][]
+    asynchronous: boolean
+    mode: 'gaussian' | 'exponential' | 'spherical',
+    sigma2: number
+    alpha: number
+    gridDivideNum: number
+}
+const generateGrid = (options: GridOptions) => {
+    return new Promise<any>((resolve) => {
+        const { lngs, lats, vals, polygon, mode, sigma2, alpha, gridDivideNum } = options
+        if (!options.asynchronous) {
+            const polygonCartesians = Cesium.Cartesian3.fromDegreesArray(polygon.flat())
+
+            //寻找边界框的4个值
+            const polygonExtentRect = Cesium.PolygonGeometry.computeRectangleFromPositions(polygonCartesians)
+
+            const minx = Cesium.Math.toDegrees(polygonExtentRect.west)
+            const miny = Cesium.Math.toDegrees(polygonExtentRect.south)
+            const maxx = Cesium.Math.toDegrees(polygonExtentRect.east)
+            const maxy = Cesium.Math.toDegrees(polygonExtentRect.north)
+            const polygonExtentCoords = [[[minx, miny], [maxx, miny], [maxx, maxy], [minx, maxy]]] as [number, number][][]
+            // 训练并得到格网
+            const variogram = kriging.train(vals, lngs, lats, mode, sigma2, alpha)
+            const grid = kriging.grid(polygonExtentCoords, variogram, (maxx - minx) / gridDivideNum)
+
+            resolve(grid)
+        }
+        else {
+            const worker = new Worker(new URL('./kergingWk.ts', import.meta.url), {
+                type: 'module'
+            })
+            worker.postMessage(options)
+            worker.onmessage = e => {
+                const grid = e.data
+
+                resolve(grid)
+            }
+        }
+    })
+}
+
 
 
 </script>
