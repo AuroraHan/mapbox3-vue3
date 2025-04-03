@@ -43,6 +43,8 @@ const getLngLat = () => {
 
 const shaderSource = `
 	uniform vec4 color;
+    
+    uniform float gradationNumber;
 	
 	czm_material czm_getMaterial(czm_materialInput materialInput)
 	{
@@ -50,10 +52,10 @@ const shaderSource = `
 		czm_material material = czm_getDefaultMaterial(materialInput);
 
         vec2 st = materialInput.st;
-        outColor.r = st.t;
+        outColor.r = fract(st.t * gradationNumber);
 
 		material.diffuse = czm_gammaCorrect(outColor.rgb);
-		material.alpha = st.t;
+		material.alpha = outColor.r;
 		return material;
 	}
 `
@@ -64,7 +66,8 @@ const myMaterial = new Cesium.Material({
     fabric: {
         type: 'test',
         uniforms: {
-            color: new Cesium.Color(1, 0, 0, 1),
+            color: new Cesium.Color(1, 1, 0, 1),
+            gradationNumber: 3
         },
         source: shaderSource
     }
