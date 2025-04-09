@@ -19,7 +19,6 @@ const { getMap } = useMapbox({ container: 'map', isOffline: false })
 
 onMounted(() => {
     baseConfig()
-    // getTextData()
 })
 
 //当前经纬度
@@ -46,12 +45,13 @@ const baseConfig = () => {
     })
 
     mapR.on('load', () => {
-        getTextData()
+        // getTextData()
     })
 }
 
 let row = 201;
 let column = 198;
+//加载热力图实例
 const getTextData = async () => {
     const res = await fetch('/data/grid.txt')
     const result = await res.text()
