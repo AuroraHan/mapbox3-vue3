@@ -6,10 +6,10 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, onUnmounted } from 'vue'
-import mapbox from 'mapbox-gl';
+import { onMounted, ref } from 'vue'
 import * as THREE from 'three';
 import { Threebox } from 'threebox-plugin';
+import lodash from 'lodash'
 import { useMapbox } from '../../hooks/useMapBox'
 
 let mapR: mapboxgl.Map;
@@ -19,6 +19,7 @@ const { getMap } = useMapbox({ container: 'map', isOffline: false })
 
 onMounted(() => {
     baseConfig()
+    // getTextData()
 })
 
 //当前经纬度
@@ -43,6 +44,140 @@ const baseConfig = () => {
     mapR.on('zoom', () => {
         zoom.value = mapR.getZoom() as Number;
     })
+
+    mapR.on('load', () => {
+        getTextData()
+    })
+}
+
+let row = 201;
+let column = 198;
+const getTextData = async () => {
+    const res = await fetch('/data/grid.txt')
+    const result = await res.text()
+    const alllines = arrSplit(tb, result)
+
+    mapR.addLayer({
+        id: 'heatmap',
+        type: 'custom',
+        onAdd: function (map, gl) {
+            this.map = map;
+            let lineGroup = new THREE.Group();
+            tb.add(lineGroup);
+            let lineMesh = null;
+            alllines.forEach((line, index) => {
+                lineMesh = drawLine(line);
+                lineMesh.userdata = { index: index }
+                lineGroup.add(lineMesh)
+            });
+        },
+        render: function (gl, matrix) {
+            if (this.map)
+                this.map.triggerRepaint();
+            if (tb)
+                tb.update();
+        }
+    })
+
+}
+
+const drawLine = (row: Array<any>) => {
+    let vertices: Array<any> = [];
+    let colors: Array<any> = [];
+    let geometry = new THREE.BufferGeometry();
+
+    row.forEach(coordinate => {
+        let [x, y, z] = [coordinate[0], coordinate[1], coordinate[2]];
+        vertices.push(x, y, z);
+        const color = getColorByValue(z);
+        colors.push(color.r, color.g, color.b); // 颜色按 [r,g,b] 顺序填充
+    });
+
+    let material = new THREE.LineBasicMaterial({
+        opacity: 1,
+        linewidth: 1,
+        vertexColors: true,
+        // blending: THREE.AdditiveBlending
+    });
+
+    // 3. 设置顶点坐标（必须为 Float32Array）
+    geometry.setAttribute(
+        'position',
+        new THREE.Float32BufferAttribute(vertices, 3) // 3 表示每个顶点的分量数（x,y,z）
+    );
+
+    // 4. 设置顶点颜色（必须为 Float32Array）
+    geometry.setAttribute(
+        'color',
+        new THREE.Float32BufferAttribute(colors, 3) // 3 表示颜色分量数（r,g,b）
+    );
+
+    let lineMesh = new THREE.Line(geometry, material);
+    return lineMesh;
+}
+
+const arrSplit = (tb: any, datStr: string) => {
+    let resArr = dataFormat(tb, datStr);
+    let rows = lodash.chunk(resArr, row);
+    let colums = [];
+    let tmpColums = [];
+    for (let i = 0; i < row; i++) {
+        for (let j = 0; j < column; j++) {
+            let item = resArr[row * j + i]
+            tmpColums.push(item);
+        }
+    }
+    colums = lodash.chunk(tmpColums, column);
+    return [...rows, ...colums];
+}
+
+//将文件中数据经纬度转换为mapbox中投影坐标
+const dataFormat = (tb: any, dataStr: string) => {
+    let points: Array<any> = [];
+    dataStr.split('\n').map(function (s, i) {
+        let splitArray = s.split(',');
+        var ll = [parseFloat(splitArray[0]), parseFloat(splitArray[1])];
+        let {
+            x,
+            y,
+            z
+        } = tb.projectToWorld(ll)
+
+        points.push([...[x, y], ...splitArray.splice(2).map(i => Number(i))])
+    });
+    return points;
+}
+
+let colors = [
+    new THREE.Color(`rgb( 113, 196, 54)`),
+    new THREE.Color(`rgb( 113, 196, 54)`),
+    new THREE.Color(`rgb( 171, 190, 52)`),
+    new THREE.Color(`rgb( 201, 155, 52)`),
+    new THREE.Color(`rgb( 205, 122, 45)`),
+    new THREE.Color(`rgb( 214, 96, 53)`),
+    new THREE.Color(`rgb( 234, 57, 45)`),
+    new THREE.Color(`rgb( 234, 57, 45)`)
+
+]
+const getColorByValue = (value: any) => {
+    let tvalue = Number(value)
+    if (tvalue < 3) {
+        return colors[0];
+    } else if (tvalue < 5) {
+        return colors[1];
+    } else if (tvalue <= 8) {
+        return colors[2];
+    } else if (tvalue < 10) {
+        return colors[3];
+    } else if (tvalue < 15) {
+        return colors[4];
+    } else if (tvalue < 30) {
+        return colors[5];
+    } else if (tvalue < 50) {
+        return colors[6];
+    } else {
+        return colors[7];
+    }
 }
 
 
