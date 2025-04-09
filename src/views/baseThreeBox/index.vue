@@ -56,7 +56,6 @@ const getTextData = async () => {
     const res = await fetch('/data/grid.txt')
     const result = await res.text()
     const alllines = arrSplit(tb, result)
-
     mapR.addLayer({
         id: 'heatmap',
         type: 'custom',
@@ -85,9 +84,8 @@ const drawLine = (row: Array<any>) => {
     let vertices: Array<any> = [];
     let colors: Array<any> = [];
     let geometry = new THREE.BufferGeometry();
-
     row.forEach(coordinate => {
-        let [x, y, z] = [coordinate[0], coordinate[1], coordinate[2]];
+        let [x, y, z] = [coordinate[0], coordinate[1], coordinate[4]];
         vertices.push(x, y, z);
         const color = getColorByValue(z);
         colors.push(color.r, color.g, color.b); // 颜色按 [r,g,b] 顺序填充
