@@ -61,19 +61,19 @@ const getTextData = async () => {
         id: 'heatmap',
         type: 'custom',
         onAdd: function (map, gl) {
-            this.map = map;
+            // this.map = map;
             let lineGroup = new THREE.Group();
             tb.add(lineGroup);
             let lineMesh = null;
             alllines.forEach((line, index) => {
                 lineMesh = drawLine(line);
-                lineMesh.userdata = { index: index }
+                // lineMesh.userdata = { index: index }
                 lineGroup.add(lineMesh)
             });
         },
         render: function (gl, matrix) {
-            if (this.map)
-                this.map.triggerRepaint();
+            // if (this.map)
+            //     this.map.triggerRepaint();
             if (tb)
                 tb.update();
         }
