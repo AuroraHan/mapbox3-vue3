@@ -51,7 +51,7 @@ import DrawTools from './components/drawTools.vue';
 import EquipmentManage from './components/equipmentManage.vue'
 
 let mapR: mapboxgl.Map;
-let Draw;
+let Draw: any;
 
 const { getMap } = useMapbox({ container: 'map', isOffline: false })
 
