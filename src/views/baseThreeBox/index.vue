@@ -259,13 +259,15 @@ const addSmokeMaterial = () => {
     });
 }
 
+//------------案例三----------
+
 //随机生成一定范围内粒子
 const rondomPar = (tb: any) => {
     //设置中心点
     const conter = Turf.point([112, 31])
     const rondomParArr = []
 
-    for (let index = 0; index < 1000; index++) {
+    for (let index = 0; index < 10000; index++) {
         //角度 0-90
         const bearing = Math.floor(Math.random() * 90);
         const distance = Number(Math.random().toFixed(2));
@@ -282,7 +284,36 @@ const rondomPar = (tb: any) => {
 
     return rondomParArr
 }
-//
+//生成点位
+const drawPoint = (row: Array<any>) => {
+    let vertices: Array<any> = [];
+    let colors: Array<any> = [];
+    let geometry = new THREE.BufferGeometry();
+    row.forEach(coordinate => {
+        let [x, y, z] = [coordinate[0], coordinate[1], coordinate[2]];
+        vertices.push(x, y, z);
+        const color = getColorByValue(z);
+        colors.push(color.r, color.g, color.b); // 颜色按 [r,g,b] 顺序填充
+    });
+
+    const material = new THREE.PointsMaterial({ size: 10, vertexColors: true });
+
+    // 3. 设置顶点坐标（必须为 Float32Array）
+    geometry.setAttribute(
+        'position',
+        new THREE.Float32BufferAttribute(vertices, 3) // 3 表示每个顶点的分量数（x,y,z）
+    );
+
+    // 4. 设置顶点颜色（必须为 Float32Array）
+    geometry.setAttribute(
+        'color',
+        new THREE.Float32BufferAttribute(colors, 3) // 3 表示颜色分量数（r,g,b）
+    );
+
+    let pointMesh = new THREE.Points(geometry, material);
+    return pointMesh;
+}
+
 const addCustomPoint = () => {
 
     mapR.addLayer({
@@ -290,13 +321,9 @@ const addCustomPoint = () => {
         type: 'custom',
         onAdd: function (map, gl) {
             // this.map = map;
-            let lineGroup = new THREE.Group();
-            tb.add(lineGroup);
-            let lineMesh = null;
-
             const list = rondomPar(tb)
-            lineMesh = drawLine(list);
-            lineGroup.add(lineMesh)
+            let pointMesh = drawPoint(list);
+            tb.add(pointMesh)
         },
         render: function (gl, matrix) {
             // if (this.map)
