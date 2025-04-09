@@ -60,7 +60,7 @@ const routsList = ref([
         path: 'cesiumShader'
     },
     {
-        name: 'threeBox烟雾',
+        name: 'ThreeBox',
         path: 'baseThreeBox'
     },
     {

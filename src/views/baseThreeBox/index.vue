@@ -11,6 +11,7 @@ import * as THREE from 'three';
 import { Threebox } from 'threebox-plugin';
 import lodash from 'lodash'
 import { useMapbox } from '../../hooks/useMapBox'
+import * as Turf from '@turf/turf'
 
 let mapR: mapboxgl.Map;
 let tb: any;
@@ -20,6 +21,7 @@ const { getMap } = useMapbox({ container: 'map', isOffline: false })
 onMounted(() => {
     baseConfig()
     // getTextData()
+    // rondomPar()
 })
 
 //当前经纬度
@@ -32,6 +34,7 @@ const zoom = ref<Number>(0)
 const baseConfig = () => {
     mapR = getMap()!
 
+    //@ts-ignore
     tb = window.tb = new Threebox(
         mapR,
         mapR.getCanvas().getContext('webgl'), //get the context from the map canvas
@@ -46,7 +49,8 @@ const baseConfig = () => {
     })
 
     mapR.on('load', () => {
-        getTextData()
+        // getTextData()
+        addCustomPoint()
     })
 }
 
@@ -85,7 +89,7 @@ const drawLine = (row: Array<any>) => {
     let colors: Array<any> = [];
     let geometry = new THREE.BufferGeometry();
     row.forEach(coordinate => {
-        let [x, y, z] = [coordinate[0], coordinate[1], coordinate[4]];
+        let [x, y, z] = [coordinate[0], coordinate[1], coordinate[2]];
         vertices.push(x, y, z);
         const color = getColorByValue(z);
         colors.push(color.r, color.g, color.b); // 颜色按 [r,g,b] 顺序填充
@@ -253,6 +257,54 @@ const addSmokeMaterial = () => {
             tb.update();
         }
     });
+}
+
+//随机生成一定范围内粒子
+const rondomPar = (tb: any) => {
+    //设置中心点
+    const conter = Turf.point([112, 31])
+    const rondomParArr = []
+
+    for (let index = 0; index < 1000; index++) {
+        //角度 0-90
+        const bearing = Math.floor(Math.random() * 90);
+        const distance = Number(Math.random().toFixed(2));
+        const height = Number((Math.random() * 100).toFixed(2))
+        let destination = Turf.rhumbDestination(conter, distance, bearing, { units: "kilometers" });
+        let {
+            x,
+            y,
+        } = tb.projectToWorld(destination.geometry.coordinates)
+        const point = [x, y, height]
+        rondomParArr.push(point)
+    }
+
+
+    return rondomParArr
+}
+//
+const addCustomPoint = () => {
+
+    mapR.addLayer({
+        id: 'heatmap',
+        type: 'custom',
+        onAdd: function (map, gl) {
+            // this.map = map;
+            let lineGroup = new THREE.Group();
+            tb.add(lineGroup);
+            let lineMesh = null;
+
+            const list = rondomPar(tb)
+            lineMesh = drawLine(list);
+            lineGroup.add(lineMesh)
+        },
+        render: function (gl, matrix) {
+            // if (this.map)
+            //     this.map.triggerRepaint();
+            if (tb)
+                tb.update();
+        }
+    })
 }
 
 </script>
