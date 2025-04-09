@@ -37,7 +37,8 @@ export function useMapbox(options: options) {
       ],
     };
   } else {
-    style = "mapbox://styles/mapbox/dark-v11";
+    // style = "mapbox://styles/mapbox/dark-v11";
+    style = "mapbox://styles/mapbox/outdoors-v12";
   }
 
   const initMap = () => {

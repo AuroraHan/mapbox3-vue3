@@ -9,19 +9,16 @@
 import { onMounted, ref, onUnmounted } from 'vue'
 import mapbox from 'mapbox-gl';
 import * as THREE from 'three';
-import { range, texture, mix, uv, color, rotateUV, positionLocal, time, uniform } from 'three/tsl';
-import { WebGPURenderer } from 'three/webgpu'
 import { Threebox } from 'threebox-plugin';
+import { useMapbox } from '../../hooks/useMapBox'
 
 let mapR: mapboxgl.Map;
-let tb;
+let tb: any;
+
+const { getMap } = useMapbox({ container: 'map', isOffline: false })
 
 onMounted(() => {
-    initMap()
-})
-
-onUnmounted(() => {
-    mapR.remove()
+    baseConfig()
 })
 
 //当前经纬度
@@ -31,30 +28,23 @@ const jw = ref<{ lat: number, lng: number }>({ lat: 0, lng: 0 });
 const zoom = ref<Number>(0)
 
 
-const initMap = () => {
-    mapbox.accessToken = "pk.eyJ1IjoiaHBqbmYiLCJhIjoiY20yMzU5OGhzMDI2NjJrb2kweG5yYWRuZSJ9.HX3dEC4HuYwKuA3_Fm2wXA";
-    const map = new mapbox.Map({
-        container: 'map',
-        projection: "mercator",
-        style: 'mapbox://styles/mapbox/outdoors-v12',
-        center: [120, 30],
-        zoom: 2,
-    })
+const baseConfig = () => {
+    mapR = getMap()!
 
-    mapR = map;
     tb = window.tb = new Threebox(
-        map,
-        map.getCanvas().getContext('webgl'), //get the context from the map canvas
+        mapR,
+        mapR.getCanvas().getContext('webgl'), //get the context from the map canvas
         { defaultLights: true }
     );
-    map.on('mousemove', (e: { lngLat: { lat: number, lng: number } }) => {
+    mapR.on('mousemove', (e: { lngLat: { lat: number, lng: number } }) => {
         jw.value = e.lngLat;
     })
 
-    map.on('zoom', () => {
-        zoom.value = map.getZoom() as Number;
+    mapR.on('zoom', () => {
+        zoom.value = mapR.getZoom() as Number;
     })
 }
+
 
 const addCustom = () => {
     mapR.addLayer({
