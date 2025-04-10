@@ -45,10 +45,16 @@
         text-align: center;
         color: aliceblue;
         cursor: pointer;
+        margin-bottom: 8px;
 
-        &:hover{
-            background-color: aquamarine;
-        }
+        // &:hover{
+        //     background-color: aquamarine;
+        // }
+    }
+
+    .selected {
+        background-color: #42b983;
+        color: white;
     }
 }
 

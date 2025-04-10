@@ -5,7 +5,8 @@
             v-for="(ele, index) in tools" :key="index">{{ ele.name }}</div>
     </div>
     <div class="tool" v-show="curType == 'A'">
-        <div class="item" @click="addPoint">测试点</div>
+        <div class="item" :class="{ 'selected': selectedId === item.id }" v-for="(item) in menus"
+            @click="toggleSelect(item)">{{ item.name }}</div>
     </div>
     <div class="info">
         <div class="lnglat">
@@ -78,6 +79,32 @@ const onClickSelect = (ele: typeof tools[0]) => {
     console.log(ele);
     curType.value = ele.type
 }
+
+const menus = [
+    {
+        id: 1,
+        name: '测试点',
+        bc: null
+    },
+    {
+        id: 2,
+        name: '测试线',
+        bc: null
+    },
+    {
+        id: 3,
+        name: '测试面',
+        bc: null
+    }
+]
+
+const selectedId = ref(); // 存储当前选中的ID
+
+const toggleSelect = (ele: any) => {
+    selectedId.value = selectedId.value === ele.id ? null : ele.id;
+
+
+};
 
 //添加点数据
 const addPoint = () => {
