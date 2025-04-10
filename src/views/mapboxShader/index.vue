@@ -327,28 +327,44 @@ const demo3 = () => {
                 { lng: this.center[0], lat: this.center[1] },
                 0
             );
-            const circleVertices = [];
-            for (let i = 0; i < this.segments; i++) {
-                const angle = (i / this.segments) * Math.PI * 2;
-                const x = center.x + this.radius * Math.cos(angle);
-                const y = center.y + this.radius * Math.sin(angle);
-                circleVertices.push(x, y);
+            // 生成带厚度的圆环顶点（内外圈）
+            const thickness = 0.0003; // 线宽
+            const vertices = [];
+            for (let i = 0; i <= this.segments; i++) {
+                const angle = (i % this.segments) * Math.PI * 2 / this.segments;
+                const cos = Math.cos(angle);
+                const sin = Math.sin(angle);
+
+                // 内圈
+                vertices.push(
+                    center.x + (this.radius - thickness) * cos,
+                    center.y + (this.radius - thickness) * sin
+                );
+
+                // 外圈
+                vertices.push(
+                    center.x + (this.radius + thickness) * cos,
+                    center.y + (this.radius + thickness) * sin
+                );
             }
 
-            // 绑定顶点数据
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(circleVertices), gl.DYNAMIC_DRAW);
 
-            // 渲染设置
+            // 绑定数据并绘制
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.DYNAMIC_DRAW);
+
             gl.useProgram(this.program);
             gl.uniformMatrix4fv(gl.getUniformLocation(this.program, "u_matrix"), false, matrix);
-            gl.uniform1f(this.uOpacity, 1.0 - this.radius / this.maxRadius); // 透明度渐变
+            gl.uniform1f(this.uOpacity, 1.0 - this.radius / this.maxRadius);
 
             gl.enableVertexAttribArray(this.aPos);
             gl.vertexAttribPointer(this.aPos, 2, gl.FLOAT, false, 0, 0);
 
-            gl.lineWidth(1.0); // 线宽
-            gl.drawArrays(gl.LINE_LOOP, 0, this.segments); // 绘制圆环
+            // 如需平滑边缘，启用 gl.enable(gl.BLEND) 并设置混合函数：
+            gl.enable(gl.BLEND);
+            gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+            // 绘制为三角形带
+            gl.drawArrays(gl.TRIANGLE_STRIP, 0, vertices.length / 2);
 
             //不断刷新
             if (this.map)
