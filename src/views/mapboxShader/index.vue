@@ -127,14 +127,19 @@ const demo2 = () => {
             const vertexSource = `
             uniform mat4 u_matrix;
             attribute vec3 a_pos;
+            varying vec3 v_pos;
             void main() {
                 gl_PointSize = 5.0;
+                v_pos = a_pos;
                 gl_Position = u_matrix * vec4(a_pos, 1.0);
             }`;
 
             const fragmentSource = `
+            precision mediump float;
+            varying vec3 v_pos;
             void main() {
-                gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0); // 黄色粒子
+                float normalizedZ =step(0.005, v_pos.z); 
+                gl_FragColor = vec4(1.0, normalizedZ,0.0, 1.0); // 黄色粒子
             }`;
 
             const vertexShader = gl.createShader(gl.VERTEX_SHADER)!;
@@ -168,7 +173,7 @@ const demo2 = () => {
                 for (let i = 0; i < 20; i++) {
                     this.particles.push(new Particle(
                         116.4074, 39.9042,  // 北京坐标
-                        Math.random() * 25000 // 高度
+                        Math.random() * 250000 // 高度
                     ));
                 }
                 this.lastEmitTime = now;
@@ -179,6 +184,9 @@ const demo2 = () => {
                 p.update();
                 return !p.isOutOfBounds(this.centerPos.x, this.centerPos.y, 0.1); // 0.1 是最大距离
             });
+            // console.log(this.particles);
+
+            // debugger
 
             // 将粒子数据写入缓冲区
             const particlePositions = new Float32Array(this.particles.length * 3);
