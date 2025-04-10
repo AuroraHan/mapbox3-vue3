@@ -24,7 +24,8 @@ onMounted(() => {
     // addPoint()
     // add()
     // createPrimitive()
-    stainRain()
+    // stainRain()
+    timeFilter()
 })
 
 //根据鼠标获取经纬度
@@ -130,25 +131,29 @@ const flyTo = () => {
 }
 
 //添加geojson数据
-const chinaGeo = () => {
-    const data = Cesium.GeoJsonDataSource.load('/geojson/fusc1.geojson', {
+const chinaGeo = async () => {
+    const data = await Cesium.GeoJsonDataSource.load('/geojson/dep-conc-time.geojson', {
         stroke: Cesium.Color.HOTPINK,
         fill: Cesium.Color.PINK.withAlpha(0.1),
     })
+    cesiumV.dataSources.add(data)
 
-    data.then((data) => {
-        cesiumV.dataSources.add(data)
-        // const entities = data.entities.values
-        // for (const entity of entities) {
-        //     //@ts-ignore
-        //     entity.polygon.extrudedHeight = Math.random() * 100000
+    return data
+}
 
-        //     entity.polygon.material = Cesium.Color.RED
-        // }
-        // console.log(data.entities.values);
-    })
+const filterByTime = (dataSource: Cesium.GeoJsonDataSource, timeRange: number) => {
+    const entities = dataSource.entities.values;
+    for (let i = 0; i < entities.length; i++) {
+        const entity = entities[i];
+        const Hour = entity.properties.Hour; // 假设time是属性名
+        // 判断是否在时间范围内
+        entity.show = Hour == timeRange;
+    }
+}
 
-    cesiumV.flyTo(data);
+const timeFilter = async () => {
+    const geojson = await chinaGeo()
+    filterByTime(geojson, 1)
 
 }
 
