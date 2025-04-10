@@ -1,51 +1,82 @@
 <template>
     <div id="cesiumContainer"></div>
-    <div class="lnglat" @click="geojsonPri">
-        经度:{{ lnglat.longitude }} &nbsp;纬度:{{ lnglat.latitude }}
+    <div class="operate">
+        <div class="select" :class="curType == ele.type ? 'active' : ''" @click="onClickSelect(ele)"
+            v-for="(ele, index) in tools" :key="index">{{ ele.name }}</div>
+    </div>
+    <div class="tool" v-show="curType == 'A'">
+        <div class="item" @click="addPoint">测试点</div>
+    </div>
+    <div class="info">
+        <div class="lnglat">
+            经度:{{ lnglat.longitude }}° &nbsp;纬度:{{ lnglat.latitude }} ° &nbsp;相机高度:{{ lnglat.cameraHeading }}m
+        </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive } from 'vue';
+import { onMounted, reactive, ref } from 'vue';
 import * as Cesium from 'cesium';
 import { useCesium } from '../../hooks/useCesium'
 import { getCurrentPositionByMouse } from '../../utils/cesiumTools'
 import * as Turf from '@turf/turf'
+import { tools } from './config'
 
 import krigingExport from 'kriging'
 const { kriging } = krigingExport
 
 let cesiumV: Cesium.Viewer;
-const { getCesiumViewer } = useCesium({ container: 'cesiumContainer' })
+const { getCesiumViewer } = useCesium({ container: 'cesiumContainer', timeline: false, animation: false })
+
+
 
 onMounted(() => {
-    cesiumV = getCesiumViewer()
-    getLngLat()
-    // addPoint()
-    // add()
-    // createPrimitive()
-    // stainRain()
+    baseConfig()
     timeFilter()
 })
+
+const baseConfig = () => {
+    cesiumV = getCesiumViewer()
+    getLngLat()
+}
 
 //根据鼠标获取经纬度
 const lnglat = reactive({
     longitude: 0,
     latitude: 0,
-    height: 0
+    height: 0,
+    cameraHeading: 0,
+    FPS: 0,
+    FPStime: ''
 })
 const getLngLat = () => {
     const handler = new Cesium.ScreenSpaceEventHandler(cesiumV.scene.canvas)
 
+    //获取经纬度
     handler.setInputAction((movement) => {
         const lnglathig = getCurrentPositionByMouse(cesiumV.scene, movement.endPosition, null)
+
         if (Cesium.defined(lnglathig)) {
             let carto = Cesium.Cartographic.fromCartesian(lnglathig);
-            lnglat.latitude = Number(Cesium.Math.toDegrees(carto.latitude).toFixed(3));
-            lnglat.longitude = Number(Cesium.Math.toDegrees(carto.longitude).toFixed(3));
-            lnglat.height = Number(carto.height.toFixed(1));
+            lnglat.latitude = Number(Cesium.Math.toDegrees(carto.latitude).toFixed(5));
+            lnglat.longitude = Number(Cesium.Math.toDegrees(carto.longitude).toFixed(5));
+            // lnglat.height = Number(carto.height.toFixed(1));
+
         }
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE)
+
+    //获取相机高度
+    handler.setInputAction(() => {
+        lnglat.cameraHeading = Number(cesiumV.camera.positionCartographic.height.toFixed(2))
+    }, Cesium.ScreenSpaceEventType.WHEEL)
+
+}
+
+const curType = ref<string>()
+//点击操作栏
+const onClickSelect = (ele: typeof tools[0]) => {
+    console.log(ele);
+    curType.value = ele.type
 }
 
 //添加点数据
@@ -461,21 +492,6 @@ const generateGrid = (options: GridOptions) => {
 
 </script>
 
-<style scoped>
-#cesiumContainer {
-    height: 100vh;
-}
-
-.lnglat {
-    position: absolute;
-    top: 2%;
-    left: 3%;
-    width: 300px;
-    height: 40px;
-    text-align: center;
-    line-height: 40px;
-    font-size: 16px;
-    border-radius: 3px;
-    background-color: beige;
-}
+<style lang="scss" scoped>
+@import './index.scss';
 </style>
