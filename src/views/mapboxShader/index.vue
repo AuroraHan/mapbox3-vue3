@@ -21,7 +21,7 @@ const baseConfig = () => {
     mapR = getMap()!
 
     mapR.on('load', () => {
-        demo2()
+        demo3()
     })
 }
 
@@ -112,6 +112,7 @@ const demo1 = () => {
     mapR?.addLayer(particleLayer);
 }
 
+//效果2 粒子发射器，不断向外发射
 const demo2 = () => {
     const particleLayer = {
         id: 'particle-layer',
@@ -182,7 +183,7 @@ const demo2 = () => {
             // 更新粒子位置，移除超出范围的
             this.particles = this.particles.filter(p => {
                 p.update();
-                return !p.isOutOfBounds(this.centerPos.x, this.centerPos.y, 0.1); // 0.1 是最大距离
+                return !p.isOutOfBounds(this.centerPos.x, this.centerPos.y, 0.01); // 0.1 是最大距离
             });
             // console.log(this.particles);
 
@@ -259,6 +260,104 @@ class Particle {
         const dy = this.y - centerY;
         return Math.sqrt(dx * dx + dy * dy) > maxDistance;
     }
+}
+
+
+//效果3 扩散圆环
+const demo3 = () => {
+    const rippleLayer = {
+        id: 'ripple-layer',
+        type: 'custom',
+        center: [116.4074, 39.9042], // 北京中心坐标
+        radius: 0,                   // 当前半径（墨卡托坐标单位）
+        maxRadius: 0.005,             // 最大半径（超出后消失）
+        speed: 0.00005,               // 扩散速度
+        segments: 64,                // 圆环分段数（越高越圆滑）
+
+        onAdd: function (map, gl) {
+            this.map = map;
+            // 顶点着色器（绘制圆环）
+            const vertexSource = `
+                uniform mat4 u_matrix;
+                attribute vec2 a_pos;
+                void main() {
+                    gl_Position = u_matrix * vec4(a_pos, 0.0, 1.0);
+                }
+            `;
+
+            // 片段着色器（红色渐变透明度）
+            const fragmentSource = `
+                precision mediump float;
+                uniform float u_opacity;
+                void main() {
+                    gl_FragColor = vec4(1.0, 0.0, 0.0, u_opacity); // 纯红色 + 动态透明度
+                }
+            `;
+
+            // 编译着色器程序
+            const vertexShader = gl.createShader(gl.VERTEX_SHADER)!;
+            gl.shaderSource(vertexShader, vertexSource);
+            gl.compileShader(vertexShader);
+
+            const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER)!;
+            gl.shaderSource(fragmentShader, fragmentSource);
+            gl.compileShader(fragmentShader);
+
+            this.program = gl.createProgram()!;
+            gl.attachShader(this.program, vertexShader);
+            gl.attachShader(this.program, fragmentShader);
+            gl.linkProgram(this.program);
+
+            this.aPos = gl.getAttribLocation(this.program, "a_pos");
+            this.uOpacity = gl.getUniformLocation(this.program, "u_opacity");
+            this.buffer = gl.createBuffer();
+        },
+
+        render: function (gl, matrix) {
+            // 更新半径（扩散动画）
+            this.radius += this.speed;
+
+            // 重置条件：超出最大半径
+            if (this.radius > this.maxRadius) {
+                this.radius = 0;
+            }
+
+            // 生成当前半径的圆环顶点
+            const center = mapboxgl.MercatorCoordinate.fromLngLat(
+                { lng: this.center[0], lat: this.center[1] },
+                0
+            );
+            const circleVertices = [];
+            for (let i = 0; i < this.segments; i++) {
+                const angle = (i / this.segments) * Math.PI * 2;
+                const x = center.x + this.radius * Math.cos(angle);
+                const y = center.y + this.radius * Math.sin(angle);
+                circleVertices.push(x, y);
+            }
+
+            // 绑定顶点数据
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(circleVertices), gl.DYNAMIC_DRAW);
+
+            // 渲染设置
+            gl.useProgram(this.program);
+            gl.uniformMatrix4fv(gl.getUniformLocation(this.program, "u_matrix"), false, matrix);
+            gl.uniform1f(this.uOpacity, 1.0 - this.radius / this.maxRadius); // 透明度渐变
+
+            gl.enableVertexAttribArray(this.aPos);
+            gl.vertexAttribPointer(this.aPos, 2, gl.FLOAT, false, 0, 0);
+
+            gl.lineWidth(1.0); // 线宽
+            gl.drawArrays(gl.LINE_LOOP, 0, this.segments); // 绘制圆环
+
+            //不断刷新
+            if (this.map)
+                this.map.triggerRepaint();
+        }
+    } as mapboxgl.CustomLayerInterface;
+
+    // 添加到地图
+    mapR.addLayer(rippleLayer);
 }
 </script>
 <style scoped lang='scss'>
