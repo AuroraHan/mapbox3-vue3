@@ -168,7 +168,7 @@ const demo2 = () => {
                 for (let i = 0; i < 20; i++) {
                     this.particles.push(new Particle(
                         116.4074, 39.9042,  // 北京坐标
-                        10000 + Math.random() * 10000 // 高度
+                        Math.random() * 25000 // 高度
                     ));
                 }
                 this.lastEmitTime = now;
@@ -233,7 +233,7 @@ class Particle {
         this.z = pos.z;
 
         // 随机初速度（向外扩散）
-        const speed = 0.0001 + Math.random() * 0.0001;
+        const speed = 0.0000001 + Math.random() * 0.0001; //控制速度
         const angle = Math.random() * Math.PI / 2; // 随机方向
         this.vx = Math.cos(angle) * speed;
         this.vy = Math.sin(angle) * speed;
