@@ -28,6 +28,10 @@ const routsList = ref([
         path: 'popup'
     },
     {
+        name: 'Mapbox+Shader',
+        path: 'mapboxShader'
+    },
+    {
         name: 'Mapbox图层切换',
         path: 'mapboxVector'
     },
