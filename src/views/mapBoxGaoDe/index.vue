@@ -1,7 +1,7 @@
 <template>
     <div id="map" class="map"></div>
     <div class="top">
-        <div class="info-panel">
+        <div class="info-panel" v-if="allLonLat.length">
             <div class="info-item">
                 <span class="label">剩余距离</span>
                 <span class="value">{{ remainingDistance }}米</span>
@@ -31,7 +31,7 @@
     </div>
 
     <!-- 右侧进度条 -->
-    <div class="right">
+    <div class="right" v-if="allLonLat.length">
         <el-slider v-model="prag" :max="totalDistance" vertical height="400px" disabled :show-tooltip="false" />
     </div>
 
@@ -162,6 +162,7 @@ const pathPlanGaode = (paths: any) => {
 //点击其中一条线路
 const onclickPath = (item: any) => {
     pathPlanGaode(item)
+    resetNavigation()
 }
 
 
@@ -274,12 +275,16 @@ const startNavigation = () => {
     if (isNavigating.value) return
     isNavigating.value = true
     lastTimestamp.value = 0
+    mapR.setZoom(16)
+    mapR.setPitch(45)
     animate(performance.now())
 }
 
 // 暂停导航
 const pauseNavigation = () => {
     isNavigating.value = false
+    mapR.setZoom(16)
+    mapR.setPitch(45)
     if (animationFrameId.value) {
         cancelAnimationFrame(animationFrameId.value)
     }
