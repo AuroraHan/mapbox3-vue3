@@ -1,5 +1,21 @@
 <template>
     <div id="map" class="map"></div>
+    <div class="top">
+        <div class="info-panel">
+            <!-- <div class="info-item">
+                <span class="label">剩余距离</span>
+                <span class="value">{{ remainingDistance }}米</span>
+            </div>
+            <div class="info-item">
+                <span class="label">预计时间</span>
+                <span class="value">{{ remainingTime }}分钟</span>
+            </div>
+            <div class="info-item">
+                <span class="label">当前速度</span>
+                <span class="value">{{ currentSpeed }}km/h</span>
+            </div>-->
+        </div>
+    </div>
     <div class="buttom">
         <el-button class="btn" :disabled="isNavigating" @click="startNavigation">开始导航</el-button>
         <el-button class="btn" :disabled="!isNavigating" @click="pauseNavigation">暂停导航</el-button>
@@ -26,7 +42,6 @@ const jw = ref<{ lat: number, lng: number }>({ lat: 0, lng: 0 });
 
 //当前缩放层级
 const zoom = ref<Number>(0)
-
 
 onMounted(() => {
     baseConfig()
@@ -94,7 +109,6 @@ getGoade()
 //-----高德路径规划---------
 const pathPlanGaode = (paths: Array<any>) => {
     const path1 = paths[0]
-
     //获取路线经过的所有经纬度
     path1.steps.forEach((step: any) => {
         //未进行偏移处理
