@@ -2723,6 +2723,11 @@ concaveman@^1.2.1:
     robust-predicates "^2.0.4"
     tinyqueue "^2.0.3"
 
+coordtransform@^2.1.2:
+  version "2.1.2"
+  resolved "https://registry.npmmirror.com/coordtransform/-/coordtransform-2.1.2.tgz#090349cd62b1dc05fae47b291bf9f0b7ce827f66"
+  integrity sha512-0xLJApBlrUP+clyLJWIaqg4GXE5JTbAJb5d/CDMqebIksAMMze8eAyO6YfHEIxWJ+c42mXoMHBzWTeUrG7RFhw==
+
 copy-anything@^3.0.2:
   version "3.0.5"
   resolved "https://registry.npmmirror.com/copy-anything/-/copy-anything-3.0.5.tgz#2d92dce8c498f790fa7ad16b01a1ae5a45b020a0"
