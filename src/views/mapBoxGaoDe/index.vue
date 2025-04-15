@@ -2,7 +2,7 @@
     <div id="map" class="map"></div>
     <div class="top">
         <div class="info-panel">
-            <!-- <div class="info-item">
+            <div class="info-item">
                 <span class="label">剩余距离</span>
                 <span class="value">{{ remainingDistance }}米</span>
             </div>
@@ -13,7 +13,7 @@
             <div class="info-item">
                 <span class="label">当前速度</span>
                 <span class="value">{{ currentSpeed }}km/h</span>
-            </div>-->
+            </div>
         </div>
     </div>
     <div class="buttom">
@@ -62,7 +62,7 @@ const baseConfig = () => {
     mapR.addControl(scale);
 
     mapR.on('load', () => {
-        mapR.setCenter(allLonLat[0])
+        mapR.setCenter(allLonLat.value[0])
         mapR.setZoom(16)
         mapR.setPitch(45)
         pathLayer()
@@ -77,7 +77,7 @@ const baseConfig = () => {
             element: el,
             rotationAlignment: 'map'
         })
-            .setLngLat(allLonLat[0])
+            .setLngLat(allLonLat.value[0])
             .addTo(mapR)
 
     })
@@ -87,8 +87,8 @@ const baseConfig = () => {
 //当前距离
 const currentDistance = ref(0)
 //所有经纬度点坐标
-const allLonLat: [number, number][] = []
-const currentSpeed = ref(120) // 初始速度到 20km/h
+const allLonLat = ref<Array<[number, number]>>([])
+const currentSpeed = ref(100) // 初始速度到
 const isNavigating = ref(false)
 const animationFrameId = ref<number | null>(null)
 const lastTimestamp = ref<number>(0)
@@ -126,7 +126,7 @@ const pathPlanGaode = (paths: Array<any>) => {
             return [wgs84Coord[0], wgs84Coord[1]];
         });
 
-        allLonLat.push(...result)
+        allLonLat.value.push(...result)
     });
 
 }
@@ -134,7 +134,7 @@ const pathPlanGaode = (paths: Array<any>) => {
 
 // 创建路线的 LineString
 const routeLine = computed(() => {
-    return Turf.lineString(allLonLat)
+    return Turf.lineString(allLonLat.value)
 })
 
 // 计算路线总长度（米）
@@ -157,14 +157,14 @@ const remainingTime = computed(() => {
 // 获取路线上的点位置
 const getPositionAlongRoute = (distance: number): [number, number] => {
     try {
-        if (distance <= 0) return allLonLat[0]
-        if (distance >= totalDistance.value) return allLonLat[allLonLat.length - 1]
+        if (distance <= 0) return allLonLat.value[0]
+        if (distance >= totalDistance.value) return allLonLat.value[allLonLat.value.length - 1]
 
         const point = Turf.along(routeLine.value, distance / 1000, { units: 'kilometers' })
         return point.geometry.coordinates as [number, number]
     } catch (error) {
         console.error('Error calculating position:', error)
-        return allLonLat[0]
+        return allLonLat.value[0]
     }
 }
 
@@ -257,11 +257,11 @@ const resetNavigation = () => {
     }
     if (marker.value) {
         marker.value
-            .setLngLat(allLonLat[0])
+            .setLngLat(allLonLat.value[0])
             .setRotation(0)
     }
     mapR.easeTo({
-        center: allLonLat[0],
+        center: allLonLat.value[0],
         zoom: 16,
         pitch: 45,
         bearing: 0,
