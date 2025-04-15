@@ -22,6 +22,11 @@
         <el-button class="btn" @click="resetNavigation"> 重置</el-button>
     </div>
 
+    <!-- 右侧进度条 -->
+    <div class="right">
+        <el-slider v-model="prag" :max="totalDistance" vertical height="400px" disabled :show-tooltip="false" />
+    </div>
+
 </template>
 
 <script setup lang="ts">
@@ -130,6 +135,11 @@ const pathPlanGaode = (paths: Array<any>) => {
     });
 
 }
+
+
+const prag = computed(() => {
+    return totalDistance.value - remainingDistance.value
+})
 
 
 // 创建路线的 LineString

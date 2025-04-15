@@ -66,6 +66,18 @@
     transition: background-color 0.2s;
 }
 
+.right{
+  z-index: 9;
+  position: absolute;
+  right: 1.5%;
+  top: 24%;
+  width: 40px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+  padding:15px 0;
+  // height: 600px;
+}
+
 
 .icon {
     font-size: 16px;
@@ -85,3 +97,7 @@
     }
 }
 
+
+:deep(.el-slider__bar){
+  background-color: #3887be !important;
+}
