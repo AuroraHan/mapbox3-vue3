@@ -1,14 +1,20 @@
 <template>
     <div id="map" class="map"></div>
+    <div class="buttom">
+        <el-button class="btn" :disabled="isNavigating" @click="startNavigation">开始导航</el-button>
+        <el-button class="btn" :disabled="!isNavigating" @click="pauseNavigation">暂停导航</el-button>
+        <el-button class="btn" @click="resetNavigation"> 重置</el-button>
+    </div>
+
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, computed, } from 'vue'
+import { onMounted, ref, computed, onUnmounted } from 'vue'
 import { useMapbox } from '../../hooks/useMapBox'
 import * as Turf from '@turf/turf'
 import coordtransform from 'coordtransform'
 import mapboxgl from 'mapbox-gl';
-import arrow from '../../assets/navigation.png'
+import arrow from '../../assets/nav2.png'
 
 let mapR: mapboxgl.Map;
 const marker = ref<mapboxgl.Marker | null>(null)
@@ -26,11 +32,18 @@ onMounted(() => {
     baseConfig()
 })
 
+onUnmounted(() => {
+    if (animationFrameId.value) {
+        cancelAnimationFrame(animationFrameId.value)
+    }
+})
+
 
 //基础配置
 const baseConfig = () => {
     mapR = getMap()!
     const scale = new mapboxgl.ScaleControl();
+    mapR.addControl(new mapboxgl.NavigationControl());
     mapR.addControl(scale);
 
     mapR.on('load', () => {
@@ -201,6 +214,45 @@ const animate = (timestamp: number) => {
 
     lastTimestamp.value = timestamp
     animationFrameId.value = requestAnimationFrame(animate)
+}
+
+
+// 开始导航
+const startNavigation = () => {
+    if (isNavigating.value) return
+    isNavigating.value = true
+    lastTimestamp.value = 0
+    animate(performance.now())
+}
+
+// 暂停导航
+const pauseNavigation = () => {
+    isNavigating.value = false
+    if (animationFrameId.value) {
+        cancelAnimationFrame(animationFrameId.value)
+    }
+}
+
+// 重置导航
+const resetNavigation = () => {
+    isNavigating.value = false
+    currentDistance.value = 0
+    lastTimestamp.value = 0
+    if (animationFrameId.value) {
+        cancelAnimationFrame(animationFrameId.value)
+    }
+    if (marker.value) {
+        marker.value
+            .setLngLat(allLonLat[0])
+            .setRotation(0)
+    }
+    mapR.easeTo({
+        center: allLonLat[0],
+        zoom: 16,
+        pitch: 45,
+        bearing: 0,
+        duration: 1000
+    })
 }
 
 
