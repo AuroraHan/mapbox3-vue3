@@ -22,6 +22,14 @@
         <el-button class="btn" @click="resetNavigation"> 重置</el-button>
     </div>
 
+    <!-- 左侧线路 -->
+    <div class="left">
+        <div class="path" v-for="(item, index) in pathArr" :key="index" @click="onclickPath(item)">
+            <div class="name">{{ item.name }}</div>
+            <div class="dis">{{ item.distance / 1000 }} KM</div>
+        </div>
+    </div>
+
     <!-- 右侧进度条 -->
     <div class="right">
         <el-slider v-model="prag" :max="totalDistance" vertical height="400px" disabled :show-tooltip="false" />
@@ -36,6 +44,7 @@ import * as Turf from '@turf/turf'
 import coordtransform from 'coordtransform'
 import mapboxgl from 'mapbox-gl';
 import arrow from '../../assets/nav2.png'
+import { removeLayerAndSource } from '@/utils/mapTools';
 
 let mapR: mapboxgl.Map;
 const marker = ref<mapboxgl.Marker | null>(null)
@@ -67,24 +76,15 @@ const baseConfig = () => {
     mapR.addControl(scale);
 
     mapR.on('load', () => {
-        mapR.setCenter(allLonLat.value[0])
-        mapR.setZoom(16)
-        mapR.setPitch(45)
-        pathLayer()
-
         // 添加导航标记（使用自定义箭头标记）
         const el = document.createElement('div')
         el.className = 'navigation-marker'
         el.innerHTML = `<img src="${arrow}" style="width: 64px; height: 64px;" alt="arrow" />`
         el.style.fontSize = '24px'
-
         marker.value = new mapboxgl.Marker({
             element: el,
             rotationAlignment: 'map'
         })
-            .setLngLat(allLonLat.value[0])
-            .addTo(mapR)
-
     })
 
 }
@@ -98,24 +98,41 @@ const isNavigating = ref(false)
 const animationFrameId = ref<number | null>(null)
 const lastTimestamp = ref<number>(0)
 
-//调用高德接口
+const pathArr = ref<Array<any>>() //线路集合数组
+
+//调用路径规划高德接口
 const getGoade = async () => {
     const res = await fetch('https://restapi.amap.com/v5/direction/driving?origin=114.40654,30.49940&destination=114.55808,30.49017&key=b1783f9c16e48520ac5cd31031904fa4&show_fields=polyline', {
         method: 'get'
     })
 
     const result = await res.json()
-    pathPlanGaode(result.route.paths)
-
+    if (!result.status) {
+        window.alert('服务器错误')
+        return
+    }
+    handlerPaths(result.route.paths)
 }
 
 getGoade()
 
+//对于返回线路数组的处理
+const handlerPaths = (paths: Array<any>) => {
+    pathArr.value = paths.map((ele, index) => {
+        return {
+            name: `线路${index + 1}`,
+            distance: ele.distance,
+            steps: ele.steps
+        }
+    })
+}
+
 //-----高德路径规划---------
-const pathPlanGaode = (paths: Array<any>) => {
-    const path1 = paths[0]
+const pathPlanGaode = (paths: any) => {
+    allLonLat.value = []
+
     //获取路线经过的所有经纬度
-    path1.steps.forEach((step: any) => {
+    paths.steps.forEach((step: any) => {
         //未进行偏移处理
         // const lonlats = step.polyline.split(';').map(p => p.split(',').map(Number));
 
@@ -130,10 +147,21 @@ const pathPlanGaode = (paths: Array<any>) => {
 
             return [wgs84Coord[0], wgs84Coord[1]];
         });
-
         allLonLat.value.push(...result)
     });
 
+    mapR.setCenter(allLonLat.value[0])
+    mapR.setZoom(16)
+    mapR.setPitch(45)
+    pathLayer()
+
+    marker.value?.setLngLat(allLonLat.value[0])
+        .addTo(mapR)
+}
+
+//点击其中一条线路
+const onclickPath = (item: any) => {
+    pathPlanGaode(item)
 }
 
 
@@ -283,6 +311,9 @@ const resetNavigation = () => {
 
 //加载线路图层
 const pathLayer = () => {
+    removeLayerAndSource(mapR, 'route', 1)
+    removeLayerAndSource(mapR, 'route', 0)
+
     // 添加路线图层
     mapR?.addSource('route', {
         type: 'geojson',
