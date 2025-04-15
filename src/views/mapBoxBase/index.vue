@@ -113,9 +113,9 @@ const baseConfig = () => {
 
 
     mapR.on('load', () => {
-        addPoint()
+        // addPoint()//多个点
         // stainRain()
-        fillImage()
+        // fillImage()
     })
 
     mapR.on('mousemove', (e: { lngLat: { lat: number, lng: number } }) => {

@@ -36,6 +36,14 @@ const baseConfig = () => {
 }
 
 
+//调用高德接口
+const getGoade = async () => {
+    const res = await fetch('https://restapi.amap.com/v5/direction/driving?origin=116.434307,39.90909&destination=116.434446,39.90816&key=b1783f9c16e48520ac5cd31031904fa4', {
+        method: 'get'
+    })
+}
+
+
 //-----高德路径规划---------
 const pathPlanGaode = () => {
 
