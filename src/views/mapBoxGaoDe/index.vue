@@ -4,15 +4,16 @@
 
 <script setup lang="ts">
 import { onMounted, ref, computed, } from 'vue'
-import mapbox, { Marker, PointLike } from 'mapbox-gl';
 import { useMapbox } from '../../hooks/useMapBox'
 import * as Turf from '@turf/turf'
 import coordtransform from 'coordtransform'
+import mapboxgl from 'mapbox-gl';
+import arrow from '../../assets/navigation.png'
 
 let mapR: mapboxgl.Map;
-let Draw: any;
+const marker = ref<mapboxgl.Marker | null>(null)
 
-const { getMap } = useMapbox({ container: 'map', isOffline: true })
+const { getMap } = useMapbox({ container: 'map', isOffline: false })
 
 //当前经纬度
 const jw = ref<{ lat: number, lng: number }>({ lat: 0, lng: 0 });
@@ -29,7 +30,7 @@ onMounted(() => {
 //基础配置
 const baseConfig = () => {
     mapR = getMap()!
-    const scale = new mapbox.ScaleControl();
+    const scale = new mapboxgl.ScaleControl();
     mapR.addControl(scale);
 
     mapR.on('load', () => {
@@ -37,6 +38,20 @@ const baseConfig = () => {
         mapR.setZoom(16)
         mapR.setPitch(45)
         pathLayer()
+
+        // 添加导航标记（使用自定义箭头标记）
+        const el = document.createElement('div')
+        el.className = 'navigation-marker'
+        el.innerHTML = `<img src="${arrow}" style="width: 64px; height: 64px;" alt="arrow" />`
+        el.style.fontSize = '24px'
+
+        marker.value = new mapboxgl.Marker({
+            element: el,
+            rotationAlignment: 'map'
+        })
+            .setLngLat(allLonLat[0])
+            .addTo(mapR)
+
     })
 
 }
@@ -46,6 +61,9 @@ const currentDistance = ref(0)
 //所有经纬度点坐标
 const allLonLat: [number, number][] = []
 const currentSpeed = ref(120) // 初始速度到 20km/h
+const isNavigating = ref(false)
+const animationFrameId = ref<number | null>(null)
+const lastTimestamp = ref<number>(0)
 
 //调用高德接口
 const getGoade = async () => {
@@ -108,6 +126,83 @@ const remainingTime = computed(() => {
     const speed = currentSpeed.value / 3.6 // 转换为米/秒
     return Math.max(1, Math.round((remainingDistance.value / speed) / 60))
 })
+
+// 获取路线上的点位置
+const getPositionAlongRoute = (distance: number): [number, number] => {
+    try {
+        if (distance <= 0) return allLonLat[0]
+        if (distance >= totalDistance.value) return allLonLat[allLonLat.length - 1]
+
+        const point = Turf.along(routeLine.value, distance / 1000, { units: 'kilometers' })
+        return point.geometry.coordinates as [number, number]
+    } catch (error) {
+        console.error('Error calculating position:', error)
+        return allLonLat[0]
+    }
+}
+
+// 计算路线上某点的方向角度
+const calculateBearing = (distance: number): number => {
+    try {
+        const currentPoint = getPositionAlongRoute(distance)
+        const aheadPoint = getPositionAlongRoute(Math.min(distance + 5, totalDistance.value))
+        return Turf.bearing(
+            Turf.point(currentPoint),
+            Turf.point(aheadPoint)
+        )
+    } catch (error) {
+        console.error('Error calculating bearing:', error)
+        return 0
+    }
+}
+
+// 动画函数
+const animate = (timestamp: number) => {
+    if (!isNavigating.value) return
+
+    if (!lastTimestamp.value) {
+        lastTimestamp.value = timestamp
+        animationFrameId.value = requestAnimationFrame(animate)
+        return
+    }
+
+    const deltaTime = timestamp - lastTimestamp.value
+    // const speed = currentSpeed.value / 3.6 // 转换为米/秒
+    const speed = currentSpeed.value // 转换为米/秒
+    const distanceDelta = (deltaTime / 1000) * speed
+
+    const newDistance = currentDistance.value + distanceDelta
+    if (newDistance >= totalDistance.value) {
+        isNavigating.value = false
+        currentDistance.value = totalDistance.value
+        return
+    }
+
+    currentDistance.value = newDistance
+    const position = getPositionAlongRoute(currentDistance.value)
+    const bearing = calculateBearing(currentDistance.value)
+
+    if (marker.value && position) {
+        marker.value
+            .setLngLat(position)
+            .setRotation(bearing)
+
+        // 更新地图视角，添加前瞻性视角
+        const lookAheadDistance = Math.min(currentDistance.value + 30, totalDistance.value) // 前看30米
+        const lookAheadPosition = getPositionAlongRoute(lookAheadDistance)
+
+        mapR.easeTo({
+            center: lookAheadPosition,
+            bearing: bearing,
+            duration: 50,
+            pitch: 45
+        })
+    }
+
+    lastTimestamp.value = timestamp
+    animationFrameId.value = requestAnimationFrame(animate)
+}
+
 
 
 //加载线路图层
