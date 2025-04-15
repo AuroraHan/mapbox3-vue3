@@ -68,6 +68,11 @@ const routes = [
     component: () => import("@/views/mapboxShader/index.vue"),
   },
   {
+    path: "/mapBoxGaoDe",
+    name: "mapBoxGaoDe",
+    component: () => import("@/views/mapBoxGaoDe/index.vue"),
+  },
+  {
     path: "/cesiumPopup",
     name: "cesiumPopup",
     component: () => import("@/views/cesiumPopup/index.vue"),

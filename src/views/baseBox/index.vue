@@ -36,6 +36,10 @@ const routsList = ref([
         path: 'mapboxVector'
     },
     {
+        name: 'Mapbox高德路径规划',
+        path: 'mapBoxGaoDe'
+    },
+    {
         name: '基础Cesium',
         path: 'baseCesium'
     },
