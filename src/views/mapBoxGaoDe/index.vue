@@ -148,7 +148,7 @@ const pathPlanGaode = (paths: any) => {
         const points = step.polyline.split(';');
 
         // 2. 对每个点进行处理，分割经度纬度并转换为数字
-        const result = points.map(point => {
+        const result = points.map((point: any) => {
             const [lng, lat] = point.split(',');
             const wgs84Coord = coordtransform.gcj02towgs84(lng, lat);
 
