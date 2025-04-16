@@ -48,6 +48,7 @@ import { removeLayerAndSource } from '@/utils/mapTools';
 
 let mapR: mapboxgl.Map;
 const marker = ref<mapboxgl.Marker | null>(null)
+let popup: mapboxgl.Popup;
 
 const { getMap } = useMapbox({ container: 'map', isOffline: false })
 
@@ -76,6 +77,12 @@ const baseConfig = () => {
     mapR.addControl(scale);
 
     mapR.on('load', () => {
+
+        //弹出框实例
+        popup = new mapboxgl.Popup({
+            closeButton: false,
+        });
+
         // 添加导航标记（使用自定义箭头标记）
         const el = document.createElement('div')
         el.className = 'navigation-marker'
@@ -410,9 +417,11 @@ const handlerResult = (roads: Array<any>) => {
 
 //加载交通态势路线
 const loadTraffic = () => {
+    let hoveredPolygonId: any;
     mapR.addSource('traffic', {
         type: 'geojson',
-        data: pathGeoJSon
+        data: pathGeoJSon,
+        generateId: true
     })
 
     mapR.addLayer({
@@ -429,12 +438,54 @@ const loadTraffic = () => {
                 '#545758'
             ],
             'line-width': 7,
+            'line-opacity': [
+                'case',
+                ['boolean', ['feature-state', 'hover'], false],
+                1,
+                0.5
+            ]
         },
         layout: {
             'line-join': 'round',
             'line-cap': 'round'
         }
     })
+
+    mapR?.on('mousemove', 'traffic', (e) => {
+        if (e.features!.length > 0) {
+            mapR.getCanvas().style.cursor = 'pointer';
+            if (hoveredPolygonId !== null) {
+                mapR?.setFeatureState(
+                    { source: 'traffic', id: hoveredPolygonId },
+                    { hover: false }
+                );
+            }
+            hoveredPolygonId = e.features![0].id;
+            //加载弹出框
+            popup.setLngLat([e.lngLat.lng, e.lngLat.lat]).setHTML(`
+                道路名称:${e.features![0].properties?.name}</br>
+                平均速度:${e.features![0].properties?.speed}km/h </br>
+                方向描述:${e.features![0].properties?.direction}
+            `).addTo(mapR!)
+            mapR?.setFeatureState(
+                { source: 'traffic', id: hoveredPolygonId },
+                { hover: true }
+            );
+        }
+    });
+
+
+    mapR?.on('mouseleave', 'traffic', () => {
+        mapR.getCanvas().style.cursor = '';
+        if (hoveredPolygonId !== null) {
+            mapR?.setFeatureState(
+                { source: 'traffic', id: hoveredPolygonId },
+                { hover: false }
+            );
+        }
+        hoveredPolygonId = null;
+        popup.remove()
+    });
 }
 </script>
 
