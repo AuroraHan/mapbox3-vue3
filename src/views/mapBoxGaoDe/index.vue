@@ -23,7 +23,7 @@
     </div>
 
     <!-- 左侧线路 -->
-    <div class="left">
+    <div class="left" @click="loadTraffic">
         <div class="path" v-for="(item, index) in pathArr" :key="index" @click="onclickPath(item)">
             <div class="name">{{ item.name }}</div>
             <div class="dis">{{ item.distance / 1000 }} KM</div>
@@ -342,7 +342,100 @@ const pathLayer = () => {
 
 }
 
+//--------------------交通态势----------------------------
+const trafficApi = async () => {
+    const res = await fetch('https://restapi.amap.com/v3/traffic/status/circle?location=114.39364,30.50839&radius=4000&level=5&extensions=all&key=b1783f9c16e48520ac5cd31031904fa4', {
+        method: 'get'
+    }).then((res) => {
+        return res.json()
+    })
 
+    if (!res.status) {
+        window.alert('服务器错误')
+        return
+    }
+
+    handlerResult(res.trafficinfo.roads)
+
+}
+
+trafficApi()
+
+const transformGaoDeToWGS84 = (paths: string) => {
+
+    //进行了偏移处理
+    // 1. 按分号分割字符串得到各个坐标点
+    const points = paths.split(';');
+
+    // 2. 对每个点进行处理，分割经度纬度并转换为数字
+    const result = points.map(point => {
+        const [lng, lat] = point.split(',');
+        const wgs84Coord = coordtransform.gcj02towgs84(lng, lat);
+
+        return [wgs84Coord[0], wgs84Coord[1]];
+    });
+
+    return [...result];
+}
+
+//交通态势路线geojson
+const pathGeoJSon = {
+    type: "FeatureCollection",
+    features: []
+} as GeoJSON.FeatureCollection<GeoJSON.LineString>
+
+const handlerResult = (roads: Array<any>) => {
+
+    //获取路线经过的所有经纬度
+    roads.forEach((step: any) => {
+        // 2. 对每个点进行处理，分割经度纬度并转换为数字
+        const result = transformGaoDeToWGS84(step.polyline)
+        pathGeoJSon.features.push({
+            type: "Feature",
+            properties: {
+                name: step.name,
+                status: step.status,
+                direction: step.direction,
+                angle: step.angle,
+                lcodes: step.lcodes,
+                speed: step.speed
+            },
+            geometry: {
+                type: 'LineString',
+                coordinates: result
+            }
+        })
+    });
+}
+
+//加载交通态势路线
+const loadTraffic = () => {
+    mapR.addSource('traffic', {
+        type: 'geojson',
+        data: pathGeoJSon
+    })
+
+    mapR.addLayer({
+        id: 'traffic',
+        type: 'line',
+        source: 'traffic',
+        paint: {
+            'line-color': [
+                'match',
+                ['get', 'status'],
+                '1', '#36a936',
+                '2', '#ffff00',
+                '3', '#ff0000',
+                '#545758'
+            ],
+            'line-width': 7,
+        },
+        layout: {
+            'line-join': 'round',
+            'line-cap': 'round'
+        }
+    })
+}
 </script>
 
 <style lang="scss" scoped>
