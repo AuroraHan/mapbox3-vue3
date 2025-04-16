@@ -464,7 +464,7 @@ const loadTraffic = () => {
             //加载弹出框
             popup.setLngLat([e.lngLat.lng, e.lngLat.lat]).setHTML(`
                 道路名称:${e.features![0].properties?.name}</br>
-                平均速度:${e.features![0].properties?.speed}km/h </br>
+                平均速度:${e.features![0].properties?.speed || '暂无'}km/h </br>
                 方向描述:${e.features![0].properties?.direction}
             `).addTo(mapR!)
             mapR?.setFeatureState(
