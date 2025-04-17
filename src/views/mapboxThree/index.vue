@@ -2,7 +2,11 @@
     <div id="map" class="map"></div>
     <pre
         class="lonlat">经度:{{ Number(jw?.lng).toFixed(5) }} 纬度:{{ Number(jw?.lat).toFixed(5) }} 层级:{{ zoom.toFixed(1) }}</pre>
-    <div class="box" @click="threeParticle">3D</div>
+    <div class="box">
+
+        <div class="item" @click="baseBox">加载基础正方体</div>
+        <div class="item" @click="threeParticle">加载基础粒子</div>
+    </div>
 </template>
 
 <script setup lang="ts">
@@ -42,15 +46,15 @@ const baseConfig = () => {
     })
 
     mapR.on('load', () => {
-
+        mapR.setCenter([116.4, 39.9])
+        mapR.setZoom(15)
     })
 }
 
 
-//-------烟雾粒子效果
-const smoke = () => {
-    mapR.setCenter([116.4, 39.9])
-    mapR.setZoom(15)
+//-------正方体效果
+const baseBox = () => {
+
     const modelRotate = [Math.PI / 2, 0, 0];
     // 坐标转换
     const modelAsMercator = mapboxgl.MercatorCoordinate.fromLngLat(
@@ -143,7 +147,7 @@ const smoke = () => {
     mapR.addLayer(smokeLayer);
 }
 
-//纯three + mapbox
+//纯three + mapbox 粒子
 const threeParticle = () => {
     // 北京坐标(天安门附近)
     const beijingPosition: LngLatLike = [116.4, 39.9];
@@ -298,13 +302,28 @@ const threeParticle = () => {
 }
 
 .box {
-    width: 50px;
-    height: 50px;
+    width: 10%;
+    min-height: 50px;
     text-align: center;
     position: absolute;
     left: 1%;
-    bottom: 10%;
+    top: 4%;
     z-index: 9;
-    background-color: red;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 8px;
+    padding: 15px 15px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    .item {
+        border: 1px solid sandybrown;
+        height: 30px;
+        padding: 4px;
+        line-height: 30px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-bottom: 6px;
+    }
 }
 </style>
