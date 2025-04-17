@@ -5,7 +5,7 @@
     <div class="box">
 
         <div class="item" @click="baseBox">加载基础正方体</div>
-        <div class="item" @click="threeParticle">加载基础粒子</div>
+        <div class="item" @click="createParticle">加载基础粒子</div>
     </div>
 </template>
 
@@ -15,7 +15,7 @@ import * as THREE from 'three';
 import lodash from 'lodash'
 import { useMapbox } from '../../hooks/useMapBox'
 import * as Turf from '@turf/turf'
-import mapboxgl, { CustomLayerInterface, LngLatLike } from 'mapbox-gl';
+import mapboxgl, { CustomLayerInterface, LngLatLike, Map, } from 'mapbox-gl';
 
 let mapR: mapboxgl.Map;
 
@@ -51,115 +51,133 @@ const baseConfig = () => {
     })
 }
 
+class Box {
+    id = 'smoke-layer';
+    type = 'custom';
+    renderingMode = '3d';
+    scene: THREE.Scene;
+    camera: THREE.Camera;
+    map: Map | null = null;
 
-//-------正方体效果
-const baseBox = () => {
-
-    const modelRotate = [Math.PI / 2, 0, 0];
+    modelRotate = [Math.PI / 2, 0, 0];
     // 坐标转换
-    const modelAsMercator = mapboxgl.MercatorCoordinate.fromLngLat(
+    modelAsMercator = mapboxgl.MercatorCoordinate.fromLngLat(
         [116.4, 39.9],
         150
     );
     // 烟雾参数配置
-    const cubeConfig = {
+    cubeConfig = {
         position: [116.4, 39.9], // 经纬度
         size: 100, // 边长(米)
         altitude: 0, // 地面高度
-        rotateX: modelRotate[0],
-        rotateY: modelRotate[1],
-        rotateZ: modelRotate[2],
-        scale: modelAsMercator.meterInMercatorCoordinateUnits()
+        rotateX: this.modelRotate[0],
+        rotateY: this.modelRotate[1],
+        rotateZ: this.modelRotate[2],
+        scale: this.modelAsMercator.meterInMercatorCoordinateUnits()
     };
-    // Three.js烟雾层
-    const smokeLayer = {
-        id: '3d-cube',
-        type: 'custom',
-        renderingMode: '3d',
-        onAdd: function (map, gl) {
-            this.map = map;
-            this.scene = new THREE.Scene();
-            this.camera = new THREE.Camera();
+    cube: THREE.Mesh<THREE.BoxGeometry, THREE.MeshBasicMaterial, THREE.Object3DEventMap> | null = null;
+    renderer: THREE.WebGLRenderer | null = null;
 
-            // 创建立方体
-            const geometry = new THREE.BoxGeometry(3, 3, 3); // 单位立方体
-            const material = new THREE.MeshBasicMaterial({
-                color: 0xff0000, // 红色
-                transparent: true,
-                opacity: 0.8
-            });
-            this.cube = new THREE.Mesh(geometry, material);
+    constructor() {
+        this.scene = new THREE.Scene();
+        this.camera = new THREE.Camera();
+    }
 
-            // 缩放立方体到实际尺寸
-            this.cube.scale.set(
-                cubeConfig.size,
-                cubeConfig.size,
-                cubeConfig.size
-            );
+    onAdd(map: Map, gl: WebGL2RenderingContext) {
+        this.map = map;
 
-            this.scene.add(this.cube);
+        // 创建立方体
+        const geometry = new THREE.BoxGeometry(1, 1, 1); // 单位立方体
+        const material = new THREE.MeshBasicMaterial({
+            color: 0xff0000, // 红色
+            transparent: true,
+            opacity: 0.8
+        });
+        this.cube = new THREE.Mesh(geometry, material);
 
-            // 渲染器设置
-            this.renderer = new THREE.WebGLRenderer({
-                canvas: map.getCanvas(),
-                context: gl,
-                antialias: true
-            });
-            this.renderer.autoClear = false;
-        },
+        // 缩放立方体到实际尺寸
+        this.cube.scale.set(
+            this.cubeConfig.size,
+            this.cubeConfig.size,
+            this.cubeConfig.size
+        );
 
-        render: function (gl, matrix) {
-            const rotationX = new THREE.Matrix4().makeRotationAxis(
-                new THREE.Vector3(1, 0, 0),
-                cubeConfig.rotateX
-            );
-            const rotationY = new THREE.Matrix4().makeRotationAxis(
-                new THREE.Vector3(0, 1, 0),
-                cubeConfig.rotateY
-            );
-            const rotationZ = new THREE.Matrix4().makeRotationAxis(
-                new THREE.Vector3(0, 0, 1),
-                cubeConfig.rotateZ
-            );
-            // 更新立方体位置
-            const m = new THREE.Matrix4().fromArray(matrix);
-            const l = new THREE.Matrix4()
-                .makeTranslation(
-                    modelAsMercator.x,
-                    modelAsMercator.y,
-                    modelAsMercator.z
-                ).scale(
-                    new THREE.Vector3(
-                        cubeConfig.scale,
-                        -cubeConfig.scale,
-                        cubeConfig.scale
-                    )
-                ).multiply(rotationX)
-                .multiply(rotationY)
-                .multiply(rotationZ);
+        this.scene.add(this.cube);
 
-            this.camera.projectionMatrix = m.multiply(l);
-            this.renderer.resetState();
-            this.renderer.render(this.scene, this.camera);
-            this.map.triggerRepaint();
-        }
-    } as CustomLayerInterface
-    mapR.addLayer(smokeLayer);
+        // 渲染器设置
+        this.renderer = new THREE.WebGLRenderer({
+            canvas: map.getCanvas(),
+            context: gl,
+            antialias: true
+        });
+        this.renderer.autoClear = false;
+    }
+
+    render(gl: WebGL2RenderingContext, matrix: Array<number>) {
+        const rotationX = new THREE.Matrix4().makeRotationAxis(
+            new THREE.Vector3(1, 0, 0),
+            this.cubeConfig.rotateX
+        );
+        const rotationY = new THREE.Matrix4().makeRotationAxis(
+            new THREE.Vector3(0, 1, 0),
+            this.cubeConfig.rotateY
+        );
+        const rotationZ = new THREE.Matrix4().makeRotationAxis(
+            new THREE.Vector3(0, 0, 1),
+            this.cubeConfig.rotateZ
+        );
+        // 更新立方体位置
+        const m = new THREE.Matrix4().fromArray(matrix);
+        const l = new THREE.Matrix4()
+            .makeTranslation(
+                this.modelAsMercator.x,
+                this.modelAsMercator.y,
+                this.modelAsMercator.z
+            ).scale(
+                new THREE.Vector3(
+                    this.cubeConfig.scale,
+                    -this.cubeConfig.scale,
+                    this.cubeConfig.scale
+                )
+            ).multiply(rotationX)
+            .multiply(rotationY)
+            .multiply(rotationZ);
+
+        this.camera.projectionMatrix = m.multiply(l);
+        this.renderer?.resetState();
+        this.renderer?.render(this.scene, this.camera);
+        this.map?.triggerRepaint();
+    }
+}
+//正方体
+const baseBox = () => {
+    const a = new Box()
+    mapR.addLayer(a as CustomLayerInterface);
 }
 
-//纯three + mapbox 粒子
-const threeParticle = () => {
+
+class MyParticle {
+    id = 'particle-layer';
+    type = 'custom';
+    renderingMode = '3d';
     // 北京坐标(天安门附近)
-    const beijingPosition: LngLatLike = [116.4, 39.9];
+    beijingPosition: LngLatLike = [116.4, 39.9];
+
+    map: Map | null = null;
+    time: number;
+    scene: THREE.Scene;
+    camera: THREE.Camera;
+    particles: THREE.Points | null = null;
+    renderer: THREE.WebGLRenderer | null = null;
 
     // 转换为墨卡托坐标
-    const modelAsMercator = mapboxgl.MercatorCoordinate.fromLngLat(
-        beijingPosition,
+    modelAsMercator = mapboxgl.MercatorCoordinate.fromLngLat(
+        this.beijingPosition,
         40 // 初始高度为0
     );
 
     // 粒子系统配置
-    const particleConfig = {
+    particleConfig = {
         count: 5000, // 粒子数量
         size: 2, // 粒子大小
         radius: 100, // 分布半径(米)
@@ -168,116 +186,119 @@ const threeParticle = () => {
         speed: 0.5 // 动画速度
     };
 
-    // 创建自定义图层
-    const particleLayer = {
-        id: 'particles',
-        type: 'custom',
-        renderingMode: '3d',
-        onAdd: function (map, gl) {
-            this.map = map;
-            this.time = 0;
 
-            // 初始化Three.js场景
-            this.scene = new THREE.Scene();
-            this.camera = new THREE.Camera();
 
-            // 创建粒子几何体
-            const particlesGeometry = new THREE.BufferGeometry();
-            const positions = new Float32Array(particleConfig.count * 3);
-            const colors = new Float32Array(particleConfig.count * 3);
+    constructor() {
+        this.time = 0;
 
-            // 初始化粒子位置和颜色
-            for (let i = 0; i < particleConfig.count; i++) {
-                // 在球体内随机分布粒子
-                const radius = Math.random() * particleConfig.radius;
-                const theta = Math.random() * Math.PI * 2;
-                const phi = Math.random() * Math.PI;
+        // 初始化Three.js场景
+        this.scene = new THREE.Scene();
+        this.camera = new THREE.Camera();
+    }
 
-                const x = radius * Math.sin(phi) * Math.cos(theta);
-                const y = radius * Math.sin(phi) * Math.sin(theta);
-                const z = radius * Math.cos(phi) + particleConfig.altitude;
 
-                positions[i * 3] = x;
-                positions[i * 3 + 1] = y;
-                positions[i * 3 + 2] = z;
+    onAdd(map: Map, gl: WebGL2RenderingContext) {
+        this.map = map;
 
-                // 随机颜色变化
-                colors[i * 3] = particleConfig.color >> 16 & 255 / 255;
-                colors[i * 3 + 1] = particleConfig.color >> 8 & 255 / 255;
-                colors[i * 3 + 2] = particleConfig.color & 255 / 255;
-            }
+        // 创建粒子几何体
+        const particlesGeometry = new THREE.BufferGeometry();
+        const positions = new Float32Array(this.particleConfig.count * 3);
+        const colors = new Float32Array(this.particleConfig.count * 3);
 
-            particlesGeometry.setAttribute(
-                'position',
-                new THREE.BufferAttribute(positions, 3)
-            );
-            particlesGeometry.setAttribute(
-                'color',
-                new THREE.BufferAttribute(colors, 3)
-            );
+        // 初始化粒子位置和颜色
+        for (let i = 0; i < this.particleConfig.count; i++) {
+            // 在球体内随机分布粒子
+            const radius = Math.random() * this.particleConfig.radius;
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.random() * Math.PI;
 
-            // 创建粒子材质
-            const particlesMaterial = new THREE.PointsMaterial({
-                size: particleConfig.size,
-                vertexColors: true,
-                transparent: true,
-                opacity: 0.8,
-                blending: THREE.AdditiveBlending
-            });
+            const x = radius * Math.sin(phi) * Math.cos(theta);
+            const y = radius * Math.sin(phi) * Math.sin(theta);
+            const z = radius * Math.cos(phi) + this.particleConfig.altitude;
 
-            // 创建粒子系统
-            this.particles = new THREE.Points(
-                particlesGeometry,
-                particlesMaterial
-            );
-            this.scene.add(this.particles);
+            positions[i * 3] = x;
+            positions[i * 3 + 1] = y;
+            positions[i * 3 + 2] = z;
 
-            // 设置渲染器
-            this.renderer = new THREE.WebGLRenderer({
-                canvas: map.getCanvas(),
-                context: gl,
-                antialias: true
-            });
-            this.renderer.autoClear = false;
-        },
-
-        render: function (gl, matrix) {
-            // 更新时间用于动画
-            this.time += 0.01 * particleConfig.speed;
-
-            // 更新粒子位置(简单的上下浮动动画)
-            const positions = this.particles.geometry.attributes.position.array;
-            for (let i = 0; i < particleConfig.count; i++) {
-                const zIndex = i * 3 + 2;
-                positions[zIndex] += Math.sin(this.time + i * 0.1) * 0.5;
-            }
-            this.particles.geometry.attributes.position.needsUpdate = true;
-
-            // 计算变换矩阵
-            const m = new THREE.Matrix4().fromArray(matrix);
-            const l = new THREE.Matrix4()
-                .makeTranslation(
-                    modelAsMercator.x,
-                    modelAsMercator.y,
-                    modelAsMercator.z + (particleConfig.altitude * modelAsMercator.meterInMercatorCoordinateUnits())
-                )
-                .scale(new THREE.Vector3(
-                    modelAsMercator.meterInMercatorCoordinateUnits(),
-                    -modelAsMercator.meterInMercatorCoordinateUnits(),
-                    modelAsMercator.meterInMercatorCoordinateUnits()
-                ));
-
-            // 设置相机投影矩阵
-            this.camera.projectionMatrix = m.multiply(l);
-
-            // 渲染
-            this.renderer.resetState();
-            this.renderer.render(this.scene, this.camera);
-            this.map.triggerRepaint();
+            // 随机颜色变化
+            colors[i * 3] = this.particleConfig.color >> 16 & 255 / 255;
+            colors[i * 3 + 1] = this.particleConfig.color >> 8 & 255 / 255;
+            colors[i * 3 + 2] = this.particleConfig.color & 255 / 255;
         }
-    } as CustomLayerInterface
 
-    mapR.addLayer(particleLayer);
+        particlesGeometry.setAttribute(
+            'position',
+            new THREE.BufferAttribute(positions, 3)
+        );
+        particlesGeometry.setAttribute(
+            'color',
+            new THREE.BufferAttribute(colors, 3)
+        );
+
+        // 创建粒子材质
+        const particlesMaterial = new THREE.PointsMaterial({
+            size: this.particleConfig.size,
+            vertexColors: true,
+            transparent: true,
+            opacity: 0.8,
+            blending: THREE.AdditiveBlending
+        });
+
+        // 创建粒子系统
+        this.particles = new THREE.Points(
+            particlesGeometry,
+            particlesMaterial
+        );
+        this.scene.add(this.particles);
+
+        // 设置渲染器
+        this.renderer = new THREE.WebGLRenderer({
+            canvas: map.getCanvas(),
+            context: gl,
+            antialias: true
+        });
+        this.renderer.autoClear = false;
+    }
+
+    render(gl: WebGL2RenderingContext, matrix: Array<number>) {
+        // 更新时间用于动画
+        this.time += 0.01 * this.particleConfig.speed;
+
+        // 更新粒子位置(简单的上下浮动动画)
+        const positions = this.particles!.geometry.attributes.position.array;
+        for (let i = 0; i < this.particleConfig.count; i++) {
+            const zIndex = i * 3 + 2;
+            positions[zIndex] += Math.sin(this.time + i * 0.1) * 0.5;
+        }
+        this.particles!.geometry.attributes.position.needsUpdate = true;
+
+        // 计算变换矩阵
+        const m = new THREE.Matrix4().fromArray(matrix);
+        const l = new THREE.Matrix4()
+            .makeTranslation(
+                this.modelAsMercator.x,
+                this.modelAsMercator.y,
+                this.modelAsMercator.z + (this.particleConfig.altitude * this.modelAsMercator.meterInMercatorCoordinateUnits())
+            )
+            .scale(new THREE.Vector3(
+                this.modelAsMercator.meterInMercatorCoordinateUnits(),
+                -this.modelAsMercator.meterInMercatorCoordinateUnits(),
+                this.modelAsMercator.meterInMercatorCoordinateUnits()
+            ));
+
+        // 设置相机投影矩阵
+        this.camera.projectionMatrix = m.multiply(l);
+
+        // 渲染
+        this.renderer?.resetState();
+        this.renderer?.render(this.scene, this.camera);
+        this.map?.triggerRepaint();
+    }
+}
+//粒子模式
+const createParticle = () => {
+    const particle = new MyParticle()
+    mapR.addLayer(particle as CustomLayerInterface)
 }
 
 </script>
