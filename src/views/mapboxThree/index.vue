@@ -6,6 +6,7 @@
 
         <div class="item" @click="baseBox">加载基础正方体</div>
         <div class="item" @click="createParticle">加载基础粒子</div>
+        <div class="item" @click="createSmoke">烟雾扩散</div>
     </div>
 </template>
 
@@ -51,8 +52,217 @@ const baseConfig = () => {
     })
 }
 
-class Box {
+//创建烟雾模型
+class Smoke {
     id = 'smoke-layer';
+    type = 'custom';
+    renderingMode = '3d';
+
+    // 烟雾发射器配置
+    smokeConfig = {
+        emissionRate: 30, // 每秒发射粒子数
+        maxParticles: 2000, // 最大粒子数
+        particleSize: 1, // 粒子大小
+        lifeTime: 10, // 粒子生命周期(秒)
+        spread: 0.2, // 扩散范围
+        windDirection: [0.8, 0.1], // 风向向量[x,y]
+        windSpeed: 0.5, // 风速
+        riseSpeed: 0.3, // 上升速度
+        startColor: [0.8, 0.8, 0.8], // 起始颜色(灰色)
+        endColor: [0.2, 0.2, 0.2, 0] // 结束颜色(淡出)
+    }
+
+    // 北京烟雾源位置(天安门附近)
+    smokeSource = {
+        lnglat: [116.4, 39.9] as LngLatLike,
+        altitude: 50 // 起始高度50米
+    }
+
+    // 转换为墨卡托坐标
+    sourceMercator = mapboxgl.MercatorCoordinate.fromLngLat(
+        this.smokeSource.lnglat,
+        this.smokeSource.altitude
+    );
+
+    particles: Array<THREE.Mesh> = []
+    lastEmissionTime = 0
+    scene: THREE.Scene;
+    camera: THREE.Camera;
+    particleGroup: THREE.Group;
+    sourceMarker: THREE.Mesh | null = null;
+    renderer: THREE.WebGLRenderer | null = null;
+    map: Map | null = null;
+
+    constructor() {
+        this.scene = new THREE.Scene();
+        this.camera = new THREE.Camera();
+
+        // 创建粒子容器
+        this.particleGroup = new THREE.Group();
+        this.scene.add(this.particleGroup);
+    }
+
+    onAdd(map: Map, gl: WebGL2RenderingContext) {
+        this.map = map;
+        // 烟雾源标记(红色点)
+        const sourceGeometry = new THREE.SphereGeometry(2, 16, 16);
+        const sourceMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+        this.sourceMarker = new THREE.Mesh(sourceGeometry, sourceMaterial);
+        this.scene.add(this.sourceMarker);
+
+        // 设置渲染器
+        this.renderer = new THREE.WebGLRenderer({
+            canvas: map.getCanvas(),
+            context: gl,
+            antialias: true
+        });
+        this.renderer.autoClear = false;
+    }
+
+    render(gl: WebGL2RenderingContext, matrix: Array<number>) {
+        const currentTime = performance.now() / 1000; // 当前时间(秒)
+        const deltaTime = currentTime - this.lastEmissionTime;
+
+        // 发射新粒子
+        if (deltaTime >= 1 / this.smokeConfig.emissionRate) {
+            this.emitParticle(currentTime);
+            this.lastEmissionTime = currentTime;
+        }
+
+        // 更新现有粒子
+        this.updateParticles(currentTime);
+
+        // 清理死亡粒子
+        this.cleanParticles();
+
+        // 计算变换矩阵
+        const m = new THREE.Matrix4().fromArray(matrix);
+        const l = new THREE.Matrix4()
+            .makeTranslation(
+                this.sourceMercator.x,
+                this.sourceMercator.y,
+                this.sourceMercator.z
+            )
+            .scale(new THREE.Vector3(
+                this.sourceMercator.meterInMercatorCoordinateUnits(),
+                -this.sourceMercator.meterInMercatorCoordinateUnits(),
+                this.sourceMercator.meterInMercatorCoordinateUnits()
+            ));
+
+        // 设置相机投影矩阵
+        this.camera.projectionMatrix = m.multiply(l);
+
+        // 渲染
+        this.renderer?.resetState();
+        this.renderer?.render(this.scene, this.camera);
+        this.map?.triggerRepaint();
+    }
+
+    //发射粒子
+    emitParticle(currentTime: number) {
+        if (this.particles.length >= this.smokeConfig.maxParticles) return;
+
+        // 创建新粒子
+        const geometry = new THREE.SphereGeometry(
+            this.smokeConfig.particleSize * (0.2 + Math.random() * 0.4),
+            16, 16
+        );
+
+        // 初始颜色
+        const color = new THREE.Color(
+            this.smokeConfig.startColor[0],
+            this.smokeConfig.startColor[1],
+            this.smokeConfig.startColor[2]
+        );
+
+        const material = new THREE.MeshBasicMaterial({
+            color: color,
+            transparent: true,
+            opacity: 0.8,
+            depthTest: false
+        });
+
+        const particle = new THREE.Mesh(geometry, material);
+
+        // 初始位置(添加一些随机扩散)
+        particle.position.set(
+            (Math.random() - 0.5) * this.smokeConfig.spread * 10,
+            (Math.random() - 0.5) * this.smokeConfig.spread * 10,
+            (Math.random() - 0.5) * this.smokeConfig.spread * 2
+        );
+
+        // 粒子属性
+        particle.userData = {
+            bornTime: currentTime,
+            lifeTime: this.smokeConfig.lifeTime * (0.8 + Math.random() * 0.4),
+            velocity: new THREE.Vector3(
+                this.smokeConfig.windDirection[0] * this.smokeConfig.windSpeed,
+                this.smokeConfig.windDirection[1] * this.smokeConfig.windSpeed,
+                this.smokeConfig.riseSpeed
+            ),
+            startColor: new THREE.Color().setRGB(this.smokeConfig.startColor[0], this.smokeConfig.startColor[1], this.smokeConfig.startColor[2]),
+            endColor: new THREE.Color().setRGB(this.smokeConfig.endColor[0], this.smokeConfig.endColor[1], this.smokeConfig.endColor[2])
+        };
+
+        this.particleGroup.add(particle);
+        this.particles.push(particle);
+    }
+
+    //更新粒子
+    updateParticles(currentTime: number) {
+        const particles = this.particles;
+
+        for (let i = 0; i < particles.length; i++) {
+            const p = particles[i];
+            const age = currentTime - p.userData.bornTime;
+            const lifeProgress = age / p.userData.lifeTime;
+
+            if (lifeProgress >= 1) continue; // 已死亡粒子跳过
+
+            // 更新位置
+            p.position.x += p.userData.velocity.x * 0.016; // 假设60fps
+            p.position.y += p.userData.velocity.y * 0.016;
+            p.position.z += p.userData.velocity.z * 0.016;
+
+            // 更新大小(逐渐变大)
+            const scale = 1 + lifeProgress * 2;
+            p.scale.set(scale, scale, scale);
+
+            // 更新颜色和透明度
+            p.material.color.lerpColors(
+                p.userData.startColor,
+                p.userData.endColor,
+                lifeProgress
+            );
+            p.material.opacity = 0.8 * (1 - lifeProgress);
+        }
+    }
+
+    //清除粒子
+    cleanParticles() {
+        const currentTime = performance.now() / 1000;
+
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+            const p = this.particles[i];
+            const age = currentTime - p.userData.bornTime;
+
+            if (age >= p.userData.lifeTime) {
+                this.particleGroup.remove(p);
+                p.geometry.dispose();
+                p.material.dispose();
+                this.particles.splice(i, 1);
+            }
+        }
+    }
+}
+
+const createSmoke = () => {
+    const aa = new Smoke()
+    mapR.addLayer(aa as CustomLayerInterface)
+}
+
+class Box {
+    id = 'box-layer';
     type = 'custom';
     renderingMode = '3d';
     scene: THREE.Scene;
