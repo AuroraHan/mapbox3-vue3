@@ -23,7 +23,7 @@
     </div>
 
     <!-- 左侧线路 -->
-    <div class="left" @click="loadTraffic">
+    <div class="left">
         <div class="path" v-for="(item, index) in pathArr" :key="index" @click="onclickPath(item)">
             <div class="name">{{ item.name }}</div>
             <div class="dis">{{ item.distance / 1000 }} KM</div>
@@ -33,6 +33,12 @@
     <!-- 右侧进度条 -->
     <div class="right" v-if="allLonLat.length">
         <el-slider v-model="prag" :max="totalDistance" vertical height="400px" disabled :show-tooltip="false" />
+    </div>
+
+    <!-- 态势开关 -->
+    <div class="posture">
+        <span>交通态势</span>
+        <el-switch v-model="openPosture" @change="postureChange" />
     </div>
 
 </template>
@@ -486,6 +492,16 @@ const loadTraffic = () => {
         hoveredPolygonId = null;
         popup.remove()
     });
+}
+
+const openPosture = ref(false)
+const postureChange = () => {
+    if (openPosture.value) {
+        loadTraffic()
+    } else {
+        removeLayerAndSource(mapR, 'traffic', 1)
+        removeLayerAndSource(mapR, 'traffic', 0)
+    }
 }
 </script>
 
