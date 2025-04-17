@@ -73,6 +73,11 @@ const routes = [
     component: () => import("@/views/mapBoxGaoDe/index.vue"),
   },
   {
+    path: "/mapboxThree",
+    name: "mapboxThree",
+    component: () => import("@/views/mapboxThree/index.vue"),
+  },
+  {
     path: "/cesiumPopup",
     name: "cesiumPopup",
     component: () => import("@/views/cesiumPopup/index.vue"),

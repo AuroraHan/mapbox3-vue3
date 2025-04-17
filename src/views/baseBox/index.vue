@@ -32,6 +32,10 @@ const routsList = ref([
         path: 'mapboxShader'
     },
     {
+        name: 'Mapbox+Three',
+        path: 'mapboxThree'
+    },
+    {
         name: 'Mapbox图层切换',
         path: 'mapboxVector'
     },

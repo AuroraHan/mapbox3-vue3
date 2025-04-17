@@ -2,7 +2,7 @@
     <div id="map" class="map"></div>
     <pre
         class="lonlat">经度:{{ Number(jw?.lng).toFixed(5) }} 纬度:{{ Number(jw?.lat).toFixed(5) }} 层级:{{ zoom.toFixed(1) }}</pre>
-    <div class="box" @click="smoke">3D</div>
+    <div class="box">3D</div>
 </template>
 
 <script setup lang="ts">
@@ -335,112 +335,6 @@ const addCustomPoint = () => {
                 tb.update();
         }
     })
-}
-
-//-------烟雾粒子效果
-const smoke = () => {
-    mapR.setCenter([116.4, 39.9])
-    mapR.setZoom(15)
-    const modelRotate = [Math.PI / 2, 0, 0];
-    // 坐标转换
-    const modelAsMercator = mapboxgl.MercatorCoordinate.fromLngLat(
-        [116.4, 39.9],
-        60
-    );
-    // 烟雾参数配置
-    const cubeConfig = {
-        position: [116.4, 39.9], // 经纬度
-        size: 100, // 边长(米)
-        altitude: 0, // 地面高度
-        rotateX: modelRotate[0],
-        rotateY: modelRotate[1],
-        rotateZ: modelRotate[2],
-        scale: modelAsMercator.meterInMercatorCoordinateUnits()
-    };
-    // Three.js烟雾层
-    const smokeLayer = {
-        id: '3d-cube',
-        type: 'custom',
-        renderingMode: '3d',
-        onAdd: function (map, gl) {
-            this.map = map;
-            this.scene = new THREE.Scene();
-            this.camera = new THREE.Camera();
-
-            // create two three.js lights to illuminate the model
-            // const directionalLight = new THREE.DirectionalLight(0xffffff);
-            // directionalLight.position.set(0, -70, 100).normalize();
-            // this.scene.add(directionalLight);
-
-            // const directionalLight2 = new THREE.DirectionalLight(0xffffff);
-            // directionalLight2.position.set(0, 70, 100).normalize();
-            // this.scene.add(directionalLight2);
-
-            // 创建立方体
-            const geometry = new THREE.BoxGeometry(5, 5, 5); // 单位立方体
-            const material = new THREE.MeshBasicMaterial({
-                color: 0xff0000, // 红色
-                transparent: true,
-                opacity: 0.8
-            });
-            this.cube = new THREE.Mesh(geometry, material);
-
-            // 缩放立方体到实际尺寸
-            this.cube.scale.set(
-                cubeConfig.size,
-                cubeConfig.size,
-                cubeConfig.size
-            );
-
-            this.scene.add(this.cube);
-
-            // 渲染器设置
-            this.renderer = new THREE.WebGLRenderer({
-                canvas: map.getCanvas(),
-                context: gl,
-                antialias: true
-            });
-            this.renderer.autoClear = false;
-        },
-
-        render: function (gl, matrix) {
-            const rotationX = new THREE.Matrix4().makeRotationAxis(
-                new THREE.Vector3(1, 0, 0),
-                cubeConfig.rotateX
-            );
-            const rotationY = new THREE.Matrix4().makeRotationAxis(
-                new THREE.Vector3(0, 1, 0),
-                cubeConfig.rotateY
-            );
-            const rotationZ = new THREE.Matrix4().makeRotationAxis(
-                new THREE.Vector3(0, 0, 1),
-                cubeConfig.rotateZ
-            );
-            // 更新立方体位置
-            const m = new THREE.Matrix4().fromArray(matrix);
-            const l = new THREE.Matrix4()
-                .makeTranslation(
-                    modelAsMercator.x,
-                    modelAsMercator.y,
-                    modelAsMercator.z
-                ).scale(
-                    new THREE.Vector3(
-                        cubeConfig.scale,
-                        -cubeConfig.scale,
-                        cubeConfig.scale
-                    )
-                ).multiply(rotationX)
-                .multiply(rotationY)
-                .multiply(rotationZ);
-
-            this.camera.projectionMatrix = m.multiply(l);
-            this.renderer.resetState();
-            this.renderer.render(this.scene, this.camera);
-            this.map.triggerRepaint();
-        }
-    }
-    mapR.addLayer(smokeLayer);
-
 }
 
 </script>
