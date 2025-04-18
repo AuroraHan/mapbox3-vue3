@@ -116,6 +116,7 @@ const baseConfig = () => {
         // addPoint()//多个点
         // stainRain()
         // fillImage()
+        windaGeoJsonOrg()
     })
 
     mapR.on('mousemove', (e: { lngLat: { lat: number, lng: number } }) => {
@@ -430,6 +431,26 @@ const point = () => {
         paint: {
             'circle-color': '#ff0000',
         },
+    })
+}
+
+const windaGeoJsonOrg = () => {
+    mapR.setCenter([84.64610, 39.20450])
+    mapR.addSource('window0', {
+        type: 'geojson',
+        data: '/geojson/conc-time-winds2.geojson'
+    })
+
+    mapR.addLayer({
+        id: 'window0',
+        source: 'window0',
+        type: 'fill',
+        paint: {
+            'fill-color': '#ccc',
+            'fill-outline-color': '#da97ac',
+            'fill-opacity': 0.3
+        },
+        filter: ['==', ['get', 'Hour'], 5],
     })
 }
 </script>

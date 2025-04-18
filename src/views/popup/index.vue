@@ -25,16 +25,24 @@ const initMap = () => {
     const map = new mapbox.Map({
         container: 'map',
         projection: "mercator",
-        style: 'mapbox://styles/mapbox/dark-v11',
-        center: [125.7182120747035, 39.8251270095359],
-        zoom: 9,
+        style: 'mapbox://styles/mapbox/outdoors-v12',
+        center: [125.7551, 39.7978],
+        zoom: 15,
     })
 
     mapR = map;
     map.on('load', () => {
+
+        map.addSource('mapbox-dem', {
+            'type': 'raster-dem',
+            'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
+            'tileSize': 512,
+            'maxzoom': 14
+        });
+        // add the DEM source as a terrain layer with exaggerated height
+        map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
         windaGeoJsonOrg()
         constLine()
-        filterGeoJson()
     })
 
     map.on('click', (e) => {
@@ -57,7 +65,7 @@ const customPopup = (e) => {
 
 //画线
 const constLine = () => {
-    const line = Turf.lineString([[125.7246, 39.8159], [125.17842, 40.14235]]);
+    const line = Turf.lineString([[84.64610, 39.20350], [84.70405, 39.20302]]);
 
     mapR.addSource('cline', {
         type: 'geojson',
@@ -81,11 +89,11 @@ const filterGeoJson = async (filename) => {
     });
 
     const time1 = jxProm.features.filter((ele) => {
-        return ele.properties.Hour == 4;
+        return ele.properties.Hour == 9 && ele.properties.Nu == 'Cs137';
     });
 
     // 创建线段
-    const line = Turf.lineString([[125.7246, 39.8159], [125.17842, 40.14235]]);
+    const line = Turf.lineString([[84.64610, 39.20350], [84.70405, 39.20302]]);
 
     // 准备结果集合
     const intersectingFeatures = {
@@ -104,7 +112,7 @@ const filterGeoJson = async (filename) => {
     });
     console.log(intersectingFeatures);
 
-    // windaGeoJson(intersectingFeatures)
+
     return intersectingFeatures
 }
 
@@ -132,8 +140,9 @@ const findOverlappingPolygons = (winds, linux) => {
 }
 
 const handlerData = async () => {
-    const w = await filterGeoJson('/geojson/conc-time-winds.geojson')
-    const l = await filterGeoJson('/geojson/conc-time-linux.geojson')
+    const w = await filterGeoJson('/geojson/conc-time-winds2.geojson')
+    windaGeoJson(w)
+    const l = await filterGeoJson('/geojson/conc-time-linux2.geojson')
 
     const result = findOverlappingPolygons(w, l)
     console.table(result)
@@ -157,7 +166,7 @@ const handlerData = async () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
-    link.setAttribute('download', `1.csv`);
+    link.setAttribute('download', `time9.csv`);
     link.style.visibility = 'hidden';
 
     document.body.appendChild(link);
@@ -167,14 +176,14 @@ const handlerData = async () => {
 }
 
 const windaGeoJson = (geojson) => {
-    mapR.addSource('window', {
+    mapR.addSource('window111', {
         type: 'geojson',
         data: geojson
     })
 
     mapR.addLayer({
-        id: 'window',
-        source: 'window',
+        id: 'window111',
+        source: 'window111',
         type: 'fill',
         paint: {
             'fill-color': '#c62457',
@@ -186,7 +195,7 @@ const windaGeoJson = (geojson) => {
 const windaGeoJsonOrg = () => {
     mapR.addSource('window0', {
         type: 'geojson',
-        data: '/geojson/conc-time-winds.geojson'
+        data: '/geojson/conc-time-winds2.geojson'
     })
 
     mapR.addLayer({
