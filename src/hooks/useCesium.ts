@@ -41,21 +41,12 @@ export function useCesium(options: options) {
       cesiumV.terrainProvider = provider;
     }
 
-    // const customTilingScheme = new Cesium.WebMercatorTilingScheme({
-    //   numberOfLevelZeroTilesX: 1,
-    //   numberOfLevelZeroTilesY: 1,
+    // 使用mapbox的底图 加载xyz
+    // var xyz = new Cesium.UrlTemplateImageryProvider({
+    //   credit: "mapbox",
+    //   url: "/tile/{z}/{x}/{y}.jpg",
     // });
-
-    // const provider = await Cesium.TileMapServiceImageryProvider.fromUrl(
-    //   "/tile",
-    //   {
-    //     fileExtension: "jpg",
-    //     tilingScheme: customTilingScheme,
-    //     rectangle: Cesium.Rectangle.fromDegrees(-180, -85.06, 180, 85.06),
-    //   }
-    // );
-
-    // cesiumV.imageryLayers.addImageryProvider(provider);
+    // cesiumV.imageryLayers.addImageryProvider(xyz);
 
     //隐藏logo
     //@ts-ignore
