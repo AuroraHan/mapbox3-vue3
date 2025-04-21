@@ -25,22 +25,22 @@ const initMap = () => {
     const map = new mapbox.Map({
         container: 'map',
         projection: "mercator",
-        style: 'mapbox://styles/mapbox/outdoors-v12',
-        center: [125.7551, 39.7978],
-        zoom: 15,
+        style: 'mapbox://styles/mapbox/dark-v11',//mapbox://styles/mapbox/outdoors-v12
+        center: [125.7182120747035, 39.8251270095359],
+        zoom: 10,
     })
 
     mapR = map;
     map.on('load', () => {
 
-        map.addSource('mapbox-dem', {
-            'type': 'raster-dem',
-            'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
-            'tileSize': 512,
-            'maxzoom': 14
-        });
-        // add the DEM source as a terrain layer with exaggerated height
-        map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
+        // map.addSource('mapbox-dem', {
+        //     'type': 'raster-dem',
+        //     'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
+        //     'tileSize': 512,
+        //     'maxzoom': 14
+        // });
+        // // add the DEM source as a terrain layer with exaggerated height
+        // map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
         windaGeoJsonOrg()
         constLine()
     })
@@ -195,7 +195,7 @@ const windaGeoJson = (geojson) => {
 const windaGeoJsonOrg = () => {
     mapR.addSource('window0', {
         type: 'geojson',
-        data: '/geojson/conc-time-winds2.geojson'
+        data: '/geojson/conc-time-linux.geojson'
     })
 
     mapR.addLayer({
@@ -207,7 +207,7 @@ const windaGeoJsonOrg = () => {
             'fill-outline-color': '#da97ac',
             'fill-opacity': 0.3
         },
-        filter: ['==', ['get', 'Hour'], 4],
+        filter: ['==', ['get', 'Hour'], 1],
     })
 }
 </script>
