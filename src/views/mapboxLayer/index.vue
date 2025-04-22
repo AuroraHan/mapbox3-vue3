@@ -48,7 +48,7 @@ import { antGeojson, windList } from '../../assets/const'
 import { addWindIcon } from './utils'
 
 let mapR: mapboxgl.Map | null = null;
-const { getMap } = useMapbox({ container: 'map' })
+const { getMap } = useMapbox({ container: 'map', isOffline: true })
 
 onMounted(() => {
     mapR = getMap()
