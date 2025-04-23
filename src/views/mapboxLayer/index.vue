@@ -642,7 +642,7 @@ const globalWindHandle = () => {
 
 //根据json添加全球风场数据
 const globalWind = async () => {
-    const res = await fetch('/geojson/result.json').then((res) => res.json())
+    const res = await fetch('/winds/result.json').then((res) => res.json())
     loadWinds(res)
 }
 
@@ -678,7 +678,7 @@ const loadWinds = async (data: any) => {
                 'rgb(220,24,32)',
                 'rgb(180,0,35)',
             ],
-            velocityScale: 1 / 30,
+            velocityScale: 1 / 40,
             // paths: 5000,
             frameRate: 16,
             maxAge: 60,
