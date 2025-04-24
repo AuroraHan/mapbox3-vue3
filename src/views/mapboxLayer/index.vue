@@ -60,6 +60,57 @@ const proConfig = () => {
     mapR?.on('load', () => {
         addPoint()
         addWindIcon(mapR!)
+        test()
+    })
+}
+
+//测试精灵图
+const test = () => {
+    mapR?.addLayer({
+        id: 'clusters',
+        type: 'symbol',
+        source: {
+            type: 'geojson',
+            data: {
+                type: 'FeatureCollection',
+                features: [
+                    {
+                        "type": "Feature",
+                        "properties": { "id": "1", "Conc": 0.0004, "type": 1 },
+                        "geometry": {
+                            "type": "Point",
+                            "coordinates": [120, 31]
+                        }
+                    },
+                ]
+            }
+        },
+        layout: {
+            'icon-image': 'train',
+            'icon-size': 2,
+            'icon-allow-overlap': true // 允许图标重叠
+        },
+        paint: {
+            'icon-opacity': 1 // 图标透明度
+        }
+    });
+
+    mapR?.addLayer({
+        id: 'myline',
+        type: 'line',
+        source: {
+            type: 'geojson',
+            data: antGeojson
+        },
+        layout: {
+            // 'icon-allow-overlap': true // 允许图标重叠
+        },
+        paint: {
+            'line-pattern': 'railway',
+            // 'line-pattern': 'railway-line',
+            // 'line-color': '#ff0000',
+            'line-width': 20
+        }
     })
 }
 
