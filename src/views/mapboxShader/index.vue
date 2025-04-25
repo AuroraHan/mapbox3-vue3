@@ -21,7 +21,7 @@ const baseConfig = () => {
     mapR = getMap()!
 
     mapR.on('load', () => {
-        demo2()
+        demo3()
     })
 }
 
@@ -286,20 +286,25 @@ const demo2 = () => {
 
 
 //效果3 扩散圆环
-const demo3 = () => {
-    const rippleLayer = {
-        id: 'ripple-layer',
-        type: 'custom',
-        center: [116.4074, 39.9042], // 北京中心坐标
-        radius: 0,                   // 当前半径（墨卡托坐标单位）
-        maxRadius: 0.005,             // 最大半径（超出后消失）
-        speed: 0.00005,               // 扩散速度
-        segments: 64,                // 圆环分段数（越高越圆滑）
+class DiffusionLoop {
+    id = 'ripple-layer'
+    type = 'custom'
+    center = [116.4074, 39.9042] // 北京中心坐标
+    radius = 0                  // 当前半径（墨卡托坐标单位）
+    maxRadius = 0.005             // 最大半径（超出后消失）
+    speed = 0.00005               // 扩散速度
+    segments = 64                // 圆环分段数（越高越圆滑）
 
-        onAdd: function (map, gl) {
-            this.map = map;
-            // 顶点着色器（绘制圆环）
-            const vertexSource = `
+    map: mapboxgl.Map | null = null;
+    program: WebGLProgram | null = null;
+    aPos: number | null = null;
+    uOpacity: WebGLUniformLocation | null = null;
+    buffer: WebGLBuffer | null = null;
+
+    onAdd(map: mapboxgl.Map, gl: WebGL2RenderingContext) {
+        this.map = map;
+        // 顶点着色器（绘制圆环）
+        const vertexSource = `
                 uniform mat4 u_matrix;
                 attribute vec2 a_pos;
                 void main() {
@@ -307,8 +312,8 @@ const demo3 = () => {
                 }
             `;
 
-            // 片段着色器（红色渐变透明度）
-            const fragmentSource = `
+        // 片段着色器（红色渐变透明度）
+        const fragmentSource = `
                 precision mediump float;
                 uniform float u_opacity;
                 void main() {
@@ -316,86 +321,88 @@ const demo3 = () => {
                 }
             `;
 
-            // 编译着色器程序
-            const vertexShader = gl.createShader(gl.VERTEX_SHADER)!;
-            gl.shaderSource(vertexShader, vertexSource);
-            gl.compileShader(vertexShader);
+        // 编译着色器程序
+        const vertexShader = gl.createShader(gl.VERTEX_SHADER)!;
+        gl.shaderSource(vertexShader, vertexSource);
+        gl.compileShader(vertexShader);
 
-            const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER)!;
-            gl.shaderSource(fragmentShader, fragmentSource);
-            gl.compileShader(fragmentShader);
+        const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER)!;
+        gl.shaderSource(fragmentShader, fragmentSource);
+        gl.compileShader(fragmentShader);
 
-            this.program = gl.createProgram()!;
-            gl.attachShader(this.program, vertexShader);
-            gl.attachShader(this.program, fragmentShader);
-            gl.linkProgram(this.program);
+        this.program = gl.createProgram()!;
+        gl.attachShader(this.program, vertexShader);
+        gl.attachShader(this.program, fragmentShader);
+        gl.linkProgram(this.program);
 
-            this.aPos = gl.getAttribLocation(this.program, "a_pos");
-            this.uOpacity = gl.getUniformLocation(this.program, "u_opacity");
-            this.buffer = gl.createBuffer();
-        },
+        this.aPos = gl.getAttribLocation(this.program, "a_pos");
+        this.uOpacity = gl.getUniformLocation(this.program, "u_opacity");
+        this.buffer = gl.createBuffer();
+    }
 
-        render: function (gl, matrix) {
-            // 更新半径（扩散动画）
-            this.radius += this.speed;
+    render(gl: WebGL2RenderingContext, matrix: Array<number>) {
+        // 更新半径（扩散动画）
+        this.radius += this.speed;
 
-            // 重置条件：超出最大半径
-            if (this.radius > this.maxRadius) {
-                this.radius = 0;
-            }
-
-            // 生成当前半径的圆环顶点
-            const center = mapboxgl.MercatorCoordinate.fromLngLat(
-                { lng: this.center[0], lat: this.center[1] },
-                0
-            );
-            // 生成带厚度的圆环顶点（内外圈）
-            const thickness = 0.0003; // 线宽
-            const vertices = [];
-            for (let i = 0; i <= this.segments; i++) {
-                const angle = (i % this.segments) * Math.PI * 2 / this.segments;
-                const cos = Math.cos(angle);
-                const sin = Math.sin(angle);
-
-                // 内圈
-                vertices.push(
-                    center.x + (this.radius - thickness) * cos,
-                    center.y + (this.radius - thickness) * sin
-                );
-
-                // 外圈
-                vertices.push(
-                    center.x + (this.radius + thickness) * cos,
-                    center.y + (this.radius + thickness) * sin
-                );
-            }
-
-
-            // 绑定数据并绘制
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.DYNAMIC_DRAW);
-
-            gl.useProgram(this.program);
-            gl.uniformMatrix4fv(gl.getUniformLocation(this.program, "u_matrix"), false, matrix);
-            gl.uniform1f(this.uOpacity, 1.0 - this.radius / this.maxRadius);
-
-            gl.enableVertexAttribArray(this.aPos);
-            gl.vertexAttribPointer(this.aPos, 2, gl.FLOAT, false, 0, 0);
-
-            // 如需平滑边缘，启用 gl.enable(gl.BLEND) 并设置混合函数：
-            gl.enable(gl.BLEND);
-            gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-            // 绘制为三角形带
-            gl.drawArrays(gl.TRIANGLE_STRIP, 0, vertices.length / 2);
-
-            //不断刷新
-            if (this.map)
-                this.map.triggerRepaint();
+        // 重置条件：超出最大半径
+        if (this.radius > this.maxRadius) {
+            this.radius = 0;
         }
-    } as mapboxgl.CustomLayerInterface;
 
+        // 生成当前半径的圆环顶点
+        const center = mapboxgl.MercatorCoordinate.fromLngLat(
+            { lng: this.center[0], lat: this.center[1] },
+            0
+        );
+        // 生成带厚度的圆环顶点（内外圈）
+        const thickness = 0.0003; // 线宽
+        const vertices = [];
+        for (let i = 0; i <= this.segments; i++) {
+            const angle = (i % this.segments) * Math.PI * 2 / this.segments;
+            const cos = Math.cos(angle);
+            const sin = Math.sin(angle);
+
+            // 内圈
+            vertices.push(
+                center.x + (this.radius - thickness) * cos,
+                center.y + (this.radius - thickness) * sin
+            );
+
+            // 外圈
+            vertices.push(
+                center.x + (this.radius + thickness) * cos,
+                center.y + (this.radius + thickness) * sin
+            );
+        }
+
+
+        // 绑定数据并绘制
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.DYNAMIC_DRAW);
+
+        gl.useProgram(this.program);
+        gl.uniformMatrix4fv(gl.getUniformLocation(this.program!, "u_matrix"), false, matrix);
+        gl.uniform1f(this.uOpacity, 1.0 - this.radius / this.maxRadius);
+
+        gl.enableVertexAttribArray(this.aPos!);
+        gl.vertexAttribPointer(this.aPos!, 2, gl.FLOAT, false, 0, 0);
+
+        // 如需平滑边缘，启用 gl.enable(gl.BLEND) 并设置混合函数：
+        gl.enable(gl.BLEND);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+        // 绘制为三角形带
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, vertices.length / 2);
+
+        //不断刷新
+        if (this.map)
+            this.map.triggerRepaint();
+    }
+}
+const demo3 = () => {
+    //mapboxgl.CustomLayerInterface;
+    const loop = new DiffusionLoop()
     // 添加到地图
-    mapR.addLayer(rippleLayer);
+    mapR.addLayer(loop);
 }
 </script>
 <style scoped lang='scss'>
