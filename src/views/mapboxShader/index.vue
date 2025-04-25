@@ -116,7 +116,7 @@ const demo1 = () => {
     const pLayer = new FixedParticles()
 
     // 添加到地图
-    mapR?.addLayer(pLayer);
+    mapR?.addLayer(pLayer as mapboxgl.CustomLayerInterface);
 }
 
 
@@ -279,7 +279,7 @@ const demo2 = () => {
     const sendP = new SendParticles()
 
     // 添加到地图
-    mapR?.addLayer(sendP);
+    mapR?.addLayer(sendP as mapboxgl.CustomLayerInterface);
 }
 
 
@@ -402,7 +402,7 @@ const demo3 = () => {
     //mapboxgl.CustomLayerInterface;
     const loop = new DiffusionLoop()
     // 添加到地图
-    mapR.addLayer(loop);
+    mapR.addLayer(loop as mapboxgl.CustomLayerInterface);
 }
 </script>
 <style scoped lang='scss'>
