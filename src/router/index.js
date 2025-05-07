@@ -107,6 +107,11 @@ const routes = [
     name: "cesiumShader",
     component: () => import("@/views/cesiumShader/index.vue"),
   },
+  {
+    path: "/cesiumFlyTime",
+    name: "cesiumFlyTime",
+    component: () => import("@/views/cesiumFlyTime/index.vue"),
+  },
 ];
 
 const router = createRouter({

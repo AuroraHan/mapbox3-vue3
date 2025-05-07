@@ -118,6 +118,11 @@ const routsList = ref([
         type: 'cesium'
     },
     {
+        name: 'Cesium时间飞行',
+        path: 'cesiumFlyTime',
+        type: 'cesium'
+    },
+    {
         name: 'ThreeBox',
         path: 'baseThreeBox',
         type: 'other'
