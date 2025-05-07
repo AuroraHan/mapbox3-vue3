@@ -110,18 +110,35 @@ const czml = [
         //         cartesian: [0.0, 0.0, -10.0],
         //     },
         // },
+        label: {
+            text: "无人机1号",
+            scale: 1.0,
+            pixelOffset: {
+                "cartesian2": [
+                    20.0, 35.0
+                ]
+            },
+            fillColor: [
+                {
+                    "interval": "2025-04-28T10:37:10Z/2025-04-28T10:38:50Z",
+                    "rgba": [
+                        255, 255, 0, 255
+                    ]
+                }
+            ],
+            outlineColor: {
+                "rgba": [
+                    255, 0, 0, 255
+                ]
+            },
+        },
         model: {
             gltf: "/models/CesiumDrone.glb",
             scale: 2.0,
             minimumPixelSize: 128,
-            // nodeTransformations: {
-            //     "default": {  // 使用模型中的根节点名称（不同模型可能不同）
-            //         "rotation": {
-            //             // 关键点2：使用四元数格式 [x, y, z, w]
-            //             "unitQuaternion": [0, 0, 0.7071, 0.7071]  // 绕Z轴旋转90度（四元数格式）
-            //         }
-            //     }
-            // }
+        },
+        orientation: {
+            "velocityReference": "#position"
         },
         position: {
             epoch: "2025-04-28T10:37:10Z",
