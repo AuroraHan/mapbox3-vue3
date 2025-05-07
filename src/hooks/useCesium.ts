@@ -7,6 +7,7 @@ interface options {
   timeline?: boolean;
   animation?: boolean;
   addTerrain?: boolean;
+  shouldAnimate?: boolean;
 }
 
 export function useCesium(options: options) {
@@ -30,6 +31,7 @@ export function useCesium(options: options) {
       navigationHelpButton: false, //是否现在帮助按钮
       timeline: options.timeline,
       animation: options.animation,
+      shouldAnimate: options.shouldAnimate
     });
 
     //添加地形
