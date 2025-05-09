@@ -78,6 +78,11 @@ const routes = [
     component: () => import("@/views/mapboxThree/index.vue"),
   },
   {
+    path: "/mapboxPopup",
+    name: "mapboxPopup",
+    component: () => import("@/views/mapboxPopup/index.vue"),
+  },
+  {
     path: "/cesiumPopup",
     name: "cesiumPopup",
     component: () => import("@/views/cesiumPopup/index.vue"),
@@ -106,6 +111,11 @@ const routes = [
     path: "/cesiumShader",
     name: "cesiumShader",
     component: () => import("@/views/cesiumShader/index.vue"),
+  },
+  {
+    path: "/cesiumFlyModel",
+    name: "cesiumFlyModel",
+    component: () => import("@/views/cesiumFlyModel/index.vue"),
   },
   {
     path: "/cesiumFlyTime",
