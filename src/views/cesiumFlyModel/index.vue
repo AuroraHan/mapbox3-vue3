@@ -1,14 +1,21 @@
 <template>
     <div id="cesiumContainer"></div>
-    <div class="flex-box" @click="loadModel">加载固定模型</div>
+    <div class="flex-box" @click="loadModel">加载模型查看历史</div>
     <div class="flex-box" style="top: 9%;" @click="addCzml">加载单个飞行</div>
     <div class="flex-box" style="top: 15%;" @click="singModelFly">案例三</div>
+    <div class="flex-box" style="top: 21%;" @click="multiModel">多模型加载</div>
+
+    <!-- 弹出框 -->
+    <CesiumDialog :show="isOpen" @exportCesium="exportCesium" @closeDialog="closeDialog"></CesiumDialog>
+    <MyDialog ref="mydialog" :positionXY="pos" @showHistory="showHistory"></MyDialog>
 </template>
 
 <script lang='ts' setup>
-import { onMounted } from 'vue';
+import { onMounted, ref, reactive } from 'vue';
 import * as Cesium from 'cesium';
 import { useCesium } from '../../hooks/useCesium'
+import CesiumDialog from '/@/components/cesiumDialog/index.vue'
+import MyDialog from '/@/components/cesiumPopupTwo/index.vue';
 
 let cesiumV: Cesium.Viewer;
 const { getCesiumViewer } = useCesium({ container: 'cesiumContainer', timeline: true, animation: true, shouldAnimate: true })
@@ -64,13 +71,17 @@ const baseConfig = () => {
 
     }
 
-    // addCzml()
 }
 
 /* 第一个方法 */
 
 //加载一组模型配置
 const entityList: Array<Cesium.Entity> = []
+const pos = reactive({
+    xAxis: 0,
+    yAxis: 0
+})
+const mydialog = ref()
 const loadModel = () => {
     const list = [
         {
@@ -127,18 +138,62 @@ const loadModel = () => {
         entityList.push(entity)
     }
 
+    let handle = new Cesium.ScreenSpaceEventHandler(cesiumV.scene.canvas)
+    handle.setInputAction((clickEvent: any) => {
+        let pickData = cesiumV.scene.pick(clickEvent.position)
+
+        //存在则打开弹出框
+        if (Cesium.defined(pickData)) {
+            let scratch = new Cesium.Cartesian2();
+            cesiumV.scene.preRender.addEventListener(() => {
+                //获取模型的坐标数据
+                const modelPos = pickData.primitive.id.position.getValue()
+                let position = new Cesium.Cartesian3(modelPos.x, modelPos.y, modelPos.z);
+                let canvasPosition = cesiumV.scene.cartesianToCanvasCoordinates(position, scratch);
+
+                if (Cesium.defined(canvasPosition)) {
+                    pos.xAxis = canvasPosition.x - 100
+                    pos.yAxis = canvasPosition.y - 70
+                }
+            })
+
+            mydialog.value.openDialog()
+        } else {
+            mydialog.value.closeDialog()
+        }
+    }, Cesium.ScreenSpaceEventType.LEFT_CLICK)
+
+    // dynamicPos()
 }
 
+const isOpen = ref(false)
+
+const showHistory = () => {
+    isOpen.value = true
+}
+
+//暴露的方法
+const exportCesium = (v: any) => {
+    addCzml(v)
+}
+
+//关闭弹出框的回调
+const closeDialog = () => {
+    isOpen.value = false
+}
 
 //进行动态更新
 const dynamicPos = () => {
-    cesiumV.entities.suspendEvents();
-    entityList.forEach((entity) => {
-        //方法一
-        entity.position = getRandomPos()
+    setInterval(() => {
+        cesiumV.entities.suspendEvents();
+        entityList.forEach((entity) => {
+            //方法一
+            entity.position = getRandomPos()
 
-    })
-    cesiumV.entities.suspendEvents();
+        })
+        cesiumV.entities.suspendEvents();
+    }, 4000)
+
 }
 
 
@@ -148,7 +203,7 @@ const getRandomPos = () => {
 
 /* 第二个方法 */
 //加载单个模型数据
-const addCzml = async () => {
+const addCzml = async (cesiumV: Cesium.Viewer) => {
     const dataSource = await cesiumV.dataSources.add(Cesium.CzmlDataSource.load(czml));
     cesiumV.trackedEntity = dataSource.entities.getById('wrj')
     // cesiumV.trackingReferenceFrame = Cesium.TrackingReferenceFrame.AUTODETECT;
@@ -366,7 +421,144 @@ const singModelFly = () => {
     cesiumV.trackedEntity = entity;
 }
 
+//多个模型在地图上加载
+const multiModel = async () => {
+    const mulCzml = [
+        {
+            id: "document",
+            name: "CZML Path",
+            version: "1.0",
+            // clock: {
+            //     interval: "2025-04-28T10:37:10Z/2025-04-28T10:38:50Z",
+            //     currentTime: "2025-04-28T10:37:10Z",
+            //     multiplier: 1,
+            // },
+        },
+        {
+            id: 'wrj',
+            availability: "2025-04-28T10:37:10Z/2025-04-28T10:38:50Z",
+            path: {
+                material: {
+                    polylineOutline: {
+                        color: {
+                            rgba: [255, 0, 255, 255],
+                        },
+                        outlineColor: {
+                            rgba: [0, 255, 255, 255],
+                        },
+                        outlineWidth: 5,
+                    },
+                },
+                width: 8,
+            },
+            label: {
+                text: "无人机1号",
+                pixelOffset: {
+                    "cartesian2": [
+                        18.0, 35.0
+                    ]
+                },
+            },
+            model: {
+                gltf: "/models/CesiumDrone.glb",
+                scale: 2.0,
+                minimumPixelSize: 128,
+            },
+            orientation: {
+                "velocityReference": "#position"
+            },
+            position: {
+                epoch: "2025-04-28T10:37:10Z",
+                cartographicDegrees: [
+                    0, 113.28328631492639, 23.111433215435753, 1500,
+                    5, 113.50714976568543, 23.694634169248147, 2000,
+                    10, 113.6299135935181, 24.169871656793887, 2500,
+                    15, 113.70934901152907, 24.85320754694945, 3000,
+                    20, 113.65157704589103, 25.61746954483914, 3500,
+                    25, 113.49150502960089, 26.297929565617395, 4000,
+                    30, 113.32225282991868, 26.919159149253858, 4500,
+                    35, 112.96275429879444, 27.54911441094461, 5000,
+                    40, 112.9449382777749, 28.234076869525722, 5500,
+                    45, 112.8784720236336, 28.543897602427435, 6000,
+                    50, 112.92669944031508, 29.130070639697294, 6500,
+                    55, 113.14372281537442, 29.697212026021546, 7000,
+                    60, 113.43308669785722, 30.07354009292432, 7500,
+                    65, 113.74053647919294, 30.38085734849267, 8000,
+                    70, 114.17458307056592, 30.583470562015506, 8000,
+                    75, 114.86182323969172, 30.899530905574252, 8000,
+                    80, 115.597291344067, 31.30215750288525, 8000,
+                    85, 116.22424543023169, 31.641504716189345, 7000,
+                    90, 117.20407629814952, 31.812939039523783, 6000,
+                    95, 118.31626581796667, 32.256622831560406, 5500,
+                    100, 118.54273109813403, 33.02364879361495, 5000,
+                ]
+            }
+        },
+        {
+            id: 'hc',
+            availability: "2025-04-28T10:37:10Z/2025-04-28T10:38:50Z",
+            path: {
+                material: {
+                    polylineOutline: {
+                        color: {
+                            rgba: [255, 0, 255, 255],
+                        },
+                        outlineColor: {
+                            rgba: [0, 255, 255, 255],
+                        },
+                        outlineWidth: 5,
+                    },
+                },
+                width: 8,
+            },
+            label: {
+                text: "航测1号",
+                pixelOffset: {
+                    "cartesian2": [
+                        18.0, 35.0
+                    ]
+                },
+            },
+            model: {
+                gltf: "/models/Cesium_Air.glb",
+                scale: 2.0,
+                minimumPixelSize: 128,
+            },
+            orientation: {
+                "velocityReference": "#position"
+            },
+            position: {
+                epoch: "2025-04-28T10:37:10Z",
+                cartographicDegrees: [
+                    0, 113.7923396363662, 23.106990160005353, 1500,
+                    5, 114.28048350624312, 23.739311443864054, 2000,
+                    10, 114.82468623840595, 24.484386889937966, 2500,
+                    15, 115.31806092785678, 25.663489133757224, 3000,
+                    20, 116.04843929319111, 26.710839538617932, 3500,
+                    25, 116.069918991115, 27.761318438407528, 4000,
+                    30, 116.93720744983318, 28.8409109572179, 4500,
+                    35, 118.24769147243478, 29.715664149451882, 5000,
+                    40, 119.13560153143925, 30.787055778457216, 5500,
+                    // 45, 112.8784720236336, 28.543897602427435, 6000,
+                    // 50, 112.92669944031508, 29.130070639697294, 6500,
+                    // 55, 113.14372281537442, 29.697212026021546, 7000,
+                    // 60, 113.43308669785722, 30.07354009292432, 7500,
+                    // 65, 113.74053647919294, 30.38085734849267, 8000,
+                    // 70, 114.17458307056592, 30.583470562015506, 8000,
+                    // 75, 114.86182323969172, 30.899530905574252, 8000,
+                    // 80, 115.597291344067, 31.30215750288525, 8000,
+                    // 85, 116.22424543023169, 31.641504716189345, 7000,
+                    // 90, 117.20407629814952, 31.812939039523783, 6000,
+                    // 95, 118.31626581796667, 32.256622831560406, 5500,
+                    // 100, 118.54273109813403, 33.02364879361495, 5000,
+                ]
+            }
+        }
+    ]
 
+    const dataSource = await cesiumV.dataSources.add(Cesium.CzmlDataSource.load(mulCzml));
+    // cesiumV.trackedEntity = dataSource.entities.getById('hc')
+}
 
 </script>
 <style lang='scss' scoped>
