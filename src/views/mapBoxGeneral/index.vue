@@ -21,7 +21,7 @@ onMounted(() => {
 const proConfig = () => {
     mapR = getMap()
     mapR?.on('load', () => {
-        constLine()
+        loadData()
     })
 
     mapR?.on('click', (e) => {
@@ -60,6 +60,80 @@ const constLine = () => {
             'line-color': '#ffff00'
         }
     })
+}
+
+let droneData: Array<any> = []; // 存储无人机轨迹数据
+const loadData = () => {
+    fetch('/geojson/flypath.geojson')
+        .then(response => response.json())
+        .then(data => {
+            droneData = data.features
+                .map(f => ({
+                    lng: f.geometry.coordinates[0],
+                    lat: f.geometry.coordinates[1],
+                    // alt: f.properties.altitude,
+                    time: new Date(f.properties.timestamp).getTime()
+                }))
+                .sort((a, b) => a.time - b.time);
+
+            initAnimation();
+            // createTimelineControl();
+        });
+}
+
+function initAnimation() {
+    // 添加无人机模型源
+    mapR?.addSource('drone', {
+        type: 'geojson',
+        data: {
+            'type': 'Feature',
+            'properties': {},
+            'geometry': {
+                'coordinates': [droneData[0].lng, droneData[0].lat],
+                'type': 'Point'
+            }
+        }
+    })
+
+    mapR?.addLayer({
+        'id': 'drone-model',
+        'type': 'model',
+        'source': 'drone',
+        'layout': {
+            'model-id': 'http://localhost:4000/models/CesiumDrone.glb'
+            // 'model-id': 'https://docs.mapbox.com/mapbox-gl-js/assets/tower.glb'
+        },
+        'paint': {
+            'model-opacity': 1,
+            // 'model-rotation': [0.0, 0.0, 35.0],
+            'model-scale': [100, 100, 100],
+            // 'model-color-mix-intensity': 0,
+            // 'model-cast-shadows': true,
+            // 'model-emissive-strength': 0.8
+        }
+    });
+
+    // 添加飞行路径线
+    mapR?.addSource('flight-path', {
+        type: 'geojson',
+        data: {
+            type: 'Feature',
+            geometry: {
+                type: 'LineString',
+                coordinates: droneData.map(p => [p.lng, p.lat])
+            }
+        }
+    });
+
+    mapR?.addLayer({
+        id: 'flight-path',
+        type: 'line',
+        source: 'flight-path',
+        paint: {
+            'line-color': '#ff0000',
+            'line-width': 3
+        }
+    });
 }
 
 

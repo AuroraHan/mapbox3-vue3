@@ -1,0 +1,320 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "1",
+        "Conc": 10,
+        "time": "2025-04-28T10:37:10Z"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          113.28328631492639,
+          23.111433215435753
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "2",
+        "Conc": 10,
+        "time": "2025-04-28T10:37:15Z"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          113.50714976568543,
+          23.694634169248147
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "3",
+        "Conc": 10,
+        "time": "2025-04-28T10:37:20Z"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          113.6299135935181,
+          24.169871656793887
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "4",
+        "Conc": 10,
+        "time": "2025-04-28T10:37:25Z"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          113.70934901152907,
+          24.85320754694945
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "5",
+        "Conc": 10,
+        "time": "2025-04-28T10:37:30Z"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          113.65157704589103,
+          25.61746954483914
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "6",
+        "Conc": 10,
+        "time": "2025-04-28T10:37:35Z"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          113.49150502960089,
+          26.297929565617395
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "7",
+        "Conc": 10,
+        "time": "2025-04-28T10:37:40Z"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          113.32225282991868,
+          26.919159149253858
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "8",
+        "Conc": 10,
+        "time": "2025-04-28T10:37:45Z"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          112.96275429879444,
+          27.54911441094461
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "9",
+        "Conc": 10,
+        "time": "2025-04-28T10:37:50Z"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          112.9449382777749,
+          28.234076869525722
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "10",
+        "Conc": 10,
+        "time": "2025-04-28T10:37:55Z"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          112.8784720236336,
+          28.543897602427435
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "11",
+        "Conc": 10,
+        "time": "2025-04-28T10:38:00Z"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          112.92669944031508,
+          29.130070639697294
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "12",
+        "Conc": 10,
+        "time": "2025-04-28T10:38:05Z"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          113.14372281537442,
+          29.697212026021546
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "13",
+        "Conc": 10,
+        "time": "2025-04-28T10:38:10Z"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          113.43308669785722,
+          30.07354009292432
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "14",
+        "Conc": 10,
+        "time": "2025-04-28T10:38:15Z"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          113.74053647919294,
+          30.38085734849267
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "15",
+        "Conc": 10,
+        "time": "2025-04-28T10:38:20Z"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          114.17458307056592,
+          30.583470562015506
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "16",
+        "Conc": 10,
+        "time": "2025-04-28T10:38:25Z"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          114.86182323969172,
+          30.899530905574252
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "17",
+        "Conc": 10,
+        "time": "2025-04-28T10:38:30Z"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          115.597291344067,
+          31.30215750288525
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "18",
+        "Conc": 10,
+        "time": "2025-04-28T10:38:35Z"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          116.22424543023169,
+          31.641504716189345
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "19",
+        "Conc": 10,
+        "time": "2025-04-28T10:38:40Z"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          117.20407629814952,
+          31.812939039523783
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "20",
+        "Conc": 10,
+        "time": "2025-04-28T10:38:45Z"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          118.31626581796667,
+          32.256622831560406
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "21",
+        "Conc": 10,
+        "time": "2025-04-28T10:38:50Z"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          118.54273109813403,
+          33.02364879361495
+        ]
+      }
+    }
+  ]
+}
