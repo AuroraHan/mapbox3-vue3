@@ -25,7 +25,7 @@ export function useMapbox(options: options) {
         },
       },
       glyphs: "../../static/glyphs/{fontstack}/{range}.pbf",
-      sprite: "http://localhost:4001/static/mysprite/sprite@2x",
+      sprite: "http://localhost:4000/static/mysprite/sprite",
       // sprite: "http://localhost:4001/static/images/sprite",
       layers: [
         {

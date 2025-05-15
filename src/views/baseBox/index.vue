@@ -205,6 +205,7 @@ const onClick = (item: any) => {
 .container {
     padding: 5px;
     display: flex;
+    flex-wrap: wrap;
     // display: grid;
     // grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
     // grid-template-rows: 230px 230px 230px 230px;
@@ -213,7 +214,7 @@ const onClick = (item: any) => {
 
     .box {
         padding: 5px 12px;
-        width: 180px;
+        width: 178px;
         height: 90px;
         background-color: #64ac29;
         cursor: pointer;
@@ -222,6 +223,7 @@ const onClick = (item: any) => {
         align-items: center;
         font-size: 18px;
         margin-left: 12px;
+        margin-bottom: 10px;
         transition: all 0.3s ease;
         border-radius: 5px;
         /* 添加过渡效果 */
