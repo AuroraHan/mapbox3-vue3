@@ -7,6 +7,24 @@
     </div>
 
     <MapPopup @exportMap="exportMap" mapId='map-popup' :show="resultDialog" />
+
+    <hr>
+
+    <div class="time-line">
+
+    </div>
+
+    <hr>
+
+    <h1>时间轴组件示例</h1>
+    <TimeAxis />
+
+    <h2>带当前时间的版本</h2>
+    <TimeAxis :show-current-time="true" />
+
+    <hr>
+    <TimeRangeAxis v-model:startTime="selectedStart" v-model:endTime="selectedEnd" :min-duration="30" />
+
 </template>
 
 <script setup lang='ts'>
@@ -16,6 +34,11 @@ import mapboxgl from "mapbox-gl";
 import { Scene, HeatmapLayer } from '@antv/l7'
 //@ts-ignore
 import MapPopup from '@/components/MapPopup/index.vue'
+import TimeAxis from '@/components/timeLine/index.vue'
+import TimeRangeAxis from '@/components/timeRangeAxis/index.vue'
+
+const selectedStart = ref('09:00');
+const selectedEnd = ref('18:00');
 
 const resultDialog = ref(false)
 
@@ -79,5 +102,11 @@ dd()
 <style scoped>
 h2 {
     text-align: center;
+}
+
+.time-line {
+    width: 100%;
+    height: 30px;
+    background-image: repeating-linear-gradient(to right, black 0px, black 1px, transparent 1px, transparent 10px);
 }
 </style>
