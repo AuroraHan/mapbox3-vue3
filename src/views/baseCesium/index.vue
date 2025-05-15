@@ -39,6 +39,7 @@ onMounted(() => {
 const baseConfig = () => {
     cesiumV = getCesiumViewer()
     getLngLat()
+    geojsonPri()
 }
 
 //根据鼠标获取经纬度
@@ -291,13 +292,13 @@ const geojsonPri = async () => {
                 ),
                 attributes: {
                     // 所有实例颜色相同（若需不同颜色，使用 ColorGeometryInstanceAttribute）
-                    // color: new Cesium.ColorGeometryInstanceAttribute(
-                    //     Cesium.Color.fromRandom().red,
-                    //     Cesium.Color.fromRandom().green,
-                    //     Cesium.Color.fromRandom().blue,
-                    //     1.0
-                    // )
-                    color: new Cesium.ColorGeometryInstanceAttribute(1.0, c, 0.0, 1.0)
+                    color: new Cesium.ColorGeometryInstanceAttribute(
+                        Cesium.Color.fromRandom().red,
+                        Cesium.Color.fromRandom().green,
+                        Cesium.Color.fromRandom().blue,
+                        1.0
+                    )
+                    // color: new Cesium.ColorGeometryInstanceAttribute(1.0, c, 0.0, 1.0)
                 }
             }))
         }

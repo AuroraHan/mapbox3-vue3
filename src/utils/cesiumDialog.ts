@@ -1,6 +1,6 @@
 import * as Cesium from "cesium";
 import { createApp, h } from "vue";
-import Popup from "@/components/cesiumPopup/index.vue";
+import Popup from "/@/components/cesiumPopup/index.vue";
 
 export default class Dialog {
   viewer: any;

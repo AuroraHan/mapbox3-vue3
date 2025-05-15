@@ -4,7 +4,7 @@
         v-model:active="active" :draggable="true" :resizable="false" :parent="true" class="def-class"
         classNameActive="classNameActive">
         <div class="tools">
-            <div>工具栏</div>
+            <div>{{ title || '工具栏' }}</div>
             <!-- <div class="close" @click="onClose">X</div> -->
         </div>
 
@@ -28,7 +28,10 @@ const props = defineProps({
         height?: number,
         x?: number,
         y?: number
-    }>
+    }>,
+    title: {
+        type: String
+    }
 })
 
 const active = ref(false)
