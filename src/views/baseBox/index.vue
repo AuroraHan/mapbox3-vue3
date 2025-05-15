@@ -48,6 +48,11 @@ const routsList = ref([
         type: 'custom'
     },
     {
+        name: '基础空白页面2',
+        path: 'basePageTwo',
+        type: 'custom'
+    },
+    {
         name: '基础Mapbox',
         path: 'mapBoxBase',
         type: 'mapbox'
@@ -63,8 +68,13 @@ const routsList = ref([
         type: 'mapbox'
     },
     {
-        name: 'Mapbox弹出框',
-        path: 'popup',
+        name: 'Mapbox图层切换',
+        path: 'mapboxVector',
+        type: 'mapbox'
+    },
+    {
+        name: 'Mapbox通用',
+        path: 'mapBoxGeneral',
         type: 'mapbox'
     },
     {
@@ -75,11 +85,6 @@ const routsList = ref([
     {
         name: 'Mapbox+Three',
         path: 'mapboxThree',
-        type: 'mapbox'
-    },
-    {
-        name: 'Mapbox图层切换',
-        path: 'mapboxVector',
         type: 'mapbox'
     },
     {
@@ -103,11 +108,6 @@ const routsList = ref([
         type: 'cesium'
     },
     {
-        name: 'Cesium飞行',
-        path: 'cesiumFlyModel',
-        type: 'cesium'
-    },
-    {
         name: 'Cesium体渲染',
         path: 'cesiumVoxel',
         type: 'cesium'
@@ -128,8 +128,8 @@ const routsList = ref([
         type: 'cesium'
     },
     {
-        name: 'Cesium时间飞行',
-        path: 'cesiumFlyTime',
+        name: 'Cesium飞行',
+        path: 'cesiumFlyModel',
         type: 'cesium'
     },
     {

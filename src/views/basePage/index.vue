@@ -25,6 +25,9 @@
     <hr>
     <TimeRangeAxis v-model:startTime="selectedStart" v-model:endTime="selectedEnd" :min-duration="30" />
 
+    <hr>
+    <TimeOne :startDateTime="selectedStart1" :endDateTime="selectedEnd1" :min-duration="60"></TimeOne>
+
 </template>
 
 <script setup lang='ts'>
@@ -32,10 +35,13 @@ import { reactive, ref, onBeforeMount, onMounted } from 'vue'
 import * as Turf from '@turf/turf'
 import mapboxgl from "mapbox-gl";
 import { Scene, HeatmapLayer } from '@antv/l7'
-//@ts-ignore
-import MapPopup from '@/components/MapPopup/index.vue'
-import TimeAxis from '@/components/timeLine/index.vue'
-import TimeRangeAxis from '@/components/timeRangeAxis/index.vue'
+import MapPopup from '/@/components/mapPopup/index.vue'
+import TimeAxis from '/@/components/timeLine/index.vue'
+import TimeRangeAxis from '/@/components/timeRangeAxis/index.vue'
+import TimeOne from '/@/components/timeOne/index.vue'
+
+const selectedStart1 = ref('2024-12-06T02:00:05');
+const selectedEnd1 = ref('2024-12-13T12:12:14');
 
 const selectedStart = ref('09:00');
 const selectedEnd = ref('18:00');
@@ -107,6 +113,6 @@ h2 {
 .time-line {
     width: 100%;
     height: 30px;
-    background-image: repeating-linear-gradient(to right, black 0px, black 1px, transparent 1px, transparent 10px);
+    background-image: repeating-linear-gradient(to right, black 0px, black 0.1px, transparent 1px, transparent 5px);
 }
 </style>

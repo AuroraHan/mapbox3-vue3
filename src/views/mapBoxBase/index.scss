@@ -10,7 +10,12 @@
     align-items: center;
     padding: 0 8px;
     box-sizing: border-box;
-    // justify-content: center;
+    justify-content:space-between;
+
+    .menu{
+        display: flex;
+        align-items: center;
+    }
 
     .lonlat{
         width: 310px;
@@ -27,10 +32,15 @@
     .operate{
         display: flex;
         align-items: center;
-        font-weight: 800;
+        font-weight: 100;
+        color: #fcfcfc;
         div{
             margin-right: 5px;
         }
+    }
+
+    .cut-img{
+        margin-right: 5px;
     }
 }
 
@@ -112,11 +122,12 @@
             display: flex;
             align-items: center;
             line-height: 40px;
-            font-weight: bold;
-            color: rgb(49, 58, 55);
-    
+            // font-weight: bold;
+            font-size: 18px;
+            color: rgb(71, 107, 95);
             .title {
                 margin-right: 10px;
+                width: 90px;
             }
         }
     }
