@@ -18,7 +18,7 @@
 import * as Cesium from 'cesium';
 import { inject } from 'vue'
 //@ts-ignore
-import { useCesiumS } from '@/stores/cesiumStore'
+import { useCesiumS } from '/@/stores/cesiumStore'
 
 // const { viewer } = useCesiumS()
 

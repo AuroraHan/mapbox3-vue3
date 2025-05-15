@@ -29,7 +29,7 @@ import { reactive, PropType, toRefs } from 'vue'
 import * as Turf from '@turf/turf'
 import mapboxgl from 'mapbox-gl';
 //@ts-ignore
-import WinControl from '@/components/winControl/index.vue'
+import WinControl from '/@/components/winControl/index.vue'
 
 const props = defineProps({
     drawI: {
@@ -82,7 +82,7 @@ const listener = () => {
     // props.mapI.on('draw.update', updateArea);
 
     function updateArea(e: any) {
-        // console.log(e, 'eeeee');
+        console.log(e, 'eeeee');
         //计算距离
         if (models.plotType == 'line') {
             models.long = (Turf.length(e.features[0])).toFixed(2) + 'km'

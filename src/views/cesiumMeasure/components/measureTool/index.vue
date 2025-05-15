@@ -8,7 +8,7 @@
 <script setup lang='ts'>
 import coordPlot from './measureUtils.vue'
 //@ts-ignore
-import WinControl from '@/components/winControl/index.vue'
+import WinControl from '/@/components/winControl/index.vue'
 
 
 </script>

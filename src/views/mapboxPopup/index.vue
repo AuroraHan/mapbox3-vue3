@@ -8,11 +8,11 @@ import { ref, onMounted } from 'vue';
 import { useMapbox } from '../../hooks/useMapBox'
 import { PointLike } from 'mapbox-gl';
 import * as Cesium from 'cesium';
-import CesiumDialog from '@/components/cesiumDialog/index.vue'
+import CesiumDialog from '/@/components/cesiumDialog/index.vue'
 
 
 let mapR: mapboxgl.Map;
-const { getMap } = useMapbox({ container: 'map-pop', isOffline: false })
+const { getMap } = useMapbox({ container: 'map-pop', isOffline: true })
 
 
 onMounted(() => {
