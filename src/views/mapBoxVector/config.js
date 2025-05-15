@@ -129,6 +129,22 @@ export const mapStyle = [
     enabled: false,
   },
   {
+    name: '中国人口数据分布',
+    id: 'china_pop',
+    type: 'raster',//栅格类型 使用wmts服务
+    typeName: '栅格地图',
+    dataSourceName: '地图',
+    tiles: [
+      "geoserverApi/geoserver/gwc/service/tms/1.0.0/k-peoject%3Achina-pop@EPSG%3A900913@png/{z}/{x}/{y}.png"
+    ],
+    scheme: "tms",
+    tileSize: 256,
+    minzoom: 0,
+    maxzoom: 18,
+    enabled: false,
+    isLegend: true,
+  },
+  {
     name: "世界城市分布",
     id: "worldcity",
     type: "geojson", //
@@ -205,6 +221,28 @@ export const mapStyle = [
     paint: {
       "fill-extrusion-color": "red",
       "fill-extrusion-height": ["*", ["to-number", ["get", "height"]], 10],
+      "fill-extrusion-base": 0,
+      "fill-extrusion-opacity": 1,
+    },
+    enableText: false, //开启文本显示
+    enabled: false,
+  },
+  {
+    name: "三亚建筑物",
+    id: "sanyajz",
+    type: "fill-extrusion", //三维
+    typeName: "矢量地图",
+    dataSourceName: "建筑物分布数据库",
+    layerType: "",
+    tiles: [
+      "http://127.0.0.1:10001/geoserver/gxh/gwc/service/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&LAYER=gxh:sanya&STYLE=&TILEMATRIX=EPSG:900913:{z}&TILEMATRIXSET=EPSG:900913&FORMAT=application/vnd.mapbox-vector-tile&TILECOL={x}&TILEROW={y}",
+    ],
+    wms: false,
+    sourceLayer: "sanya",
+    layout: {},
+    paint: {
+      "fill-extrusion-color": "#5aff00",
+      "fill-extrusion-height": ["*", ["to-number", ["get", "height"]], 1],
       "fill-extrusion-base": 0,
       "fill-extrusion-opacity": 1,
     },

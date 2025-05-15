@@ -146,6 +146,7 @@ const initMap = () => {
     mapR.removeControl(map._logoControl);
 
     map.on('load', () => {
+        addDemData()
     })
 
     map.on('click', (e) => {
@@ -177,6 +178,26 @@ const initMap = () => {
         //     }
         // }
 
+    })
+}
+
+//添加高程数据
+const addDemData = () => {
+    mapR?.addSource('dem', {
+        type: 'raster-dem',
+        tiles: ['/dem/{z}/{x}/{y}.png'],
+        tileSize: 256
+    })
+    mapR?.setTerrain({ source: 'dem', exaggeration: 2 })
+    mapR?.addLayer({
+        id: 'dem',
+        type: 'hillshade',
+        source: 'dem',
+        paint: {
+            // "hillshade-shadow-color": "#ffffff",
+            // "hillshade-accent-color": "#ffffff"
+        },
+        maxzoom: 12
     })
 }
 
@@ -222,36 +243,6 @@ const addPbfServer = () => {
             "fill-outline-color": "#ffff00",
         }
     })
-}
-
-//添加高程数据
-const addDemData = () => {
-    mapR?.addSource('dem', {
-        type: 'raster-dem',
-        tiles: ['/dem/Mapnik/{z}/{x}/{y}.png'],
-        tileSize: 256,
-        maxzoom: 12,
-        // minzoom: 7
-    })
-
-    // mapR?.addSource('dem', {
-    //     'type': 'raster-dem',
-    //     'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
-    //     'tileSize': 512,
-    //     'maxzoom': 14
-    // });
-
-
-    mapR?.addLayer({
-        id: 'dem',
-        type: 'hillshade',
-        source: 'dem',
-        paint: {
-            // "hillshade-shadow-color": "#ffffff",
-            // "hillshade-accent-color": "#ffffff"
-        }
-    })
-    mapR?.setTerrain({ source: 'dem', exaggeration: 1 })
 }
 
 //控制弹出框
