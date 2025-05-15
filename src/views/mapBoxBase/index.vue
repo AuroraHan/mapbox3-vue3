@@ -58,7 +58,7 @@ import MapboxDraw from "@mapbox/mapbox-gl-draw";
 import { AnimatedGIF, CanvasIcon } from '@sakitam-gis/viz-mapbox-gl';
 import { useMapbox } from '../../hooks/useMapBox'
 import Popup from './components/popup.vue';
-import { createImg } from '../../utils/mapTools'
+import { createImg, flyTo } from '../../utils/mapTools'
 import DrawTools from './components/drawTools.vue';
 import EquipmentManage from './components/equipmentManage.vue'
 import Weather from './components/weather.vue'
@@ -130,6 +130,7 @@ const baseConfig = () => {
         // addPoint()//多个点
         // stainRain()
         // fillImage()
+        addPoint()
     })
 
     mapR.on('mousemove', (e: { lngLat: { lat: number, lng: number } }) => {
@@ -194,21 +195,40 @@ const getSiteInfo = (data: any) => {
     }
 }
 
-//
+//添加三维模型
 const addPoint = () => {
+    flyTo(mapR, [120, 30], 13)
     mapR.addSource('test', {
         type: 'geojson',
-        data: '/geojson/grid_points.geojson'
+        data: {
+            'type': 'Feature',
+            'properties': {
+                'model-uri': 'http://localhost:4000/models/CesiumDrone.glb'
+            },
+            'geometry': {
+                'coordinates': [120, 30],
+                'type': 'Point'
+            }
+        }
     })
 
     mapR.addLayer({
-        id: 'test',
-        source: 'test',
-        type: 'circle',
-        paint: {
-            'circle-color': '#ff0000',
+        'id': 'tower',
+        'type': 'model',
+        'source': 'test',
+        'layout': {
+            'model-id': 'http://localhost:4000/models/CesiumDrone.glb'
+            // 'model-id': 'https://docs.mapbox.com/mapbox-gl-js/assets/tower.glb'
         },
-    })
+        'paint': {
+            'model-opacity': 1,
+            // 'model-rotation': [0.0, 0.0, 35.0],
+            'model-scale': [100, 100, 100],
+            // 'model-color-mix-intensity': 0,
+            // 'model-cast-shadows': true,
+            // 'model-emissive-strength': 0.8
+        }
+    });
 }
 
 
