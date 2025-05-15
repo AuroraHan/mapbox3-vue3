@@ -1,126 +1,126 @@
 import { createRouter, createWebHashHistory } from "vue-router";
 
 const routes = [
-  { path: "/", component: () => import("@/views/baseBox/index.vue") },
+  { path: "/", component: () => import("/@/views/baseBox/index.vue") },
   {
     path: "/baseBox",
     name: "baseBox",
-    component: () => import("@/views/baseBox/index.vue"),
+    component: () => import("/@/views/baseBox/index.vue"),
   },
   {
     path: "/basePage",
     name: "basePage",
-    component: () => import("@/views/basePage/index.vue"),
+    component: () => import("/@/views/basePage/index.vue"),
+  },
+  {
+    path: "/basePageTwo",
+    name: "basePageTwo",
+    component: () => import("/@/views/basePageTwo/index.vue"),
   },
   {
     path: "/mapBoxBase",
     name: "mapBoxBase",
-    component: () => import("@/views/mapBoxBase/index.vue"),
+    component: () => import("/@/views/mapBoxBase/index.vue"),
   },
   {
-    path: "/popup",
-    name: "popup",
-    component: () => import("@/views/popup/index.vue"),
+    path: "/mapBoxGeneral",
+    name: "mapBoxGeneral",
+    component: () => import("/@/views/mapBoxGeneral/index.vue"),
   },
   {
     path: "/mapboxLayer",
     name: "mapboxLayer",
-    component: () => import("@/views/mapboxLayer/index.vue"),
+    component: () => import("/@/views/mapboxLayer/index.vue"),
   },
   {
     path: "/mapboxVector",
     name: "mapboxVector",
-    component: () => import("@/views/mapBoxVector/index.vue"),
+    component: () => import("/@/views/mapBoxVector/index.vue"),
   },
   {
     path: "/baseThreeBox",
     name: "baseThreeBox",
-    component: () => import("@/views/baseThreeBox/index.vue"),
+    component: () => import("/@/views/baseThreeBox/index.vue"),
   },
   {
     path: "/baseThree",
     name: "baseThree",
-    component: () => import("@/views/baseThree/index.vue"),
+    component: () => import("/@/views/baseThree/index.vue"),
   },
   {
     path: "/mapBoxAircraft",
     name: "mapBoxAircraft",
-    component: () => import("@/views/mapBoxAircraft/index.vue"),
+    component: () => import("/@/views/mapBoxAircraft/index.vue"),
   },
   {
     path: "/baseCesium",
     name: "baseCesium",
-    component: () => import("@/views/baseCesium/index.vue"),
+    component: () => import("/@/views/baseCesium/index.vue"),
   },
   {
     path: "/mapboxL7",
     name: "mapboxL7",
-    component: () => import("@/views/mapBoxL7/index.vue"),
+    component: () => import("/@/views/mapBoxL7/index.vue"),
   },
   {
     path: "/mapboxWind",
     name: "mapboxWind",
-    component: () => import("@/views/mapboxWind/index.vue"),
+    component: () => import("/@/views/mapboxWind/index.vue"),
   },
   {
     path: "/mapboxShader",
     name: "mapboxShader",
-    component: () => import("@/views/mapboxShader/index.vue"),
+    component: () => import("/@/views/mapboxShader/index.vue"),
   },
   {
     path: "/mapBoxGaoDe",
     name: "mapBoxGaoDe",
-    component: () => import("@/views/mapBoxGaoDe/index.vue"),
+    component: () => import("/@/views/mapBoxGaoDe/index.vue"),
   },
   {
     path: "/mapboxThree",
     name: "mapboxThree",
-    component: () => import("@/views/mapboxThree/index.vue"),
+    component: () => import("/@/views/mapboxThree/index.vue"),
   },
   {
     path: "/mapboxPopup",
     name: "mapboxPopup",
-    component: () => import("@/views/mapboxPopup/index.vue"),
+    component: () => import("/@/views/mapboxPopup/index.vue"),
   },
   {
     path: "/cesiumPopup",
     name: "cesiumPopup",
-    component: () => import("@/views/cesiumPopup/index.vue"),
+    component: () => import("/@/views/cesiumPopup/index.vue"),
   },
   {
     path: "/cesiumMeasure",
     name: "cesiumMeasure",
-    component: () => import("@/views/cesiumMeasure/index.vue"),
+    component: () => import("/@/views/cesiumMeasure/index.vue"),
   },
   {
     path: "/cesiumVoxel",
     name: "cesiumVoxel",
-    component: () => import("@/views/cesiumVoxel/index.vue"),
+    component: () => import("/@/views/cesiumVoxel/index.vue"),
   },
   {
     path: "/cesiumVoxelBox",
     name: "cesiumVoxelBox",
-    component: () => import("@/views/cesiumVoxelBox/index.vue"),
+    component: () => import("/@/views/cesiumVoxelBox/index.vue"),
   },
   {
     path: "/cesiumCluster",
     name: "cesiumCluster",
-    component: () => import("@/views/cesiumCluster/index.vue"),
+    component: () => import("/@/views/cesiumCluster/index.vue"),
   },
   {
     path: "/cesiumShader",
     name: "cesiumShader",
-    component: () => import("@/views/cesiumShader/index.vue"),
+    component: () => import("/@/views/cesiumShader/index.vue"),
   },
   {
     path: "/cesiumFlyModel",
     name: "cesiumFlyModel",
-    component: () => import("@/views/cesiumFlyModel/index.vue"),
-  },
-  {
-    path: "/cesiumFlyTime",
-    name: "cesiumFlyTime",
-    component: () => import("@/views/cesiumFlyTime/index.vue"),
+    component: () => import("/@/views/cesiumFlyModel/index.vue"),
   },
 ];
 

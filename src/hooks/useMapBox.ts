@@ -59,6 +59,17 @@ export function useMapbox(options: options) {
 
     mapR = map;
     mapR.removeControl(mapR._logoControl);
+
+    map.on("style.load", () => {
+      // 设置地球背景
+      map.setFog({
+        color: "rgb(186, 210, 235)",
+        "high-color": "rgb(36, 92, 223)",
+        "horizon-blend": 0.02,
+        "space-color": "rgb(11, 11 ,25)",
+        "star-intensity": 0.6,
+      });
+    });
   };
 
   onMounted(() => {

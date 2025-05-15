@@ -31,7 +31,7 @@ export function useCesium(options: options) {
       navigationHelpButton: false, //是否现在帮助按钮
       timeline: options.timeline,
       animation: options.animation,
-      shouldAnimate: options.shouldAnimate
+      shouldAnimate: options.shouldAnimate,
     });
 
     //添加地形
