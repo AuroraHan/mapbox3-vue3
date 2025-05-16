@@ -29,6 +29,7 @@
 <script lang='ts' setup>
 import { ref, onActivated, reactive, PropType, toRefs, computed, watch } from 'vue';
 import * as Cesium from "cesium";
+//@ts-ignore
 import Timeline from './Timeline';
 import * as Turf from '@turf/turf'
 import mapboxgl, { StyleSpecification } from "mapbox-gl";
