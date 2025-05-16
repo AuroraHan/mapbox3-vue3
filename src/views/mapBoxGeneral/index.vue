@@ -1,6 +1,6 @@
 <template>
     <div id="map"></div>
-    <div class="box"></div>
+    <div class="box" @click="animateDrone"></div>
 </template>
 
 <script setup lang="ts">
@@ -10,6 +10,7 @@ import MPop from './mPop.vue';
 import emitter from '/@/mitt/index';
 import * as Turf from '@turf/turf'
 import { useMapbox } from '../../hooks/useMapBox'
+import { flyTo } from '/@/utils/mapTools';
 
 let mapR: mapboxgl.Map | null = null;
 const { getMap } = useMapbox({ container: 'map', isOffline: true })
@@ -22,6 +23,7 @@ const proConfig = () => {
     mapR = getMap()
     mapR?.on('load', () => {
         loadData()
+        // initAnimation()
     })
 
     mapR?.on('click', (e) => {
@@ -63,6 +65,29 @@ const constLine = () => {
 }
 
 let droneData: Array<any> = []; // 存储无人机轨迹数据
+const flyPath = [
+    [113.28328631492639, 23.111433215435753],
+    [113.50714976568543, 23.694634169248147],
+    [113.6299135935181, 24.169871656793887],
+    [113.70934901152907, 24.85320754694945],
+    [113.65157704589103, 25.61746954483914],
+    [113.49150502960089, 26.297929565617395],
+    [113.32225282991868, 26.919159149253858],
+    [112.96275429879444, 27.54911441094461],
+    [112.9449382777749, 28.234076869525722],
+    [112.8784720236336, 28.543897602427435],
+    [112.92669944031508, 29.130070639697294],
+    [113.14372281537442, 29.697212026021546],
+    [113.43308669785722, 30.07354009292432],
+    [113.74053647919294, 30.38085734849267],
+    [114.17458307056592, 30.583470562015506],
+    [114.86182323969172, 30.899530905574252],
+    [115.597291344067, 31.30215750288525],
+    [116.22424543023169, 31.641504716189345],
+    [117.20407629814952, 31.812939039523783],
+    [118.31626581796667, 32.256622831560406],
+    [118.54273109813403, 33.02364879361495]
+]
 const loadData = () => {
     // fetch('/geojson/flypath.geojson')
     //     .then(response => response.json())
@@ -79,31 +104,6 @@ const loadData = () => {
     //         initAnimation();
     //         // createTimelineControl();
     //     });
-
-    const flyPath = [
-        [113.28328631492639, 23.111433215435753],
-        [113.50714976568543, 23.694634169248147],
-        [113.6299135935181, 24.169871656793887],
-        [113.70934901152907, 24.85320754694945],
-        [113.65157704589103, 25.61746954483914],
-        [113.49150502960089, 26.297929565617395],
-        [113.32225282991868, 26.919159149253858],
-        [112.96275429879444, 27.54911441094461],
-        [112.9449382777749, 28.234076869525722],
-        [112.8784720236336, 28.543897602427435],
-        [112.92669944031508, 29.130070639697294],
-        [113.14372281537442, 29.697212026021546],
-        [113.43308669785722, 30.07354009292432],
-        [113.74053647919294, 30.38085734849267],
-        [114.17458307056592, 30.583470562015506],
-        [114.86182323969172, 30.899530905574252],
-        [115.597291344067, 31.30215750288525],
-        [116.22424543023169, 31.641504716189345],
-        [117.20407629814952, 31.812939039523783],
-        [118.31626581796667, 32.256622831560406],
-        [118.54273109813403, 33.02364879361495]
-    ]
-
 
     //计算总长度
     const lineDistance = Turf.length(Turf.lineString(flyPath));
@@ -152,9 +152,6 @@ const loadData = () => {
             'model-opacity': 1,
             'model-rotation': [0.0, 0.0, ['get', 'bearing']],
             'model-scale': [1500, 1500, 1500],
-            // 'model-color-mix-intensity': 0,
-            // 'model-cast-shadows': true,
-            // 'model-emissive-strength': 0.8
         }
     });
 
@@ -174,54 +171,69 @@ const loadData = () => {
         }
     });
 
-    const arc = [];
-    const steps = 50;
-    for (let i = 0; i < lineDistance; i += lineDistance / steps) {
-        const segment = Turf.along(route.features[0], i);
-        arc.push(segment.geometry.coordinates);
+}
+
+// 动画参数
+let currentIndex = 0;
+const duration = 30000; // 总动画时间(ms)
+const interval = duration / (flyPath.length - 1);
+function animateDrone() {
+    if (currentIndex >= flyPath.length - 1) {
+        currentIndex = 0; // 循环播放
     }
 
-    let counter = 0;
+    const start = flyPath[currentIndex];
+    const end = flyPath[currentIndex + 1];
 
-    function animate() {
-        const start =
-            route.features[0].geometry.coordinates[
-            counter >= steps ? counter - 1 : counter
-            ];
-        const end =
-            route.features[0].geometry.coordinates[
-            counter >= steps ? counter : counter + 1
-            ];
-        // debugger
+    // 计算两点之间的角度(航向)
+    const bearing = Turf.bearing(start, end);
 
+    // 动画过渡
+    const droneSource = mapR?.getSource('point');
+    let progress = 0;
+    const startTime = performance.now();
 
-        if (!start || !end) {
-            return;
+    function frame(time) {
+        const elapsed = time - startTime;
+        progress = Math.min(elapsed / interval, 1);
+
+        // 插值计算当前位置
+        const currentLng = start[0] + (end[0] - start[0]) * progress;
+        const currentLat = start[1] + (end[1] - start[1]) * progress;
+
+        // 更新无人机位置和方向
+        droneSource.setData({
+            type: 'Feature',
+            geometry: {
+                type: 'Point',
+                coordinates: [currentLng, currentLat]
+            },
+            properties: {
+                bearing: bearing
+            }
+        });
+
+        // 相机跟随
+        // mapR?.flyTo({
+        //     center: [currentLng, currentLat],
+        //     bearing: bearing - 10, // 稍微偏移一点视角
+        //     pitch: 45,
+        //     speed: 0.2 // 平滑跟随
+        // });
+
+        if (progress < 1) {
+            requestAnimationFrame(frame);
+        } else {
+            currentIndex++;
+            animateDrone();
         }
-
-        point.features[0].geometry.coordinates =
-            route.features[0].geometry.coordinates[counter];
-
-        point.features[0].properties.bearing = Turf.bearing(
-            Turf.point(start),
-            Turf.point(end)
-        );
-
-        mapR?.getSource('point').setData(point);
-
-        if (counter < steps) {
-            requestAnimationFrame(animate);
-        }
-
-        counter = counter + 1;
-        console.log(point.features[0].geometry.coordinates);
-
     }
 
-    animate()
+    requestAnimationFrame(frame);
 }
 
 function initAnimation() {
+    flyTo(mapR!, [112, 31], 15)
     // 添加无人机模型源
     mapR?.addSource('drone', {
         type: 'geojson',
@@ -231,7 +243,7 @@ function initAnimation() {
                 bearing: 200
             },
             'geometry': {
-                'coordinates': [droneData[0].lng, droneData[0].lat],
+                'coordinates': [112, 31],
                 'type': 'Point'
             }
         }
@@ -255,6 +267,18 @@ function initAnimation() {
         }
     });
 
+    setInterval(() => {
+        mapR?.getSource('drone')?.setData({
+            'type': 'Feature',
+            'properties': {
+                bearing: 200
+            },
+            'geometry': {
+                'coordinates': [112, 31.002],
+                'type': 'Point'
+            }
+        });
+    }, 4000)
 
 }
 
