@@ -1,5 +1,5 @@
 <template>
-    <el-dialog :top="'9vh'" :width="boxSize.width" append-to-body v-model="show" draggablec @open="onOpenDialog"
+    <el-dialog :top="'5vh'" :width="boxSize.width" append-to-body v-model="show" draggablec @open="onOpenDialog"
         @close="onCloseDialog">
         <!-- {{ clock.currentTime }}--{{ clock.multiplier }} -->
         <div :id="mapId" :style="{ height: boxSize.height }"></div>
@@ -30,6 +30,7 @@
 import { ref, onActivated, reactive, PropType, toRefs, computed, watch } from 'vue';
 import * as Cesium from "cesium";
 import Timeline from './Timeline';
+import * as Turf from '@turf/turf'
 import mapboxgl, { StyleSpecification } from "mapbox-gl";
 
 const props = defineProps({
@@ -48,7 +49,7 @@ const props = defineProps({
         type: Object as PropType<{ width: String, height: String }>,
         default: {
             width: '83%',
-            height: '680px'
+            height: '600px'
         }
     }
 })
@@ -117,9 +118,91 @@ const onStop = () => {
 }
 
 //------
+//线性插值计算方法
+const calute = async () => {
+    const originalData = await fetch('/geojson/flypath.geojson')
+        .then(response => response.json())
+
+    // 结果数组
+    const interpolatedFeatures = [];
+
+    // 对每对连续点进行插值
+    for (let i = 0; i < originalData.features.length - 1; i++) {
+        const currentPoint = originalData.features[i];
+        const nextPoint = originalData.features[i + 1];
+
+        // 将时间转换为Date对象
+        const currentTime = new Date(currentPoint.properties.time);
+        const nextTime = new Date(nextPoint.properties.time);
+
+        // 计算时间差（毫秒）
+        const timeDiff = nextTime - currentTime;
+
+        // 计算总秒数
+        const totalSeconds = timeDiff / 1000;
+
+        // 创建线串用于插值
+        const line = Turf.lineString([
+            currentPoint.geometry.coordinates,
+            nextPoint.geometry.coordinates
+        ]);
+
+        // 添加当前点（除非是第一个点且已经添加过）
+        if (i === 0) {
+            interpolatedFeatures.push(currentPoint);
+        }
+
+        // 每秒插值一个点（跳过0秒和最后一秒）
+        for (let j = 1; j < totalSeconds; j++) {
+            // 计算插值比例 (0到1之间)
+            const fraction = j / totalSeconds;
+
+            // 沿线插值位置
+            const interpolatedCoord = Turf.along(line, Turf.length(line) * fraction).geometry.coordinates;
+
+            // 计算插值时间
+            const interpolatedTime = new Date(currentTime.getTime() + j * 1000);
+            const isoString = interpolatedTime.toISOString();
+            const formattedTime = isoString.split('.')[0] + 'Z'; // 去除毫秒部分
+
+            // 创建新的特征点
+            const interpolatedPoint = {
+                "type": "Feature",
+                "properties": {
+                    "id": `interp_${i}_${j}`,
+                    "Conc": currentPoint.properties.Conc, // 保持浓度不变
+                    "time": formattedTime
+                },
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": interpolatedCoord
+                }
+            };
+
+            interpolatedFeatures.push(interpolatedPoint);
+        }
+
+        // 添加下一个点（最后一个点会在最后一次循环时添加）
+        interpolatedFeatures.push(nextPoint);
+    }
+    return interpolatedFeatures
+}
+
 //加载路线配置
 const layerId = 'fly-path'
-const addFlyPath = () => {
+const addFlyPath = async () => {
+
+    //通过线性插值获取位置
+    const features = await calute()
+
+    mapR?.addSource('point', {
+        type: 'geojson',
+        data: {
+            type: 'FeatureCollection',
+            features: features
+        }
+    })
+
     mapR?.addSource(layerId, {
         type: 'geojson',
         data: '/geojson/time.geojson'
@@ -139,7 +222,7 @@ const addFlyPath = () => {
     mapR?.addLayer({
         id: layerId,
         type: 'symbol',
-        source: layerId,
+        source: 'point',
         layout: {
             'icon-image': 'aircraft',
             'icon-size': 1.3,
