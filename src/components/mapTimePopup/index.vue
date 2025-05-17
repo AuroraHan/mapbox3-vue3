@@ -83,6 +83,7 @@ const computedTime = computed(() => {
 
 watch(() => clock.currentTime, () => {
     mapR?.setFilter(layerId, ['==', ['get', 'time'], computedTime.value])
+    mapR?.setFilter(layerTwo, ['==', ['get', 'time'], computedTime.value])
 })
 
 //初始化时间轴
@@ -120,8 +121,8 @@ const onStop = () => {
 
 //------
 //线性插值计算方法
-const calute = async () => {
-    const originalData = await fetch('/geojson/flypath.geojson')
+const calute = async (path: string) => {
+    const originalData = await fetch(path)
         .then(response => response.json())
 
     // 结果数组
@@ -194,7 +195,7 @@ const layerId = 'fly-path'
 const addFlyPath = async () => {
 
     //通过线性插值获取位置
-    const features = await calute()
+    const features = await calute('/geojson/flypath.geojson')
 
     mapR?.addSource('point', {
         type: 'geojson',
@@ -251,6 +252,35 @@ const addFlyPath = async () => {
     })
 }
 
+//添加第二个移动数据
+const layerTwo = 'fly-path2'
+const addFlyPath2 = async () => {
+    //通过线性插值获取位置
+    const features = await calute('/geojson/flypathtwo.geojson')
+    mapR?.addSource(layerTwo, {
+        type: 'geojson',
+        data: {
+            type: 'FeatureCollection',
+            features: features
+        }
+    })
+
+    mapR?.addLayer({
+        id: layerTwo,
+        type: 'symbol',
+        source: layerTwo,
+        layout: {
+            'icon-image': 'aircraft',
+            'icon-size': 1.3,
+            'icon-allow-overlap': true // 允许图标重叠
+        },
+        paint: {
+            'icon-opacity': 1 // 图标透明度
+        },
+        filter: ['all', ['==', ['get', 'time'], computedTime.value]]
+    });
+}
+
 //基础配置
 const initMap = () => {
     const style = {
@@ -292,6 +322,7 @@ const initMap = () => {
 
     map.on('load', () => {
         addFlyPath()
+        addFlyPath2()
     })
 };
 
