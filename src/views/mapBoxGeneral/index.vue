@@ -13,7 +13,7 @@ import { useMapbox } from '../../hooks/useMapBox'
 import { flyTo } from '/@/utils/mapTools';
 
 let mapR: mapboxgl.Map | null = null;
-const { getMap } = useMapbox({ container: 'map', isOffline: true })
+const { getMap } = useMapbox({ container: 'map', isOffline: false })
 onMounted(() => {
     proConfig()
 })
