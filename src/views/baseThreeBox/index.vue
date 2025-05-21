@@ -2,7 +2,10 @@
     <div id="map" class="map"></div>
     <pre
         class="lonlat">经度:{{ Number(jw?.lng).toFixed(5) }} 纬度:{{ Number(jw?.lat).toFixed(5) }} 层级:{{ zoom.toFixed(1) }}</pre>
-    <div class="box">3D</div>
+    <div class="box" @click="getTextData">三维热力图</div>
+    <div class="box" @click="addCustomPoint" :style="{ top: '7%' }">三维柱状图</div>
+    <div class="box" @click="addSmokeMaterial" :style="{ top: '12%' }">纹理贴图</div>
+    <div class="box" @click="addCustom" :style="{ top: '17%' }">基础圆锥</div>
 </template>
 
 <script setup lang="ts">
@@ -22,8 +25,6 @@ const { getMap } = useMapbox({ container: 'map', isOffline: false })
 
 onMounted(() => {
     baseConfig()
-    // getTextData()
-    // rondomPar()
 })
 
 //当前经纬度
@@ -51,8 +52,7 @@ const baseConfig = () => {
     })
 
     mapR.on('load', () => {
-        // getTextData()
-        addCustomPoint()
+
     })
 }
 
@@ -63,6 +63,7 @@ const getTextData = async () => {
     const res = await fetch('/data/grid.txt')
     const result = await res.text()
     const alllines = arrSplit(tb, result)
+    // debugger
     mapR.addLayer({
         id: 'heatmap',
         type: 'custom',
@@ -92,7 +93,8 @@ const drawLine = (row: Array<any>) => {
     let colors: Array<any> = [];
     let geometry = new THREE.BufferGeometry();
     row.forEach(coordinate => {
-        let [x, y, z] = [coordinate[0], coordinate[1], coordinate[2]];
+        //最后一个数组设置查看的月份
+        let [x, y, z] = [coordinate[0], coordinate[1], coordinate[4]];
         vertices.push(x, y, z);
         const color = getColorByValue(z);
         colors.push(color.r, color.g, color.b); // 颜色按 [r,g,b] 顺序填充
@@ -123,6 +125,8 @@ const drawLine = (row: Array<any>) => {
 
 const arrSplit = (tb: any, datStr: string) => {
     let resArr = dataFormat(tb, datStr);
+
+    //数组进行拆分，每201个为一组
     let rows = lodash.chunk(resArr, row);
     let colums = [];
     let tmpColums = [];
@@ -274,13 +278,14 @@ const rondomPar = (tb: any) => {
         //角度 0-90
         const bearing = Math.floor(Math.random() * 90);
         const distance = Number(Math.random().toFixed(2));
-        const height = Number((Math.random() * 100).toFixed(2))
+        const height = Number((Math.random() * 50).toFixed(2))
+        const val = Number((Math.random() * 70).toFixed(1))
         let destination = Turf.rhumbDestination(conter, distance, bearing, { units: "kilometers" });
         let {
             x,
             y,
         } = tb.projectToWorld(destination.geometry.coordinates)
-        const point = [x, y, height]
+        const point = [x, y, height, val]
         rondomParArr.push(point)
     }
 
@@ -293,7 +298,7 @@ const drawPoint = (row: Array<any>) => {
     let colors: Array<any> = [];
     let geometry = new THREE.BufferGeometry();
     row.forEach(coordinate => {
-        let [x, y, z] = [coordinate[0], coordinate[1], coordinate[2]];
+        let [x, y, z, v] = [coordinate[0], coordinate[1], coordinate[2], coordinate[3]];
         vertices.push(x, y, z);
         const color = getColorByValue(z);
         colors.push(color.r, color.g, color.b); // 颜色按 [r,g,b] 顺序填充
@@ -320,7 +325,7 @@ const drawPoint = (row: Array<any>) => {
 const addCustomPoint = () => {
 
     mapR.addLayer({
-        id: 'heatmap',
+        id: 'point',
         type: 'custom',
         onAdd: function (map, gl) {
             // this.map = map;
@@ -359,13 +364,16 @@ const addCustomPoint = () => {
 }
 
 .box {
-    width: 50px;
-    height: 50px;
+    // width: 50px;
+    // height: 50px;
     text-align: center;
     position: absolute;
     left: 1%;
-    bottom: 10%;
+    top: 2%;
     z-index: 9;
-    background-color: red;
+    border-radius: 4px;
+    background-color: rgb(171, 243, 183);
+    padding: 10px;
+    cursor: pointer;
 }
 </style>
