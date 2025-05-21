@@ -7,7 +7,8 @@
     position: absolute;
     top: 8%;
     left: 3%;
-    width: 300px;
+    // width: 300px;
+    padding: 0 15px;
     height: 40px;
     background-color: rgba(33, 45, 33, .8);
     border-radius: 5px;
@@ -19,6 +20,7 @@
     .select{
         color: aliceblue;
         cursor: pointer;
+        padding: 0 10px;
     }
 
     .active{

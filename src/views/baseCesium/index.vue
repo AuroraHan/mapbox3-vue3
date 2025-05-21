@@ -1,18 +1,22 @@
 <template>
     <div id="cesiumContainer"></div>
     <div class="operate">
-        <div class="select" :class="curType == ele.type ? 'active' : ''" @click="onClickSelect(ele)"
-            v-for="(ele, index) in tools" :key="index">{{ ele.name }}</div>
-    </div>
-    <div class="tool" v-show="curType == 'A'">
-        <div class="item" :class="{ 'selected': selectedId === item.id }" v-for="(item) in menus"
-            @click="toggleSelect(item)">{{ item.name }}</div>
-    </div>
-    <div class="info">
-        <div class="lnglat">
-            经度:{{ lnglat.longitude }}° &nbsp;纬度:{{ lnglat.latitude }} ° &nbsp;相机高度:{{ lnglat.cameraHeading }}m
+        <div class="select" v-for="(ele, index) in tools" :key="index">
+            {{ ele.name }}
+            <el-switch v-model="ele.enable" />
         </div>
     </div>
+
+    <div class="info">
+        <div class="lnglat">
+            经度:{{ lnglat.longitude }}° &nbsp;纬度:{{ lnglat.latitude }}° &nbsp;相机高度:{{ lnglat.cameraHeading }}m
+        </div>
+    </div>
+
+    <IntegrationTools v-model="tools[0].enable" :viewerI="cesiumV"></IntegrationTools>
+    <AnalysisTools v-model="tools[2].enable" :viewerI="cesiumV"></AnalysisTools>
+    <VisualTools v-model="tools[1].enable" :viewerI="cesiumV"></VisualTools>
+
 </template>
 
 <script setup lang="ts">
@@ -22,6 +26,9 @@ import { useCesium } from '../../hooks/useCesium'
 import { getCurrentPositionByMouse } from '../../utils/cesiumTools'
 import * as Turf from '@turf/turf'
 import { tools } from './config'
+import AnalysisTools from './components/analysisTools.vue';
+import VisualTools from './components/visualTools.vue';
+import IntegrationTools from './components/integrationTools.vue'
 
 import krigingExport from 'kriging'
 const { kriging } = krigingExport
@@ -74,38 +81,6 @@ const getLngLat = () => {
 
 }
 
-const curType = ref<string>()
-//点击操作栏
-const onClickSelect = (ele: typeof tools[0]) => {
-    console.log(ele);
-    curType.value = ele.type
-}
-
-const menus = [
-    {
-        id: 1,
-        name: '测试点',
-        bc: null
-    },
-    {
-        id: 2,
-        name: '测试线',
-        bc: null
-    },
-    {
-        id: 3,
-        name: '测试面',
-        bc: null
-    }
-]
-
-const selectedId = ref(); // 存储当前选中的ID
-
-const toggleSelect = (ele: any) => {
-    selectedId.value = selectedId.value === ele.id ? null : ele.id;
-
-
-};
 
 //添加点数据
 const addPoint = () => {
