@@ -5,7 +5,7 @@
         classNameActive="classNameActive">
         <div class="tools">
             <div>{{ title || '工具栏' }}</div>
-            <!-- <div class="close" @click="onClose">X</div> -->
+            <slot name="close"></slot>
         </div>
 
         <slot></slot>
@@ -54,11 +54,6 @@ onMounted(() => {
         y.value = initCss.value.y
     }
 })
-
-//点击关闭弹出框
-const onClose = () => {
-
-}
 
 </script>
 <style scoped lang='scss'>
