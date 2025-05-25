@@ -1,12 +1,26 @@
 <template>
-    <div>
-        旅行
-    </div>
+    <div id="map" class="map"></div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { onMounted } from 'vue'
+import { useMapbox } from '/@/hooks/useMapBoxLine'
+
+let mapR: mapboxgl.Map;
+const { getMap } = useMapbox({ container: 'map', isOffline: false })
+
+onMounted(() => {
+    baseConfig()
+})
+
+const baseConfig = () => {
+    mapR = getMap()!
+}
 
 </script>
 
-<style scoped></style>
+<style lang="scss" scoped>
+.map {
+    height: 100vh;
+}
+</style>
