@@ -93,6 +93,11 @@ const routsList = ref([
         type: 'mapbox'
     },
     {
+        name: 'Mapbox旅行规划',
+        path: 'mapBoxTravel',
+        type: 'mapbox'
+    },
+    {
         name: '基础Cesium',
         path: 'baseCesium',
         type: 'cesium'
