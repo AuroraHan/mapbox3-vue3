@@ -50,7 +50,7 @@ const baseConfig = () => {
     cesiumV = getCesiumViewer()
     getLngLat()
     // geojsonPri()
-    add()
+    // add()
 }
 
 //根据鼠标获取经纬度
