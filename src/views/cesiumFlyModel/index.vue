@@ -3,8 +3,8 @@
     <div class="flex-box" @click="loadModel">加载模型查看历史</div>
     <div class="flex-box" style="top: 9%;" @click="addCzml">加载单个飞行</div>
     <div class="flex-box" style="top: 15%;" @click="singModelFly">案例三</div>
-    <div class="flex-box" style="top: 21%;" @click="randomPos">多模型加载</div>
-
+    <div class="flex-box" style="top: 21%;" @click="multiModel">多模型加载</div>
+    <div class="flex-box" style="top: 28%;" @click="randomPos">websorck加载</div>
     <!-- 弹出框 -->
     <CesiumDialog :show="isOpen" @exportCesium="exportCesium" @closeDialog="closeDialog"></CesiumDialog>
     <MyDialog ref="mydialog" :positionXY="pos" @showHistory="showHistory"></MyDialog>
