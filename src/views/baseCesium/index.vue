@@ -1,18 +1,28 @@
 <template>
     <div id="cesiumContainer"></div>
     <div class="operate">
-        <div class="select" :class="curType == ele.type ? 'active' : ''" @click="onClickSelect(ele)"
-            v-for="(ele, index) in tools" :key="index">{{ ele.name }}</div>
-    </div>
-    <div class="tool" v-show="curType == 'A'">
-        <div class="item" :class="{ 'selected': selectedId === item.id }" v-for="(item) in menus"
-            @click="toggleSelect(item)">{{ item.name }}</div>
-    </div>
-    <div class="info">
-        <div class="lnglat">
-            经度:{{ lnglat.longitude }}° &nbsp;纬度:{{ lnglat.latitude }} ° &nbsp;相机高度:{{ lnglat.cameraHeading }}m
+        <div class="select" v-for="(ele, index) in tools" :key="index">
+            {{ ele.name }}
+            <el-switch v-model="ele.enable" />
         </div>
     </div>
+
+    <div class="info">
+        <div class="lnglat">
+            经度:{{ lnglat.longitude }}° &nbsp;纬度:{{ lnglat.latitude }}° &nbsp;相机高度:{{ lnglat.cameraHeading }}m
+        </div>
+    </div>
+
+
+    <video id="trailer" autoplay loop controls>
+        <source src="/data/1.mp4" type="video/mp4">
+    </video>
+
+
+    <IntegrationTools v-model="tools[0].enable" :viewerI="cesiumV"></IntegrationTools>
+    <AnalysisTools v-model="tools[2].enable" :viewerI="cesiumV"></AnalysisTools>
+    <VisualTools v-model="tools[1].enable" :viewerI="cesiumV"></VisualTools>
+
 </template>
 
 <script setup lang="ts">
@@ -22,9 +32,9 @@ import { useCesium } from '../../hooks/useCesium'
 import { getCurrentPositionByMouse } from '../../utils/cesiumTools'
 import * as Turf from '@turf/turf'
 import { tools } from './config'
-
-import krigingExport from 'kriging'
-const { kriging } = krigingExport
+import AnalysisTools from './components/analysisTools.vue';
+import VisualTools from './components/visualTools.vue';
+import IntegrationTools from './components/integrationTools.vue'
 
 let cesiumV: Cesium.Viewer;
 const { getCesiumViewer } = useCesium({ container: 'cesiumContainer', timeline: false, animation: false })
@@ -39,7 +49,8 @@ onMounted(() => {
 const baseConfig = () => {
     cesiumV = getCesiumViewer()
     getLngLat()
-    geojsonPri()
+    // geojsonPri()
+    // add()
 }
 
 //根据鼠标获取经纬度
@@ -74,38 +85,6 @@ const getLngLat = () => {
 
 }
 
-const curType = ref<string>()
-//点击操作栏
-const onClickSelect = (ele: typeof tools[0]) => {
-    console.log(ele);
-    curType.value = ele.type
-}
-
-const menus = [
-    {
-        id: 1,
-        name: '测试点',
-        bc: null
-    },
-    {
-        id: 2,
-        name: '测试线',
-        bc: null
-    },
-    {
-        id: 3,
-        name: '测试面',
-        bc: null
-    }
-]
-
-const selectedId = ref(); // 存储当前选中的ID
-
-const toggleSelect = (ele: any) => {
-    selectedId.value = selectedId.value === ele.id ? null : ele.id;
-
-
-};
 
 //添加点数据
 const addPoint = () => {
@@ -132,33 +111,53 @@ const addPoint = () => {
 }
 
 const add = () => {
-    var point = Turf.point([120, 30.0]);
-    var distance = 1;
-    var bearing = 90;
-    var options = { units: "kilometers" };
-    //@ts-ignore
-    var destination = Turf.destination(point, distance, bearing, options);
-    console.log(destination, 'kkkk');
+    const videoElement = document.getElementById("trailer");
 
-    const blueBox = cesiumV.entities.add({
-        name: "Blue box",
-        position: Cesium.Cartesian3.fromDegrees(120, 30.0, 100.0),
-        box: {
-            dimensions: new Cesium.Cartesian3(1000.0, 1000.0, 100.0),
-            material: Cesium.Color.BLUE,
+    const videoMaterial = new Cesium.Material({
+        fabric: {
+            type: 'Image',
+            uniforms: {
+                Image: videoElement,
+                flipY: true
+            }
+        }
+    })
+    const redWall = cesiumV.entities.add({
+        name: "Red wall at height",
+        wall: {
+            positions: Cesium.Cartesian3.fromDegreesArrayHeights([
+                105.0, 44.0, 0.0, 115.0, 44.0, 0.0,
+            ]),
+            minimumHeights: [400000.0, 400000.0],
+            // maximumHeights: [400000.0, 200000.0],
+            material: videoElement,
         },
     });
 
-    const blueBox1 = cesiumV.entities.add({
-        name: "Blue box",
-        position: Cesium.Cartesian3.fromDegrees(120.01038445705325, 29.999999592511273, 100.0),
-        box: {
-            dimensions: new Cesium.Cartesian3(1000.0, 1000.0, 100.0),
-            material: Cesium.Color.RED,
+    const greenWall = cesiumV.entities.add({
+        name: "Green wall from surface with outline",
+        wall: {
+            positions: Cesium.Cartesian3.fromDegreesArrayHeights([
+                103, 27, 100000.0,
+                113, 27, 100000.0,
+                113, 33.0, 100000.0,
+                103, 33.0, 100000.0,
+                103, 27, 100000.0,
+            ]),
+            material: Cesium.Color.GREEN,
+            // outline: true,
         },
     });
 
-    cesiumV.zoomTo(cesiumV.entities)
+
+    const sphere = cesiumV.entities.add({
+        position: Cesium.Cartesian3.fromDegrees(120, 31, 1000),
+        ellipsoid: {
+            radii: new Cesium.Cartesian3(1000, 1000, 1000),
+            material: videoElement,
+        },
+    });
+
 }
 
 
@@ -311,211 +310,6 @@ const geojsonPri = async () => {
     });
     cesiumV.scene.primitives.add(primitive);
 }
-
-//-----------------色斑图--------------
-
-
-// 平均年降水量，单位mm。适用范围：江西
-const jxPrecipitationColors = [
-    { min: 0, max: 1000, color: "#7fffff" },
-    { min: 1000, max: 1100, color: "#23b7ff" },
-    { min: 1100, max: 1200, color: "#0177b4" },
-    { min: 1200, max: 1400, color: "#0052ca" },
-    { min: 1400, max: 1600, color: "#0310d8" },
-    { min: 1600, max: 1800, color: "#9601f9" },
-    { min: 1800, max: 2000, color: "#6f00b8" },
-    { min: 2000, max: 10000, color: "#4c0082" }
-]
-
-//降雨色斑图
-const stainRain = async () => {
-    // 绘制色斑图需要的数据
-    const lngs: number[] = []  	//经度数组
-    const lats: number[] = []  	//纬度数组
-    const vals: number[] = []		//数值数组
-    const mode: 'gaussian' | 'exponential' | 'spherical' = 'exponential' //变异函数模型
-    const sigma2 = 0  					// (σ2)高斯过程的方差参数
-    const alpha = 100 					// (α)变异函数模型的先验
-    const gridDivideNum = 500		// 根据格网的宽度/该数量划分格网单元大小
-
-    // 加载江西省各县年平均降水量数据
-    const precipitationProm = await fetch('/geojson/jxPrecipitation.geojson')
-    const precipitationData = await precipitationProm.json()
-    precipitationData.features.forEach((item: any) => {
-        const geom = item.geometry
-        const prop = item.properties
-        lngs.push(geom.coordinates[0])
-        lats.push(geom.coordinates[1])
-        vals.push(prop.y2020)
-
-        cesiumV.entities.add({
-            position: Cesium.Cartesian3.fromDegrees(geom.coordinates[0], geom.coordinates[1]),
-            point: {
-                pixelSize: 6,
-                color: Cesium.Color.YELLOW,
-                outlineColor: Cesium.Color.BLACK,
-                outlineWidth: 2
-            },
-            label: {
-                text: Number(prop.y2020).toFixed(0),
-                fillColor: Cesium.Color.WHEAT,
-                horizontalOrigin: Cesium.HorizontalOrigin.LEFT,
-                pixelOffset: new Cesium.Cartesian2(6, 0),
-                font: '16px TimesNewRoman',
-                distanceDisplayCondition: new Cesium.DistanceDisplayCondition(2000, 2000000)
-            }
-        })
-    })
-    // 加载江西省矢量
-    const jxProm = await fetch('/geojson/jiangxi.geojson')
-    const jxData = await jxProm.json()
-    const jxPolygon = jxData.features[0].geometry.coordinates[0] as [number, number][][]
-    const polygonCartesians = Cesium.Cartesian3.fromDegreesArray(jxPolygon[0].flat())
-
-    // 绘制矢量
-    cesiumV.entities.add({
-        polygon: {
-            hierarchy: polygonCartesians,
-            fill: false,
-            outline: true,
-            outlineWidth: 4,
-            outlineColor: Cesium.Color.YELLOW
-        }
-    })
-
-    const grid = await generateGrid({
-        lngs,
-        lats,
-        vals,
-        polygon: jxPolygon[0],
-        asynchronous: true,
-        mode: 'exponential',
-        sigma2: 0,
-        alpha: 100,
-        gridDivideNum: 500,
-    })
-
-    // 进行绘图
-    const canvas = document.createElement('canvas')
-    canvas.width = 1000
-    canvas.height = 1000
-    canvas.style.display = 'block'
-    canvas.getContext('2d')!.globalAlpha = 1.0
-    // console.time('绘图')
-    newPlot(canvas, grid, grid.xlim, grid.ylim, jxPrecipitationColors)
-    // console.timeEnd('绘图')
-    // 下载绘制出的图片进行查看
-    // const imgUrl = canvas.toDataURL('image/jpeg')
-    // const link = document.createElement('a')
-    // link.href = imgUrl
-    // link.download = 'scene.jpeg'
-    // link.click()
-
-    const polygonGeom = new Cesium.PolygonGeometry({
-        polygonHierarchy: new Cesium.PolygonHierarchy(polygonCartesians),
-    })
-    const primitive = new Cesium.GroundPrimitive({
-        geometryInstances: new Cesium.GeometryInstance({
-            geometry: polygonGeom
-        }),
-        appearance: new Cesium.Appearance({
-            material: Cesium.Material.fromType('Image', {
-                image: canvas
-            })
-        })
-    })
-    cesiumV.scene.primitives.add(primitive)
-}
-
-const newPlot = (canvas: HTMLCanvasElement, grid: any, xlim: number[], ylim: number[], colors: any) => {
-    let ctx = canvas.getContext("2d")!
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-    let range = [xlim[1] - xlim[0], ylim[1] - ylim[0], grid.zlim[1] - grid.zlim[0]]
-    let i, j, x, y, z
-    let n = grid.length
-    let m = grid[0].length
-    let wx = Math.ceil(grid.width * canvas.width / (xlim[1] - xlim[0]))
-    let wy = Math.ceil(grid.width * canvas.height / (ylim[1] - ylim[0]))
-    for (i = 0; i < n; i++) {
-        for (j = 0; j < m; j++) {
-            if (grid[i][j] == undefined) continue;
-            x = canvas.width * (i * grid.width + grid.xlim[0] - xlim[0]) / range[0]
-            y = canvas.height * (1 - (j * grid.width + grid.ylim[0] - ylim[0]) / range[1])
-            z = (grid[i][j] - grid.zlim[0]) / range[2]
-            if (z < 0.0) z = 0.0
-            if (z > 1.0) z = 1.0
-            ctx.fillStyle = getColor(colors, grid[i][j])
-            ctx.fillRect(Math.round(x - wx / 2), Math.round(y - wy / 2), wx, wy)
-        }
-    }
-}
-
-type ColorOpt = { min: number, max: number, color: string }
-
-
-const getColor = (colors: ColorOpt[], z: number) => {
-    const len = colors.length
-    let minVal = colors[0].min
-    for (var i = 0; i < len; i++) {
-        minVal = Math.min(minVal, colors[i].min)
-        if (z >= colors[i].min && z < colors[i].max) return colors[i].color
-    }
-    if (z <= minVal) {
-        return colors[0].color
-    }
-    else {
-        return colors[len - 1].color
-    }
-
-}
-
-//灵活使用webworke
-type GridOptions = {
-    lngs: number[]
-    lats: number[]
-    vals: number[]
-    polygon: [number, number][]
-    asynchronous: boolean
-    mode: 'gaussian' | 'exponential' | 'spherical',
-    sigma2: number
-    alpha: number
-    gridDivideNum: number
-}
-const generateGrid = (options: GridOptions) => {
-    return new Promise<any>((resolve) => {
-        const { lngs, lats, vals, polygon, mode, sigma2, alpha, gridDivideNum } = options
-        if (!options.asynchronous) {
-            const polygonCartesians = Cesium.Cartesian3.fromDegreesArray(polygon.flat())
-
-            //寻找边界框的4个值
-            const polygonExtentRect = Cesium.PolygonGeometry.computeRectangleFromPositions(polygonCartesians)
-
-            const minx = Cesium.Math.toDegrees(polygonExtentRect.west)
-            const miny = Cesium.Math.toDegrees(polygonExtentRect.south)
-            const maxx = Cesium.Math.toDegrees(polygonExtentRect.east)
-            const maxy = Cesium.Math.toDegrees(polygonExtentRect.north)
-            const polygonExtentCoords = [[[minx, miny], [maxx, miny], [maxx, maxy], [minx, maxy]]] as [number, number][][]
-            // 训练并得到格网
-            const variogram = kriging.train(vals, lngs, lats, mode, sigma2, alpha)
-            const grid = kriging.grid(polygonExtentCoords, variogram, (maxx - minx) / gridDivideNum)
-
-            resolve(grid)
-        }
-        else {
-            const worker = new Worker(new URL('./kergingWk.ts', import.meta.url), {
-                type: 'module'
-            })
-            worker.postMessage(options)
-            worker.onmessage = e => {
-                const grid = e.data
-
-                resolve(grid)
-            }
-        }
-    })
-}
-
 
 
 </script>

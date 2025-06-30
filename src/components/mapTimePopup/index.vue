@@ -306,11 +306,11 @@ const initMap = () => {
         ],
     } as StyleSpecification
     mapboxgl.accessToken =
-        "J1IjoidTEwaW50IiwiYSI6InQtMnZvTkEifQ.c8mhXquPE7_xoB3P4Ag8cA";
+        "pk.eyJ1IjoidTEwaW50IiwiYSI6InQtMnZvTkEifQ.c8mhXquPE7_xoB3P4Ag8cA";
     const map = new mapboxgl.Map({
         container: mapId.value,
         projection: "mercator",
-        style: style,
+        style: "mapbox://styles/mapbox/outdoors-v12",
         center: [120, 30],
         zoom: 2,
     });

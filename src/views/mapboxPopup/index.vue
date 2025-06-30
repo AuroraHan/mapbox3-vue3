@@ -12,7 +12,7 @@ import CesiumDialog from '/@/components/cesiumDialog/index.vue'
 
 
 let mapR: mapboxgl.Map;
-const { getMap } = useMapbox({ container: 'map-pop', isOffline: true })
+const { getMap } = useMapbox({ container: 'map-pop', isOffline: false })
 
 
 onMounted(() => {

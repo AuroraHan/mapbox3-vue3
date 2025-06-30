@@ -4,14 +4,14 @@
     <div class="flex-box" style="top: 9%;" @click="addCzml">加载单个飞行</div>
     <div class="flex-box" style="top: 15%;" @click="singModelFly">案例三</div>
     <div class="flex-box" style="top: 21%;" @click="multiModel">多模型加载</div>
-
+    <div class="flex-box" style="top: 28%;" @click="randomPos">websorck加载</div>
     <!-- 弹出框 -->
     <CesiumDialog :show="isOpen" @exportCesium="exportCesium" @closeDialog="closeDialog"></CesiumDialog>
     <MyDialog ref="mydialog" :positionXY="pos" @showHistory="showHistory"></MyDialog>
 </template>
 
 <script lang='ts' setup>
-import { onMounted, ref, reactive } from 'vue';
+import { onMounted, ref, reactive, watch } from 'vue';
 import * as Cesium from 'cesium';
 import { useCesium } from '../../hooks/useCesium'
 import CesiumDialog from '/@/components/cesiumDialog/index.vue'
@@ -559,6 +559,82 @@ const multiModel = async () => {
     const dataSource = await cesiumV.dataSources.add(Cesium.CzmlDataSource.load(mulCzml));
     // cesiumV.trackedEntity = dataSource.entities.getById('hc')
 }
+
+//生成位置信息
+const dataModel = reactive({
+    longitude: 112,
+    latitude: 31,
+    height: 1000,
+    timestamp: new Date()
+})
+//随机生成位置
+const randomPos = () => {
+    let longitude = 112;
+    let latitude = 31;
+    let height = 1000;
+
+    const position = new Cesium.SampledPositionProperty()
+    const orientation = new Cesium.VelocityOrientationProperty(position)
+
+    const entity = cesiumV.entities.add({
+        id: 'model1',
+        model: {
+            uri: "/models/CesiumDrone.glb",
+            // scale: 2.0,
+            minimumPixelSize: 128,
+        },
+        path: {
+            material: Cesium.Color.RED,
+            width: 8,
+        },
+        position,
+        orientation
+    })
+
+    // 添加初始位置
+    const initialTime = Cesium.JulianDate.fromDate(dataModel.timestamp)
+    const initialPosition = Cesium.Cartesian3.fromDegrees(
+        dataModel.longitude,
+        dataModel.latitude,
+        dataModel.height
+    )
+    position.addSample(initialTime, initialPosition)
+
+    // 配置Viewer时钟
+    cesiumV.clock.startTime = initialTime.clone()
+    cesiumV.clock.stopTime = Cesium.JulianDate.addSeconds(
+        initialTime,
+        3600,
+        new Cesium.JulianDate()
+    )
+    cesiumV.clock.currentTime = initialTime.clone()
+    cesiumV.clock.clockRange = Cesium.ClockRange.LOOP_STOP
+    cesiumV.clock.multiplier = 1
+
+    // cesiumV.trackedEntity = entity
+
+    setInterval(() => {
+        dataModel.longitude = longitude += 0.01 * (Math.random() - 0.3);
+        dataModel.latitude = latitude += 0.01 * (Math.random() - 0.2);
+        dataModel.height = height += 10 * (Math.random() - 0.5);
+        dataModel.timestamp = new Date()
+        console.log(dataModel.longitude);
+
+    }, 1500)
+}
+
+watch(dataModel, (newVal) => {
+    const { longitude, latitude, height, timestamp } = newVal
+    const moEntity = cesiumV.entities.getById('model1')
+
+    const t = Cesium.JulianDate.fromDate(timestamp)
+    const coordinate = Cesium.Cartesian3.fromDegrees(longitude, latitude, height,)
+    moEntity.position.addSample(t, coordinate)
+    // 更新时钟范围
+    if (Cesium.JulianDate.compare(t, cesiumV.clock.stopTime) > 0) {
+        cesiumV.clock.stopTime = t.clone()
+    }
+})
 
 </script>
 <style lang='scss' scoped>

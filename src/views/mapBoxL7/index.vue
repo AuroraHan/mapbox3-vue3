@@ -9,7 +9,7 @@ import { useMapbox } from '../../hooks/useMapBox';
 
 let mapBox: mapboxgl.Map | null = null;
 let scene: Scene
-const { getMap } = useMapbox({ container: 'map', isOffline: true })
+const { getMap } = useMapbox({ container: 'map', isOffline: false })
 
 onMounted(() => {
     baseConfig()

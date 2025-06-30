@@ -56,7 +56,7 @@ let mapR: mapboxgl.Map;
 const marker = ref<mapboxgl.Marker | null>(null)
 let popup: mapboxgl.Popup;
 
-const { getMap } = useMapbox({ container: 'map', isOffline: true })
+const { getMap } = useMapbox({ container: 'map', isOffline: false })
 
 //当前经纬度
 const jw = ref<{ lat: number, lng: number }>({ lat: 0, lng: 0 });
