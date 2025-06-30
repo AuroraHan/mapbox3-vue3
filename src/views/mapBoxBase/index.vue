@@ -66,7 +66,7 @@ import Weather from './components/weather.vue'
 let mapR: mapboxgl.Map;
 let Draw: any;
 
-const { getMap } = useMapbox({ container: 'map', isOffline: true })
+const { getMap } = useMapbox({ container: 'map', isOffline: false })
 
 //当前经纬度
 const jw = ref<{ lat: number, lng: number }>({ lat: 0, lng: 0 });
