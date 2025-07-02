@@ -10,6 +10,7 @@ import { onMounted, reactive } from 'vue';
 import * as Cesium from 'cesium';
 import { useCesium } from '../../hooks/useCesium'
 import { getCurrentPositionByMouse } from '../../utils/cesiumTools'
+import * as dat from 'dat.gui';
 
 let cesiumV: Cesium.Viewer;
 const { getCesiumViewer } = useCesium({ container: 'cesiumContainer', addTerrain: true })
@@ -117,7 +118,12 @@ const fs =
             out_FragColor = mix(color, vec4(u_fogColor, 1.0), fog);
         }
 `
-
+const viewModel = {
+    //烟雾高度
+    fogHeight: 1000,
+    //烟雾浓度
+    globalDensity: 0.6
+}
 //添加高度雾
 const addHeightFog = () => {
     const viewer = cesiumV
@@ -127,8 +133,8 @@ const addHeightFog = () => {
             u_earthRadiusOnCamera: () => Cesium.Cartesian3.magnitude(viewer.camera.positionWC) - viewer.camera.positionCartographic.height,
             u_cameraHeight: () => viewer.camera.positionCartographic.height,
             u_fogColor: () => new Cesium.Color(0.8, 0.82, 0.84),
-            u_fogHeight: () => 1000,
-            u_globalDensity: () => 0.6,
+            u_fogHeight: () => viewModel.fogHeight,
+            u_globalDensity: () => viewModel.globalDensity,
         }
     })
 
@@ -141,6 +147,11 @@ const addHeightFog = () => {
             roll: 0.00007913394522685024                           // default value
         }
     });
+
+    var gui = new dat.GUI();
+    gui.domElement.style = 'position:absolute;top:10px;left:10px;'
+    gui.add(viewModel, 'fogHeight', 1, 5000)
+    gui.add(viewModel, 'globalDensity', 0, 2)
 }
 
 </script>
@@ -152,8 +163,8 @@ const addHeightFog = () => {
 
 .lnglat {
     position: absolute;
-    top: 2%;
-    left: 3%;
+    bottom: 5%;
+    right: 2%;
     width: 300px;
     height: 40px;
     text-align: center;

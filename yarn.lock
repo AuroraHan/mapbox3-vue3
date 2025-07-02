@@ -2324,6 +2324,11 @@
   resolved "https://registry.npmmirror.com/@types/d3-voronoi/-/d3-voronoi-1.1.12.tgz#99d1bbf5438ac222727493bef2283da62ffc0aa3"
   integrity sha512-DauBl25PKZZ0WVJr42a6CNvI6efsdzofl9sajqZr2Gf5Gu733WkDdUGiPkUHXiUvYGzNNlFQde2wdZdfQPG+yw==
 
+"@types/dat.gui@^0.7.13":
+  version "0.7.13"
+  resolved "https://registry.npmmirror.com/@types/dat.gui/-/dat.gui-0.7.13.tgz#40bbdcf72714ce46fe624d9d05e8000f1265653c"
+  integrity sha512-LmG4Pr0mbsB/1WVttf8xaHx45BvSBDGY5D9+0/9AZCbI4vvOguwBHZdKyJMxt5Yst8+icRSHKmr7ClV2u5ZtDA==
+
 "@types/estree@*", "@types/estree@1.0.6":
   version "1.0.6"
   resolved "https://registry.npmmirror.com/@types/estree/-/estree-1.0.6.tgz#628effeeae2064a1b4e79f78e81d87b7e5fc7b50"

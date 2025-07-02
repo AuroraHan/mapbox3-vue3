@@ -14,6 +14,7 @@
     "@sakitam-gis/mapbox-wind": "^2.0.4",
     "@sakitam-gis/viz-mapbox-gl": "^1.0.1",
     "@turf/turf": "^7.2.0",
+    "@types/dat.gui": "^0.7.13",
     "@types/geojson": "^7946.0.16",
     "@types/mapbox-gl": "^3.4.1",
     "@types/three": "^0.175.0",
