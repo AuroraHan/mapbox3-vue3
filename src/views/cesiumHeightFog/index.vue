@@ -1,6 +1,6 @@
 <template>
     <div id="cesiumContainer"></div>
-    <div class="lnglat" @click="addAreaFog">
+    <div class="lnglat" @click="addFogBox">
         经度:{{ lnglat.longitude }} &nbsp;纬度:{{ lnglat.latitude }}
     </div>
 </template>
@@ -11,7 +11,7 @@ import * as Cesium from 'cesium';
 import { useCesium } from '../../hooks/useCesium'
 import { getCurrentPositionByMouse } from '../../utils/cesiumTools'
 import * as dat from 'dat.gui';
-import { fragmentShader, fragmentShaderArea } from './fs'
+import { fragmentShader, fragmentShaderArea, fragmentShaderBox } from './fs'
 
 let cesiumV: Cesium.Viewer;
 const { getCesiumViewer } = useCesium({ container: 'cesiumContainer', addTerrain: true })
@@ -103,6 +103,28 @@ const addAreaFog = () => {
         }
     });
 
+    viewer.scene.postProcessStages.add(customPostProcessStage)
+    viewer.camera.flyTo({
+        destination: Cesium.Cartesian3.fromDegrees(113.54, 38.26, 100000),
+    })
+}
+
+//正方体范围
+const addFogBox = () => {
+    const viewer = cesiumV
+    const customPostProcessStage = new Cesium.PostProcessStage({
+        fragmentShader: fragmentShaderBox,  // 使用下面修改后的GLSL代码
+        uniforms: {
+            u_earthRadiusOnCamera: () => Cesium.Cartesian3.magnitude(viewer.camera.positionWC) - viewer.camera.positionCartographic.height,
+            u_cameraHeight: () => viewer.camera.positionCartographic.height,
+            u_fogColor: () => new Cesium.Color(0.8, 0.82, 0.84),
+            u_fogHeight: () => 1000,
+            u_globalDensity: () => 0.6,
+            // 新增正方形区域参数
+            u_fogCenter: () => Cesium.Cartesian3.fromDegrees(113.54, 38.26, 0), // 中心点坐标
+            u_fogHalfSize: () => 20000 // 正方形半边长5公里(总边长10公里)
+        }
+    });
     viewer.scene.postProcessStages.add(customPostProcessStage)
     viewer.camera.flyTo({
         destination: Cesium.Cartesian3.fromDegrees(113.54, 38.26, 100000),
