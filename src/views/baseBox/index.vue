@@ -138,6 +138,11 @@ const routsList = ref([
         type: 'cesium'
     },
     {
+        name: 'Cesium高度雾',
+        path: 'cesiumHeightFog',
+        type: 'cesium'
+    },
+    {
         name: 'ThreeBox',
         path: 'baseThreeBox',
         type: 'other'

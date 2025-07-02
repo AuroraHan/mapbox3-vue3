@@ -127,6 +127,11 @@ const routes = [
     name: "cesiumFlyModel",
     component: () => import("/@/views/cesiumFlyModel/index.vue"),
   },
+  {
+    path: "/cesiumHeightFog",
+    name: "cesiumHeightFog",
+    component: () => import("/@/views/cesiumHeightFog/index.vue"),
+  },
 ];
 
 const router = createRouter({

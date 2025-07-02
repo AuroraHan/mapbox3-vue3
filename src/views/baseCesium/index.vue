@@ -49,7 +49,7 @@ onMounted(() => {
 const baseConfig = () => {
     cesiumV = getCesiumViewer()
     getLngLat()
-    // geojsonPri()
+    geojsonPri()
     // add()
 }
 
