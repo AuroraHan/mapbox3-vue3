@@ -1,6 +1,6 @@
 <template>
     <div id="cesiumContainer"></div>
-    <div class="lnglat" @click="addFogBox">
+    <div class="lnglat" @click="addGasFog">
         经度:{{ lnglat.longitude }} &nbsp;纬度:{{ lnglat.latitude }}
     </div>
 </template>
@@ -11,7 +11,7 @@ import * as Cesium from 'cesium';
 import { useCesium } from '../../hooks/useCesium'
 import { getCurrentPositionByMouse } from '../../utils/cesiumTools'
 import * as dat from 'dat.gui';
-import { fragmentShader, fragmentShaderArea, fragmentShaderBox } from './fs'
+import { fragmentShader, fragmentShaderArea, fragmentShaderBox, fragmentShaderGas } from './fs'
 
 let cesiumV: Cesium.Viewer;
 const { getCesiumViewer } = useCesium({ container: 'cesiumContainer', addTerrain: true })
@@ -35,7 +35,7 @@ const lnglat = reactive({
 const getLngLat = () => {
     const handler = new Cesium.ScreenSpaceEventHandler(cesiumV.scene.canvas)
 
-    handler.setInputAction((movement) => {
+    handler.setInputAction((movement: any) => {
         const lnglathig = getCurrentPositionByMouse(cesiumV.scene, movement.endPosition, null)
         if (Cesium.defined(lnglathig)) {
             let carto = Cesium.Cartographic.fromCartesian(lnglathig);
@@ -129,6 +129,28 @@ const addFogBox = () => {
     viewer.camera.flyTo({
         destination: Cesium.Cartesian3.fromDegrees(113.54, 38.26, 100000),
     })
+}
+
+//模拟毒气
+const addGasFog = () => {
+    const viewer = cesiumV
+    const gasVisualizationStage = new Cesium.PostProcessStage({
+        fragmentShader: fragmentShaderGas,
+        uniforms: {
+            u_earthRadiusOnCamera: () => Cesium.Cartesian3.magnitude(viewer.camera.positionWC) - viewer.camera.positionCartographic.height,
+            u_gasCenter: () => Cesium.Cartesian3.fromDegrees(116, 39.9, 0),
+            u_maxRadius: () => 30000.0,       // 5公里影响半径
+            u_heightFalloff: () => 850.0,     // 高度衰减系数（值越小气体越贴近地面）
+            u_maxConcentrationColor: () => new Cesium.Color(0.8, 0.1, 0.1, 1.0), // 深红
+            u_minConcentrationColor: () => new Cesium.Color(0.9, 0.8, 0.2, 1.0)  // 浅黄半透明
+        }
+    });
+
+    viewer.scene.postProcessStages.add(gasVisualizationStage)
+    viewer.camera.flyTo({
+        destination: Cesium.Cartesian3.fromDegrees(116, 39.9, 100000),
+    })
+
 }
 </script>
 
