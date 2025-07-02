@@ -122,7 +122,9 @@ const viewModel = {
     //烟雾高度
     fogHeight: 1000,
     //烟雾浓度
-    globalDensity: 0.6
+    globalDensity: 0.6,
+    //烟雾颜色
+    fogColor: [0, 128, 255]
 }
 //添加高度雾
 const addHeightFog = () => {
@@ -132,7 +134,7 @@ const addHeightFog = () => {
         uniforms: {
             u_earthRadiusOnCamera: () => Cesium.Cartesian3.magnitude(viewer.camera.positionWC) - viewer.camera.positionCartographic.height,
             u_cameraHeight: () => viewer.camera.positionCartographic.height,
-            u_fogColor: () => new Cesium.Color(0.8, 0.82, 0.84),
+            u_fogColor: () => new Cesium.Color(viewModel.fogColor[0] / 255, viewModel.fogColor[1] / 255, viewModel.fogColor[2] / 255),
             u_fogHeight: () => viewModel.fogHeight,
             u_globalDensity: () => viewModel.globalDensity,
         }
@@ -152,6 +154,7 @@ const addHeightFog = () => {
     gui.domElement.style = 'position:absolute;top:10px;left:10px;'
     gui.add(viewModel, 'fogHeight', 1, 5000)
     gui.add(viewModel, 'globalDensity', 0, 2)
+    gui.addColor(viewModel, 'fogColor')
 }
 
 </script>
