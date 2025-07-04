@@ -1,12 +1,12 @@
 <template>
     <div id="cesiumContainer"></div>
-    <div class="lnglat" @click="addGasFog">
+    <div class="lnglat" @click="addHeightFog">
         经度:{{ lnglat.longitude }} &nbsp;纬度:{{ lnglat.latitude }}
     </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive } from 'vue';
+import { onMounted, reactive, onUnmounted } from 'vue';
 import * as Cesium from 'cesium';
 import { useCesium } from '../../hooks/useCesium'
 import { getCurrentPositionByMouse } from '../../utils/cesiumTools'
@@ -14,6 +14,7 @@ import * as dat from 'dat.gui';
 import { fragmentShader, fragmentShaderArea, fragmentShaderBox, fragmentShaderGas } from './fs'
 
 let cesiumV: Cesium.Viewer;
+let gui: dat.GUI
 const { getCesiumViewer } = useCesium({ container: 'cesiumContainer', addTerrain: true })
 
 onMounted(async () => {
@@ -24,6 +25,13 @@ onMounted(async () => {
     cesiumV.scene.globe.depthTestAgainstTerrain = true;
 
     getLngLat()
+
+    gui = new dat.GUI();
+    gui.domElement.style = 'position:absolute;top:10px;left:10px;'
+})
+
+onUnmounted(() => {
+    gui.destroy()
 })
 
 //根据鼠标获取经纬度
@@ -77,9 +85,6 @@ const addHeightFog = () => {
             roll: 0.00007913394522685024                           // default value
         }
     });
-
-    var gui = new dat.GUI();
-    gui.domElement.style = 'position:absolute;top:10px;left:10px;'
     gui.add(viewModel, 'fogHeight', 1, 5000)
     gui.add(viewModel, 'globalDensity', 0, 2)
     gui.addColor(viewModel, 'fogColor')

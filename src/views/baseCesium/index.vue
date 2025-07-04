@@ -85,6 +85,11 @@ const getLngLat = () => {
 
 }
 
+//添加3dTiles
+const add3DTiles = async () => {
+    const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(96188);
+    cesiumV.scene.primitives.add(tileset);
+}
 
 //添加点数据
 const addPoint = () => {
