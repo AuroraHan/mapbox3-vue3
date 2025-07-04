@@ -93,6 +93,11 @@ const routsList = ref([
         type: 'mapbox'
     },
     {
+        name: 'Mapbox标识',
+        path: 'mapboxMarker',
+        type: 'mapbox'
+    },
+    {
         name: 'Mapbox旅行规划',
         path: 'mapBoxTravel',
         type: 'mapbox'
