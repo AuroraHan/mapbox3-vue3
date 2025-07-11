@@ -93,6 +93,11 @@ const routsList = ref([
         type: 'mapbox'
     },
     {
+        name: 'Mapbox标识',
+        path: 'mapboxMarker',
+        type: 'mapbox'
+    },
+    {
         name: 'Mapbox旅行规划',
         path: 'mapBoxTravel',
         type: 'mapbox'
@@ -135,6 +140,11 @@ const routsList = ref([
     {
         name: 'Cesium飞行',
         path: 'cesiumFlyModel',
+        type: 'cesium'
+    },
+    {
+        name: 'Cesium高度雾',
+        path: 'cesiumHeightFog',
         type: 'cesium'
     },
     {
