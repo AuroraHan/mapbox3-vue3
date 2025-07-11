@@ -11,7 +11,7 @@ let cesiumV: Cesium.Viewer;
 
 const initCesium = () => {
     Cesium.Ion.defaultAccessToken =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJlYTQ2ZjdjNS1jM2E0LTQ1M2EtOWM0My1mODMzNzY3YjYzY2YiLCJpZCI6MjkzMjcsInNjb3BlcyI6WyJhc3IiLCJnYyJdLCJpYXQiOjE1OTE5NDIzNjB9.RzKlVTVDTQ9r7cqCo-PDydgUh8Frgw0Erul_BVxiS9c";
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI4YzI5OGVlNy1jOWY2LTRjNmEtYWYzMC1iNzhkZDhkZmEwOWEiLCJpZCI6MTM2MCwiaWF0IjoxNTI4MTQ0MDMyfQ.itVtUPeeXb7dasKXTUYZ6r3Hbm7OVUoA26ahLaVyj5I";
     const viewer = new Cesium.Viewer("cesiumContainer", {
         baseLayerPicker: false,
         geocoder: false,
@@ -26,9 +26,108 @@ onMounted(() => {
     initCesium()
     cesiumV.extend(Cesium.viewerVoxelInspectorMixin);
     cesiumV.scene.debugShowFramesPerSecond = true;
-    ellipsoid()
+    // ellipsoid()
+    baseVoxle()
 })
 
+//基础体渲染
+const baseVoxle = () => {
+    const provider = new ProceduralMultiTileVoxelProvider(
+        Cesium.VoxelShapeType.BOX
+    );
+
+    const modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(
+        Cesium.Cartesian3.fromDegrees(106.642372689378, 26.623450331223)
+    );
+
+    Cesium.Matrix4.multiplyByTranslation(
+        modelMatrix,
+        new Cesium.Cartesian3(0, 0, 1000),
+        modelMatrix
+    );
+    const scaleMatrix = Cesium.Matrix4.fromScale(
+        new Cesium.Cartesian3(1000, 1000, 1000)
+    );
+    Cesium.Matrix4.multiply(modelMatrix, scaleMatrix, modelMatrix);
+
+    // Cesium.Matrix4.multiplyByTranslation(
+    //     modelMatrix,
+    //     new Cesium.Cartesian3(0, 0, 1),
+    //     modelMatrix
+    // );
+
+    const voxelPrimitive = cesiumV.scene.primitives.add(
+        new Cesium.VoxelPrimitive({
+            provider: provider,
+            customShader: customShader1,
+            modelMatrix: modelMatrix,
+        })
+    );
+
+    cesiumV.flyTo(voxelPrimitive)
+
+    // cesiumV.camera.flyTo({
+    //     destination: Cesium.Cartesian3.fromDegrees(106.642372689378, 26.623450331223, 100000),
+
+    // })
+}
+
+class ProceduralMultiTileVoxelProvider {
+    shape: Cesium.VoxelShapeType;
+    dimensions: Cesium.Cartesian3;
+    names: string[];
+    types: Cesium.MetadataType[];
+    componentTypes: Cesium.MetadataComponentType[];
+    _levelCount: number;
+    constructor(shape: Cesium.VoxelShapeType) {
+        this.shape = shape;
+        this.dimensions = new Cesium.Cartesian3(4, 4, 4);
+        this.names = ["color", "alpha"];
+        this.types = [Cesium.MetadataType.VEC4, Cesium.MetadataType.SCALAR];
+        this.componentTypes = [
+            Cesium.MetadataComponentType.UINT8,
+            Cesium.MetadataComponentType.FLOAT32,
+        ];
+        this._levelCount = 2;
+    }
+    requestData(options: any) {
+        const { tileLevel, tileX, tileY, tileZ } = options;
+
+        if (tileLevel >= this._levelCount) {
+            return undefined;
+        }
+
+        const dimensions = this.dimensions;
+
+        //元数据：color
+        const colorMetadataType = this.types[0];
+        const voxelCount = dimensions.x * dimensions.y * dimensions.z;
+        const colorChannelCount =
+            Cesium.MetadataType.getComponentCount(colorMetadataType);
+        const dataColor = new Uint8Array(voxelCount * colorChannelCount).fill(1);
+
+        //元数据：alpha
+        // const alphaMetadataType = this.types[1];
+        // const alphaChannelCount =
+        //     Cesium.MetadataType.getComponentCount(alphaMetadataType);
+        // const dataAlpha = new Float32Array(voxelCount * alphaChannelCount).fill(1);
+
+        //按照 names 数组的顺序排列
+        const content = Cesium.VoxelContent.fromMetadataArray([dataColor]);
+        return Promise.resolve(content);
+    }
+}
+
+const customShader1 = new Cesium.CustomShader({
+    fragmentShaderText: `void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+    {
+        material.diffuse = fsInput.metadata.color.rgb;
+        
+    }`,
+});
+
+
+//--------------
 //创建球面的体渲染
 const ellipsoid = () => {
     const provider = new ProceduralSingleTileVoxelProvider(
