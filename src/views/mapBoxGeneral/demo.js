@@ -126,3 +126,22 @@ const windaGeoJsonOrg = () => {
         filter: ['==', ['get', 'Hour'], 1],
     })
 }
+
+//画线
+const constLine = () => {
+    const line = Turf.lineString([[112, 20], [117, 33]]);
+
+    mapR?.addSource('cline', {
+        type: 'geojson',
+        data: line
+    })
+
+    mapR?.addLayer({
+        id: 'cline',
+        type: 'line',
+        source: 'cline',
+        paint: {
+            'line-color': '#ffff00'
+        }
+    })
+}
