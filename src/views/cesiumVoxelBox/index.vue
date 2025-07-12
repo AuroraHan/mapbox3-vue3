@@ -6,173 +6,132 @@
 <script setup lang="ts">
 import { onMounted } from 'vue';
 import * as Cesium from 'cesium';
+import { useCesium } from '../../hooks/useCesium'
 
 let cesiumV: Cesium.Viewer;
 
+const { getCesiumViewer } = useCesium({ container: 'cesiumContainer', timeline: false, animation: false })
 const initCesium = () => {
-    Cesium.Ion.defaultAccessToken =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJlYTQ2ZjdjNS1jM2E0LTQ1M2EtOWM0My1mODMzNzY3YjYzY2YiLCJpZCI6MjkzMjcsInNjb3BlcyI6WyJhc3IiLCJnYyJdLCJpYXQiOjE1OTE5NDIzNjB9.RzKlVTVDTQ9r7cqCo-PDydgUh8Frgw0Erul_BVxiS9c";
-    const viewer = new Cesium.Viewer("cesiumContainer", {
-        baseLayerPicker: false,
-        geocoder: false,
-        animation: false,
-        timeline: false,
-    });
-
-    cesiumV = viewer
+    cesiumV = getCesiumViewer()
 }
 
 onMounted(() => {
     initCesium()
-    cesiumV.extend(Cesium.viewerVoxelInspectorMixin);
-    cesiumV.scene.debugShowFramesPerSecond = true;
-    ellipsoid()
-
+    // geojsonPri()
+    tempRander()
 })
 
+const geojsonPri = async () => {
+    const result = await fetch('/geojson/grid_points.geojson').then((data) => data.json())
+    // debugger
+    const instances: Cesium.GeometryInstance[] = [];
 
-//创建球面的体渲染
-const ellipsoid = () => {
-    const provider = new ProceduralSingleTileVoxelProvider(Cesium.VoxelShapeType.ELLIPSOID);
+    const boxGeometry = Cesium.BoxGeometry.fromDimensions({
+        vertexFormat: Cesium.VertexFormat.POSITION_AND_NORMAL,
+        dimensions: new Cesium.Cartesian3(1000.0, 1000.0, 1000.0) // 正方体边长 100 米
+    })
 
-    const voxelPrimitive = cesiumV.scene.primitives.add(
-        new Cesium.VoxelPrimitive({
-            provider: provider,
-            customShader: customShader,
-            modelMatrix: modelMatrix,
-        }),
+
+    const c = Math.random()
+    for (const item of result.features) {
+        instances.push(new Cesium.GeometryInstance({
+            geometry: boxGeometry,
+            modelMatrix: Cesium.Matrix4.multiplyByTranslation(
+                Cesium.Transforms.eastNorthUpToFixedFrame(
+                    Cesium.Cartesian3.fromDegrees(item.geometry.coordinates[0], item.geometry.coordinates[1]),
+                ),
+                new Cesium.Cartesian3(0.0, 0.0, 0),
+                new Cesium.Matrix4(),
+            ),
+            attributes: {
+                // 所有实例颜色相同（若需不同颜色，使用 ColorGeometryInstanceAttribute）
+                // color: new Cesium.ColorGeometryInstanceAttribute(
+                //     Cesium.Color.red,
+                //     Cesium.Color.fromRandom().green,
+                //     Cesium.Color.fromRandom().blue,
+                //     1.0
+                // )
+                color: new Cesium.ColorGeometryInstanceAttribute(0.0, 1.0, 0.0, 1.0)
+            }
+        }))
+    }
+
+    // 3. 创建 Primitive 并批量渲染
+    const primitive = new Cesium.Primitive({
+        geometryInstances: instances,
+        appearance: new Cesium.PerInstanceColorAppearance(),
+        asynchronous: false     // 同步加载（适合静态数据）
+    });
+    cesiumV.scene.primitives.add(primitive);
+}
+
+
+//============
+
+const getColorByTemp = (temp: number) => {
+    // 假设温度范围0-40℃映射到蓝-红
+    const normalized = Cesium.Math.clamp((temp - 0) / 40, 0, 1);
+    return Cesium.Color.fromHsl(
+        (1.0 - normalized) * 0.6, // 蓝(0.6)到红(0.0)
+        1.0,
+        0.5
     );
+}
 
-    voxelPrimitive.nearestSampling = true;
+const tempRander = async () => {
+    // 1. 加载温度数据
+    const tempData = await fetch('/geojson/temperature_field.geojson').then(res => res.json());
 
-    cesiumV.camera.flyToBoundingSphere(voxelPrimitive.boundingSphere, {
-        duration: 0.0,
+    // 3. 创建几何实例
+    const instances = [];
+    const rectangleSize = 100; // 矩形面片大小(米)
+
+    tempData.features.forEach(feature => {
+        const position = Cesium.Cartesian3.fromDegrees(
+            feature.geometry.coordinates[0],
+            feature.geometry.coordinates[1],
+            feature.properties.height || 0
+        );
+
+        const temp = feature.properties.temperature;
+        const color = getColorByTemp(temp);
+
+        // 创建矩形面片
+        instances.push(new Cesium.GeometryInstance({
+            geometry: new Cesium.RectangleGeometry({
+                rectangle: Cesium.Rectangle.fromCartesianArray([
+                    Cesium.Cartesian3.add(
+                        position,
+                        new Cesium.Cartesian3(-rectangleSize / 2, -rectangleSize / 2, 0),
+                        new Cesium.Cartesian3()
+                    ),
+                    Cesium.Cartesian3.add(
+                        position,
+                        new Cesium.Cartesian3(rectangleSize / 2, rectangleSize / 2, 0),
+                        new Cesium.Cartesian3()
+                    )
+                ]),
+                height: 0,
+                vertexFormat: Cesium.VertexFormat.POSITION_AND_COLOR
+            }),
+            attributes: {
+                color: Cesium.ColorGeometryInstanceAttribute.fromColor(color)
+            }
+        }));
     });
 
+    // 4. 创建Primitive
+    const primitive = new Cesium.Primitive({
+        geometryInstances: instances,
+        appearance: new Cesium.PerInstanceColorAppearance({
+            flat: true,
+            translucent: false
+        }),
+        asynchronous: false
+    });
+
+    cesiumV.scene.primitives.add(primitive);
 }
-
-//自定义shader
-const customShader = new Cesium.CustomShader({
-
-    fragmentShaderText: `void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
-    {
-      vec3 voxelNormal = normalize(czm_normal * fsInput.voxel.surfaceNormal);
-      float diffuse = max(0.0, dot(voxelNormal, czm_lightDirectionEC));
-      float lighting = 0.5 + 0.5 * diffuse;
-
-      int tileIndex = fsInput.voxel.tileIndex;
-      int sampleIndex = fsInput.voxel.sampleIndex;
-      vec3 cellColor = fsInput.metadata.color.rgb * lighting;
-      if (tileIndex == u_selectedTile && sampleIndex == u_selectedSample) {
-            material.diffuse = mix(cellColor, vec3(1.0), 0.5);
-            material.alpha = fsInput.metadata.color.a;
-      } else {
-            material.diffuse = cellColor;
-            material.alpha = fsInput.metadata.color.a;
-      }
-    }`,
-    uniforms: {
-        u_selectedTile: {
-            type: Cesium.UniformType.INT,
-            value: -1.0,
-        },
-        u_selectedSample: {
-            type: Cesium.UniformType.INT,
-            value: -1.0,
-        },
-    },
-});
-
-const modelMatrix = Cesium.Matrix4.fromScale(
-    Cesium.Cartesian3.fromElements(
-        Cesium.Ellipsoid.WGS84.maximumRadius,
-        Cesium.Ellipsoid.WGS84.maximumRadius,
-        Cesium.Ellipsoid.WGS84.maximumRadius,
-    ),
-);
-
-// 创建随机数据
-const constructRandomTileData = (dimensions, type, randomSeed) => {
-    Cesium.Math.setRandomNumberSeed(randomSeed);
-    const voxelCount = dimensions.x * dimensions.y * dimensions.z;
-    const channelCount = Cesium.MetadataType.getComponentCount(type);
-    const dataColor = new Float32Array(voxelCount * channelCount);
-
-    for (let z = 0; z < dimensions.z; z++) {
-        const indexZ = z * dimensions.y * dimensions.x;
-        for (let y = 0; y < dimensions.y; y++) {
-            const indexZY = indexZ + y * dimensions.x;
-            for (let x = 0; x < dimensions.x; x++) {
-                const lerperX = x / (dimensions.x - 1);
-                const lerperY = y / (dimensions.y - 1);
-                const lerperZ = z / (dimensions.z - 1);
-
-                const h = Cesium.Math.nextRandomNumber();
-                const s = 1.0 - lerperY * 0.2;
-                const l = 0.5;
-                const color = Cesium.Color.fromHsl(h, s, l, 1.0, scratchColor);
-
-                const random2 = Cesium.Math.nextRandomNumber();
-                const alphaRandom = Math.floor(random2 + 0.5);
-
-                const index = (indexZY + x) * channelCount;
-                dataColor[index + 0] = color.red;
-                dataColor[index + 1] = color.green;
-                dataColor[index + 2] = color.blue;
-                dataColor[index + 3] = alphaRandom;
-            }
-        }
-    }
-
-    return dataColor;
-}
-
-//定义颜色
-const scratchColor = new Cesium.Color();
-
-//创建体要素
-class ProceduralSingleTileVoxelProvider {
-    shape: any;
-    dimensions: Cesium.Cartesian3;
-    names: string[];
-    types: Cesium.MetadataType[];
-    componentTypes: Cesium.MetadataComponentType[];
-    _levelCount: number;
-    minBounds: Cesium.Cartesian3;
-    maxBounds: Cesium.Cartesian3;
-
-    constructor(shape) {
-        this.shape = shape;
-        this.dimensions = new Cesium.Cartesian3(4, 4, 4);
-        //设定最小范围
-        this.minBounds = new Cesium.Cartesian3(1.9, 0.54, 0);
-        //设定最大范围
-        this.maxBounds = new Cesium.Cartesian3(2.3, 0.94, 1000000);
-        this.names = ["color"];
-        this.types = [Cesium.MetadataType.VEC4];
-        this.componentTypes = [Cesium.MetadataComponentType.FLOAT32];
-        this._levelCount = 3;
-    }
-
-    // 生成体素数据并返回
-    requestData(options) {
-        const { tileLevel, tileX, tileY, tileZ } = options;
-
-        if (tileLevel >= this._levelCount) {
-            return Promise.reject(`No tiles available beyond level ${this._levelCount}`);
-        }
-
-        const dimensions = this.dimensions;
-        const type = this.types[0];
-        const randomSeed =
-            tileZ * dimensions.y * dimensions.x + tileY * dimensions.x + tileX;
-        const dataTile = constructRandomTileData(dimensions, type, randomSeed);
-
-        const content = Cesium.VoxelContent.fromMetadataArray([dataTile]);
-        return Promise.resolve(content);
-    }
-}
-
 
 </script>
 

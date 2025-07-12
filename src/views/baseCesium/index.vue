@@ -278,7 +278,7 @@ const geojsonPri = async () => {
 
     const boxGeometry = Cesium.BoxGeometry.fromDimensions({
         vertexFormat: Cesium.VertexFormat.POSITION_AND_NORMAL,
-        dimensions: new Cesium.Cartesian3(1000.0, 1000.0, 500.0) // 正方体边长 100 米
+        dimensions: new Cesium.Cartesian3(1000.0, 1000.0, 1000.0) // 正方体边长 100 米
     })
 
     for (let i = 0; i < 3; i++) {
