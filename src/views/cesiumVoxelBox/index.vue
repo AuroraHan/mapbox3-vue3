@@ -18,7 +18,9 @@ const initCesium = () => {
 onMounted(() => {
     initCesium()
     // geojsonPri()
-    tempRander()
+    // tempRander()
+    // geojsonPri1()
+    test3()
 })
 
 const geojsonPri = async () => {
@@ -30,7 +32,6 @@ const geojsonPri = async () => {
         vertexFormat: Cesium.VertexFormat.POSITION_AND_NORMAL,
         dimensions: new Cesium.Cartesian3(1000.0, 1000.0, 1000.0) // 正方体边长 100 米
     })
-
 
     const c = Math.random()
     for (const item of result.features) {
@@ -90,7 +91,7 @@ const tempRander = async () => {
         const position = Cesium.Cartesian3.fromDegrees(
             feature.geometry.coordinates[0],
             feature.geometry.coordinates[1],
-            feature.properties.height || 0
+            feature.properties.height || 1000
         );
 
         const temp = feature.properties.temperature;
@@ -133,6 +134,107 @@ const tempRander = async () => {
     cesiumV.scene.primitives.add(primitive);
 }
 
+
+const geojsonPri1 = async () => {
+    const result = await fetch('/geojson/temperature_field.geojson').then((data) => data.json())
+    // debugger
+    const instances: Cesium.GeometryInstance[] = [];
+
+    const boxGeometry = Cesium.BoxGeometry.fromDimensions({
+        vertexFormat: Cesium.VertexFormat.POSITION_AND_NORMAL,
+        dimensions: new Cesium.Cartesian3(1000.0, 1000.0, 500.0) // 正方体边长 100 米
+    })
+
+    for (const item of result.features) {
+
+        const temp = item.properties.temperature;
+        const color = getColorByTemp(temp);
+
+        instances.push(new Cesium.GeometryInstance({
+            geometry: boxGeometry,
+            modelMatrix: Cesium.Matrix4.multiplyByTranslation(
+                Cesium.Transforms.eastNorthUpToFixedFrame(
+                    Cesium.Cartesian3.fromDegrees(item.geometry.coordinates[0], item.geometry.coordinates[1]),
+                ),
+                new Cesium.Cartesian3(0.0, 0.0, 0),
+                new Cesium.Matrix4(),
+            ),
+            attributes: {
+                // 所有实例颜色相同（若需不同颜色，使用 ColorGeometryInstanceAttribute）
+                // color: new Cesium.ColorGeometryInstanceAttribute(
+                //     Cesium.Color.red,
+                //     Cesium.Color.fromRandom().green,
+                //     Cesium.Color.fromRandom().blue,
+                //     1.0
+                // )
+                color: Cesium.ColorGeometryInstanceAttribute.fromColor(color)
+            }
+        }))
+    }
+
+    // 3. 创建 Primitive 并批量渲染
+    const primitive = new Cesium.Primitive({
+        geometryInstances: instances,
+        appearance: new Cesium.PerInstanceColorAppearance(),
+        asynchronous: false     // 同步加载（适合静态数据）
+    });
+    cesiumV.scene.primitives.add(primitive);
+}
+
+
+//=============
+const test3 = async () => {
+    const result = await fetch('/public/geojson/conc-time-linux.geojson').then((data) => data.json())
+    const data = result.features.filter((ele) => {
+        return ele.properties.Hour == 4
+    })
+
+    const instances: Cesium.GeometryInstance[] = [];
+
+    const boxGeometry = Cesium.BoxGeometry.fromDimensions({
+        vertexFormat: Cesium.VertexFormat.POSITION_AND_NORMAL,
+        dimensions: new Cesium.Cartesian3(1000.0, 1000.0, 500.0) // 正方体边长 100 米
+    })
+
+    for (const item of data) {
+
+        // const temp = item.properties.temperature;
+        // const color = getColorByTemp(temp);
+
+        instances.push(new Cesium.GeometryInstance({
+            geometry: boxGeometry,
+            modelMatrix: Cesium.Matrix4.multiplyByTranslation(
+                Cesium.Transforms.eastNorthUpToFixedFrame(
+                    Cesium.Cartesian3.fromDegrees(item.geometry.coordinates[0][0][0], item.geometry.coordinates[0][0][1]),
+                ),
+                new Cesium.Cartesian3(0.0, 0.0, 0),
+                new Cesium.Matrix4(),
+            ),
+            attributes: {
+                // 所有实例颜色相同（若需不同颜色，使用 ColorGeometryInstanceAttribute）
+                // color: new Cesium.ColorGeometryInstanceAttribute(
+                //     Cesium.Color.red,
+                //     Cesium.Color.fromRandom().green,
+                //     Cesium.Color.fromRandom().blue,
+                //     1.0
+                // )
+                color: new Cesium.ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
+            }
+        }))
+    }
+
+    // 3. 创建 Primitive 并批量渲染
+    const primitive = new Cesium.Primitive({
+        geometryInstances: instances,
+        appearance: new Cesium.PerInstanceColorAppearance(),
+        asynchronous: false     // 同步加载（适合静态数据）
+    });
+    cesiumV.scene.primitives.add(primitive);
+
+    cesiumV.camera.flyTo({
+        destination: Cesium.Cartesian3.fromDegrees(125.7182120747035, 39.8251270095359, 100000),
+    })
+}
 </script>
 
 <style lang="scss" scoped>
