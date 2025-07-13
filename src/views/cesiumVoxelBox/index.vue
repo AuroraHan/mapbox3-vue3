@@ -10,7 +10,7 @@ import { useCesium } from '../../hooks/useCesium'
 
 let cesiumV: Cesium.Viewer;
 
-const { getCesiumViewer } = useCesium({ container: 'cesiumContainer', timeline: false, animation: false })
+const { getCesiumViewer } = useCesium({ container: 'cesiumContainer', infoBox: true })
 const initCesium = () => {
     cesiumV = getCesiumViewer()
 }
@@ -231,6 +231,12 @@ const test3 = async () => {
 let currentPrimitive: Cesium.Primitive | null = null;
 // 按 Hour 分类存储数据
 const hourDataMap = new Map<number, any[]>();
+
+const minHeight = 100;
+const maxHeight = 2000;
+const minConc = 1e8;  // 你的最小浓度值
+const maxConc = 1e11; // 你的最大浓度值
+
 const loadData = async () => {
     // 加载所有数据
     const result = await fetch('/geojson/conc-time-linux.geojson').then((data) => data.json());
@@ -258,15 +264,23 @@ const renderByHour = (hour: number, cesiumV: Cesium.Viewer) => {
     if (!data) return;
 
     const instances: Cesium.GeometryInstance[] = [];
-    const boxGeometry = Cesium.BoxGeometry.fromDimensions({
-        vertexFormat: Cesium.VertexFormat.POSITION_AND_NORMAL,
-        dimensions: new Cesium.Cartesian3(1000.0, 1000.0, 500.0)
-    });
 
     for (const item of data) {
         // 根据浓度值设置颜色
         const conc = item.properties.Conc;
         const color = getColorByConcentration(conc);
+
+        // 线性映射浓度到高度
+        const height = Cesium.Math.lerp(
+            minHeight,
+            maxHeight,
+            Cesium.Math.clamp((conc - minConc) / (maxConc - minConc), 0, 1)
+        );
+
+        const boxGeometry = Cesium.BoxGeometry.fromDimensions({
+            vertexFormat: Cesium.VertexFormat.POSITION_AND_NORMAL,
+            dimensions: new Cesium.Cartesian3(1000.0, 1000.0, height)
+        });
 
         instances.push(new Cesium.GeometryInstance({
             geometry: boxGeometry,
@@ -277,7 +291,7 @@ const renderByHour = (hour: number, cesiumV: Cesium.Viewer) => {
                         item.geometry.coordinates[0][0][1]
                     ),
                 ),
-                new Cesium.Cartesian3(0.0, 0.0, 0),
+                new Cesium.Cartesian3(0.0, 0.0, height / 2),
                 new Cesium.Matrix4(),
             ),
             attributes: {
@@ -295,9 +309,16 @@ const renderByHour = (hour: number, cesiumV: Cesium.Viewer) => {
     cesiumV.scene.primitives.add(currentPrimitive);
 }
 
+let currentHour = 1;
 const render = async () => {
     await loadData()
-    renderByHour(2, cesiumV)
+    renderByHour(4, cesiumV)
+
+    // setInterval(() => {
+    //     currentHour = currentHour > 6 ? 1 : currentHour;
+    //     renderByHour(currentHour, cesiumV);
+    //     currentHour++;
+    // }, 2000)
 }
 </script>
 
