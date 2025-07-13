@@ -227,6 +227,7 @@ const test3 = async () => {
     })
 }
 
+//============
 //测试动态渲染
 let currentPrimitive: Cesium.Primitive | null = null;
 // 按 Hour 分类存储数据
@@ -248,10 +249,10 @@ const loadData = async () => {
 
 const getColorByConcentration = (conc: number) => {
     // 这里可以根据你的浓度范围定义颜色渐变
-    if (conc > 1e10) return Cesium.Color.RED.withAlpha(0.7);
-    if (conc > 1e9) return Cesium.Color.ORANGE.withAlpha(0.7);
-    if (conc > 1e8) return Cesium.Color.YELLOW.withAlpha(0.7);
-    return Cesium.Color.GREEN.withAlpha(0.7);
+    if (conc > 1e10) return Cesium.Color.RED.withAlpha(0.9);
+    if (conc > 1e9) return Cesium.Color.ORANGE.withAlpha(0.9);
+    if (conc > 1e8) return Cesium.Color.YELLOW.withAlpha(0.9);
+    return Cesium.Color.GREEN.withAlpha(0.9);
 }
 
 const renderByHour = (hour: number, cesiumV: Cesium.Viewer) => {
