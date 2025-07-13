@@ -20,7 +20,8 @@ onMounted(() => {
     // geojsonPri()
     // tempRander()
     // geojsonPri1()
-    test3()
+    // test3()
+    render()
 })
 
 const geojsonPri = async () => {
@@ -185,7 +186,7 @@ const geojsonPri1 = async () => {
 //=============
 const test3 = async () => {
     const result = await fetch('/public/geojson/conc-time-linux.geojson').then((data) => data.json())
-    const data = result.features.filter((ele) => {
+    const data = result.features.filter((ele: any) => {
         return ele.properties.Hour == 4
     })
 
@@ -198,9 +199,6 @@ const test3 = async () => {
 
     for (const item of data) {
 
-        // const temp = item.properties.temperature;
-        // const color = getColorByTemp(temp);
-
         instances.push(new Cesium.GeometryInstance({
             geometry: boxGeometry,
             modelMatrix: Cesium.Matrix4.multiplyByTranslation(
@@ -211,13 +209,6 @@ const test3 = async () => {
                 new Cesium.Matrix4(),
             ),
             attributes: {
-                // 所有实例颜色相同（若需不同颜色，使用 ColorGeometryInstanceAttribute）
-                // color: new Cesium.ColorGeometryInstanceAttribute(
-                //     Cesium.Color.red,
-                //     Cesium.Color.fromRandom().green,
-                //     Cesium.Color.fromRandom().blue,
-                //     1.0
-                // )
                 color: new Cesium.ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
             }
         }))
@@ -234,6 +225,79 @@ const test3 = async () => {
     cesiumV.camera.flyTo({
         destination: Cesium.Cartesian3.fromDegrees(125.7182120747035, 39.8251270095359, 100000),
     })
+}
+
+//测试动态渲染
+let currentPrimitive: Cesium.Primitive | null = null;
+// 按 Hour 分类存储数据
+const hourDataMap = new Map<number, any[]>();
+const loadData = async () => {
+    // 加载所有数据
+    const result = await fetch('/geojson/conc-time-linux.geojson').then((data) => data.json());
+    for (let hour = 1; hour <= 6; hour++) {
+        const filtered = result.features.filter((ele: any) => ele.properties.Hour === hour);
+        hourDataMap.set(hour, filtered);
+    }
+}
+
+const getColorByConcentration = (conc: number) => {
+    // 这里可以根据你的浓度范围定义颜色渐变
+    if (conc > 1e10) return Cesium.Color.RED.withAlpha(0.7);
+    if (conc > 1e9) return Cesium.Color.ORANGE.withAlpha(0.7);
+    if (conc > 1e8) return Cesium.Color.YELLOW.withAlpha(0.7);
+    return Cesium.Color.GREEN.withAlpha(0.7);
+}
+
+const renderByHour = (hour: number, cesiumV: Cesium.Viewer) => {
+    // 移除之前的primitive
+    if (currentPrimitive) {
+        cesiumV.scene.primitives.remove(currentPrimitive);
+    }
+
+    const data = hourDataMap.get(hour);
+    if (!data) return;
+
+    const instances: Cesium.GeometryInstance[] = [];
+    const boxGeometry = Cesium.BoxGeometry.fromDimensions({
+        vertexFormat: Cesium.VertexFormat.POSITION_AND_NORMAL,
+        dimensions: new Cesium.Cartesian3(1000.0, 1000.0, 500.0)
+    });
+
+    for (const item of data) {
+        // 根据浓度值设置颜色
+        const conc = item.properties.Conc;
+        const color = getColorByConcentration(conc);
+
+        instances.push(new Cesium.GeometryInstance({
+            geometry: boxGeometry,
+            modelMatrix: Cesium.Matrix4.multiplyByTranslation(
+                Cesium.Transforms.eastNorthUpToFixedFrame(
+                    Cesium.Cartesian3.fromDegrees(
+                        item.geometry.coordinates[0][0][0],
+                        item.geometry.coordinates[0][0][1]
+                    ),
+                ),
+                new Cesium.Cartesian3(0.0, 0.0, 0),
+                new Cesium.Matrix4(),
+            ),
+            attributes: {
+                color: Cesium.ColorGeometryInstanceAttribute.fromColor(color)
+            }
+        }));
+    }
+
+    currentPrimitive = new Cesium.Primitive({
+        geometryInstances: instances,
+        appearance: new Cesium.PerInstanceColorAppearance(),
+        asynchronous: false
+    });
+
+    cesiumV.scene.primitives.add(currentPrimitive);
+}
+
+const render = async () => {
+    await loadData()
+    renderByHour(2, cesiumV)
 }
 </script>
 
