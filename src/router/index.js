@@ -118,6 +118,11 @@ const routes = [
     component: () => import("/@/views/cesiumVoxelBox/index.vue"),
   },
   {
+    path: "/cesiumWindy",
+    name: "cesiumWindy",
+    component: () => import("/@/views/cesiumWindy/index.vue"),
+  },
+  {
     path: "/cesiumCluster",
     name: "cesiumCluster",
     component: () => import("/@/views/cesiumCluster/index.vue"),

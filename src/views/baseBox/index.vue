@@ -148,6 +148,11 @@ const routsList = ref([
         type: 'cesium'
     },
     {
+        name: 'Cesium模拟windy',
+        path: 'cesiumWindy',
+        type: 'cesium'
+    },
+    {
         name: 'ThreeBox',
         path: 'baseThreeBox',
         type: 'other'
