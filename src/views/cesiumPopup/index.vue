@@ -8,6 +8,8 @@ import { onMounted, ref, reactive } from 'vue';
 import * as Cesium from 'cesium';
 import { useCesium } from '../../hooks/useCesium'
 import MyDialog from '/@/components/cesiumPopupTwo/index.vue';
+import DivBillboard from '/@/utils/DivBillboard'
+import lineDiv from './lineDiv.vue';
 
 let cesiumV: Cesium.Viewer;
 const { getCesiumViewer } = useCesium({ container: 'cesiumContainer', infoBox: false, shouldAnimate: true })
@@ -19,10 +21,11 @@ onMounted(() => {
     //弹窗
 
     demoVueComp()
+    demoB()
 })
 
 
-//案例四 使用vue组件弹出框
+//案例A 使用vue组件弹出框
 const pos = reactive({
     xAxis: 0,
     yAxis: 0
@@ -72,6 +75,21 @@ const demoVueComp = () => {
     // setInterval(() => {
     //     entityOne.position = Cesium.Cartesian3.fromDegrees(100 + Math.random() * 22, 20 + Math.random() * 16, Math.random() * 3000)
     // }, 4000)
+}
+
+
+//方案B
+const demoB = () => {
+    const div = {
+        id: "002",
+        name: '这是Vue组件',
+        position: [113, 37, 100],
+        content: '这是一个Vue组件',
+        vueComponent: lineDiv
+    }
+
+    let divbillboard = new DivBillboard(cesiumV, Cesium.Cartesian3.fromDegrees(div.position[0], div.position[1], div.position[2]), div.content, div.vueComponent, true, div.id)
+    // divbillboard.flyTo()
 }
 
 </script>
