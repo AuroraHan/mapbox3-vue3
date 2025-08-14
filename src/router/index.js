@@ -137,6 +137,11 @@ const routes = [
     name: "cesiumHeightFog",
     component: () => import("/@/views/cesiumHeightFog/index.vue"),
   },
+  {
+    path: "/cesiumGeneral",
+    name: "cesiumGeneral",
+    component: () => import("/@/views/cesiumGeneral/index.vue"),
+  },
 ];
 
 const router = createRouter({

@@ -148,6 +148,11 @@ const routsList = ref([
         type: 'cesium'
     },
     {
+        name: 'Cesium通用',
+        path: 'cesiumGeneral',
+        type: 'cesium'
+    },
+    {
         name: 'ThreeBox',
         path: 'baseThreeBox',
         type: 'other'
