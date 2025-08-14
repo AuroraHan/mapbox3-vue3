@@ -324,6 +324,39 @@ const render = async () => {
 }
 
 //=============================
+
+const colorArray = [
+    [203, [115, 70, 105, 255]],
+    [218, [202, 172, 195, 255]],
+    [233, [162, 70, 145, 255]],
+    [248, [143, 89, 169, 255]],
+    [258, [157, 219, 217, 255]],
+    [265, [106, 191, 181, 255]],
+    [269, [100, 166, 189, 255]],
+    [273.15, [93, 133, 198, 255]],
+    [274, [68, 125, 99, 255]],
+    [283, [128, 147, 24, 255]],
+    [294, [243, 183, 4, 255]],
+    [303, [232, 83, 25, 255]],
+    [320, [71, 14, 0, 255]]
+]
+
+const tempToColor = (kelvin: any) => {
+    for (let i = 0; i < colorArray.length - 1; i++) {
+        const [t1, c1] = colorArray[i];
+        const [t2, c2] = colorArray[i + 1];
+        if (kelvin >= t1 && kelvin <= t2) {
+            const ratio = (kelvin - t1) / (t2 - t1);
+            return [
+                Math.round(c1[0] + ratio * (c2[0] - c1[0])),
+                Math.round(c1[1] + ratio * (c2[1] - c1[1])),
+                Math.round(c1[2] + ratio * (c2[2] - c1[2])),
+                255
+            ];
+        }
+    }
+    return colorArray[colorArray.length - 1][1]; // 超范围
+}
 class WindyTemperatureImageryProvider {
     _url: any;
     _tileWidth: number;

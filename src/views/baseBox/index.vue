@@ -108,7 +108,7 @@ const routsList = ref([
         type: 'cesium'
     },
     {
-        name: 'Cesium弹出框',
+        name: 'Cesium标牌',
         path: 'cesiumPopup',
         type: 'cesium'
     },
