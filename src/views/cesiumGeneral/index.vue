@@ -1,13 +1,19 @@
 <!--  -->
 <template>
     <div id="cesiumContainer"></div>
-    <div class="aaa" @click="onClick">sss</div>
+    <div class="aaa" @click="onClick">{{ position.longitude }}</div>
 </template>
 
 <script setup lang='ts'>
-import { onMounted, ref, reactive } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 import * as Cesium from 'cesium';
 import { useCesium } from '../../hooks/useCesium'
+import { CesiumEvent } from '/@/utils/cesiumEvent'
+import { useCesiumEventStore } from '/@/stores/cesiumStore'
+
+const cesiumEventStore = useCesiumEventStore();
+const position = computed(() => cesiumEventStore.mouseMovePostion);
+const bounds = computed(() => cesiumEventStore.bounds);
 
 let cesiumV: Cesium.Viewer;
 const { getCesiumViewer } = useCesium({ container: 'cesiumContainer', addTerrain: true, infoBox: false, shouldAnimate: true })
@@ -15,6 +21,7 @@ const { getCesiumViewer } = useCesium({ container: 'cesiumContainer', addTerrain
 onMounted(() => {
     cesiumV = getCesiumViewer()
     addTerrainLine()
+    new CesiumEvent(cesiumV)
 })
 
 
