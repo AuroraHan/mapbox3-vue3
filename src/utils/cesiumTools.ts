@@ -121,3 +121,55 @@ export const postionTransfrom = (
 
   return [longitude, latitude];
 };
+
+// 工具类函数如下：
+export function debounce(func: Function, delay: number) {
+  let timeoutId: number;
+  return function (...args) {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => {
+      func.apply(this, args);
+    }, delay);
+  };
+}
+/**
+ * 获取当前的图层层级
+ * @param {cesium.viewer} viewer
+ * @returns 图层层级
+ */
+export const getTileLevel = (viewer: Cesium.Viewer) => {
+  let tiles = new Set();
+  let tilesToRender = viewer.scene.globe._surface._tilesToRender;
+  if (Cesium.defined(tilesToRender)) {
+    for (let i = 0; i < tilesToRender.length; i++) {
+      tiles.add(tilesToRender[i].level);
+    }
+    const levels = Array.from(tiles);
+    return Math.max(...levels);
+  }
+}
+/**
+ * 获取3D模式下cesium的屏幕经纬度
+ * @param {cesium.viewer} viewer
+ * @returns 经纬度信息
+ */
+export const getViewBounds = (viewer: Cesium.Viewer) => {
+  let bounds = {
+    topLeft: { lon: 0, lat: 0 },
+    bottomRight: { lon: 0, lat: 0 },
+    level: 0,
+  };
+
+  // 获取当前视图矩形范围
+  const extent = viewer.camera.computeViewRectangle();
+
+  // 在3D模式下计算边界
+  if (extent) {
+    bounds.topLeft.lon = Cesium.Math.toDegrees(extent.west);
+    bounds.topLeft.lat = Cesium.Math.toDegrees(extent.north);
+    bounds.bottomRight.lon = Cesium.Math.toDegrees(extent.east);
+    bounds.bottomRight.lat = Cesium.Math.toDegrees(extent.south);
+  }
+  bounds.level = getTileLevel(viewer);
+  return bounds;
+}
