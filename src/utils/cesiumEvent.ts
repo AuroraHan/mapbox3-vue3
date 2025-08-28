@@ -6,6 +6,7 @@ import { useCesiumEventStore } from '/@/stores/cesiumStore'
 interface PosI {
     longitude: number,
     latitude: number,
+    altitude: number,
     height: number
 }
 
@@ -116,6 +117,7 @@ export class CesiumEvent {
         this.position = {
             longitude: Cesium.Math.toDegrees(cartographic.longitude),
             latitude: Cesium.Math.toDegrees(cartographic.latitude),
+            altitude: cartographic.height,
             height: this.viewer.camera.positionCartographic.height / 1000, // 转换为千米
         };
 

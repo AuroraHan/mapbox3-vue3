@@ -4,11 +4,11 @@ import { computed, reactive, ref } from "vue";
 export const useCesiumEventStore = defineStore("cesiumEvent", () => {
 
   // 鼠标移动的经纬度
-  const mouseMovePostion = ref({ longitude: 0, latitude: 0, height: 0 });
+  const mouseMovePostion = ref({ longitude: 0, latitude: 0, height: 0, altitude: 0 });
   // 鼠标左键点击的经纬度
-  const leftClickPosition = ref({ longitude: 0, latitude: 0, height: 0 });
+  const leftClickPosition = ref({ longitude: 0, latitude: 0, height: 0, altitude: 0 });
   // 鼠标右键点击的经纬度
-  const rightClickPosition = ref({ longitude: 0, latitude: 0, height: 0 });
+  const rightClickPosition = ref({ longitude: 0, latitude: 0, height: 0, altitude: 0 });
   // 当前视角所在层级
   const bounds = reactive({
     topLeft: { lon: null, lat: null },

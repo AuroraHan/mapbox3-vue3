@@ -42,6 +42,7 @@ export class InteractivePolygon {
 
     leftClickPosition(position: Cesium.Cartographic) {
         const cartesian = Cesium.Cartesian3.fromDegrees(position.longitude, position.latitude);
+        debugger
         if (!cartesian) return;
         this.polygonPoints.push(cartesian);
         this.dynamicPoints.push(cartesian);
@@ -97,6 +98,8 @@ export class InteractivePolygon {
                 return;
             }
             // 步骤1：转换为经纬度数组（带有效性校验）
+            // const aa = Cesium.Cartographic.fromCartesian(this.polygonPoints[3])
+            // console.log(aa, 'kkk');
             const degreesCoordinates = convertCartesiansToDegrees(this.polygonPoints);
             if (!degreesCoordinates) {
                 ElMessage.error("存在无效坐标点，无法计算面积");

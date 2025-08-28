@@ -8,16 +8,17 @@
         层级:{{ bounds.level }}
     </div>
     <div class="options">
-        <el-button type="primary">绘制面</el-button>
+        <el-button type="primary" @click="drawPolygon">绘制面</el-button>
     </div>
 </template>
 
 <script setup lang='ts'>
-import { onMounted, ref, computed } from 'vue';
+import { onMounted, ref, computed, watch } from 'vue';
 import * as Cesium from 'cesium';
 import { useCesium } from '../../hooks/useCesium'
 import { CesiumEvent } from '/@/utils/cesiumEvent'
 import { useCesiumEventStore } from '/@/stores/cesiumStore'
+import { InteractivePolygon } from './interactivePolygon';
 
 
 const cesiumEventStore = useCesiumEventStore();
@@ -43,7 +44,7 @@ const addTerrainLine = () => {
         [110.8834848758976, 30.04803830643123, 923.651454152295],
         [110.93732277846644, 30.048178667944597, 597.5883761989865],
         [110.95818944973519, 30.08307354872316, 1011.2606325887339],
-        [110.92957034551483, 30.09950535924442, 1180.6223600558253],
+        // [110.92957034551483, 30.09950535924442, 1180.6223600558253],
     ]);
 }
 
@@ -225,6 +226,48 @@ const addContourLabels = async (viewer: Cesium.Viewer, rect: any, spacing: numbe
             }
         });
     });
+}
+
+//绘制
+let polygon: any = null;
+const mouseMovePostion = computed(() => cesiumEventStore.mouseMovePostion);
+const leftClickPosition = computed(() => cesiumEventStore.leftClickPosition);
+const rightClickPosition = computed(() => cesiumEventStore.rightClickPosition);
+
+watch(
+    leftClickPosition,
+    (position) => {
+        if (!polygon) return;
+        polygon.leftClickPosition({ ...position });
+    },
+    { deep: true }
+);
+watch(
+    rightClickPosition,
+    () => {
+        if (!polygon) return;
+        polygon.rightClickPosition();
+    },
+    { deep: true }
+);
+watch(
+    mouseMovePostion,
+    (position) => {
+        if (!polygon) return;
+        polygon.mouseMovePosition({ ...position });
+    },
+    { deep: true }
+);
+
+
+const drawPolygon = () => {
+    if (polygon) {
+        polygon.clearDrawing();
+        polygon = null;
+    } else {
+        polygon = new InteractivePolygon(cesiumV);
+    }
+
 }
 
 </script>
