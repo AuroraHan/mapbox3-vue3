@@ -153,6 +153,11 @@ const routsList = ref([
         type: 'cesium'
     },
     {
+        name: 'Cesium|Geoserver服务',
+        path: 'cesiumGeoserver',
+        type: 'cesium'
+    },
+    {
         name: 'ThreeBox',
         path: 'baseThreeBox',
         type: 'other'
