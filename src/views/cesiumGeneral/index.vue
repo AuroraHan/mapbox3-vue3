@@ -1,7 +1,15 @@
 <!--  -->
 <template>
     <div id="cesiumContainer"></div>
-    <div class="aaa" @click="onClick">{{ position.longitude }}</div>
+    <div class="show-info">
+        经度:{{ position.longitude.toFixed(4) }}
+        纬度:{{ position.latitude.toFixed(4) }}
+        高空:{{ position.height.toFixed(2) }}km
+        层级:{{ bounds.level }}
+    </div>
+    <div class="options">
+        <el-button type="primary">绘制面</el-button>
+    </div>
 </template>
 
 <script setup lang='ts'>
@@ -10,6 +18,7 @@ import * as Cesium from 'cesium';
 import { useCesium } from '../../hooks/useCesium'
 import { CesiumEvent } from '/@/utils/cesiumEvent'
 import { useCesiumEventStore } from '/@/stores/cesiumStore'
+
 
 const cesiumEventStore = useCesiumEventStore();
 const position = computed(() => cesiumEventStore.mouseMovePostion);
@@ -20,7 +29,7 @@ const { getCesiumViewer } = useCesium({ container: 'cesiumContainer', addTerrain
 
 onMounted(() => {
     cesiumV = getCesiumViewer()
-    addTerrainLine()
+    // addTerrainLine()
     new CesiumEvent(cesiumV)
 })
 
@@ -224,12 +233,24 @@ const addContourLabels = async (viewer: Cesium.Viewer, rect: any, spacing: numbe
     height: 100vh;
 }
 
-.aaa {
+.show-info {
     position: absolute;
-    left: 2%;
+    left: 1%;
     top: 2%;
-    width: 100px;
-    height: 100px;
-    background-color: aquamarine;
+    width: 28%;
+    min-height: 35px;
+    text-align: center;
+    line-height: 35px;
+    background-color: rgb(239, 139, 63);
+    border-radius: 5px;
+}
+
+.options {
+    position: absolute;
+    right: 2%;
+    top: 20%;
+    width: 10%;
+    min-height: 80px;
+    background-color: aqua;
 }
 </style>
