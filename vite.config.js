@@ -2,10 +2,10 @@ import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 import cesium from "vite-plugin-cesium";
 import path from "path";
-import { resolve } from 'path';
+import { resolve } from "path";
 
 const pathResolve = (dir) => {
-  return resolve(__dirname, '.', dir);
+  return resolve(__dirname, ".", dir);
 };
 
 // https://vitejs.dev/config/
@@ -16,11 +16,11 @@ export default defineConfig({
   plugins: [vue(), cesium()],
   resolve: {
     alias: {
-      "/@": pathResolve('./src/'),
+      "/@": pathResolve("./src/"),
     },
   },
   server: {
-    host: '0.0.0.0', // 服务器地址
+    host: "0.0.0.0", // 服务器地址
     hmr: true,
     port: 4001,
     open: false,
@@ -42,7 +42,8 @@ export default defineConfig({
       //   rewrite: (path) => path.replace(/^\/dem/, ""),
       // },
       "/geoserverApi": {
-        target: "http://127.0.0.1:10001/",
+        // target: "http://127.0.0.1:10002/",
+        target: " http://127.0.0.1:8099/geoserverApi/",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/geoserverApi/, ""),
       },

@@ -21,7 +21,8 @@ onMounted(() => {
     // tempRander()
     // geojsonPri1()
     // test3()
-    render()
+    // render()
+    aa()
 })
 
 const geojsonPri = async () => {
@@ -321,6 +322,164 @@ const render = async () => {
     //     currentHour++;
     // }, 2000)
 }
+
+//=============================
+
+const colorArray = [
+    [203, [115, 70, 105, 255]],
+    [218, [202, 172, 195, 255]],
+    [233, [162, 70, 145, 255]],
+    [248, [143, 89, 169, 255]],
+    [258, [157, 219, 217, 255]],
+    [265, [106, 191, 181, 255]],
+    [269, [100, 166, 189, 255]],
+    [273.15, [93, 133, 198, 255]],
+    [274, [68, 125, 99, 255]],
+    [283, [128, 147, 24, 255]],
+    [294, [243, 183, 4, 255]],
+    [303, [232, 83, 25, 255]],
+    [320, [71, 14, 0, 255]]
+]
+
+const tempToColor = (kelvin: any) => {
+    for (let i = 0; i < colorArray.length - 1; i++) {
+        const [t1, c1] = colorArray[i];
+        const [t2, c2] = colorArray[i + 1];
+        if (kelvin >= t1 && kelvin <= t2) {
+            const ratio = (kelvin - t1) / (t2 - t1);
+            return [
+                Math.round(c1[0] + ratio * (c2[0] - c1[0])),
+                Math.round(c1[1] + ratio * (c2[1] - c1[1])),
+                Math.round(c1[2] + ratio * (c2[2] - c1[2])),
+                255
+            ];
+        }
+    }
+    return colorArray[colorArray.length - 1][1]; // 超范围
+}
+class WindyTemperatureImageryProvider {
+    _url: any;
+    _tileWidth: number;
+    _tileHeight: number;
+    _minimumLevel: any;
+    _maximumLevel: any;
+    _tilingScheme: Cesium.WebMercatorTilingScheme;
+    _ready: boolean;
+    constructor(options: any) {
+        this._url = options.url;
+        this._tileWidth = 256;
+        this._tileHeight = 256;
+        this._minimumLevel = options.minimumLevel || 0;
+        this._maximumLevel = options.maximumLevel || 18;
+        this._tilingScheme = new Cesium.WebMercatorTilingScheme();
+        this._ready = true;
+    }
+
+    get ready() { return this._ready; }
+    get tileWidth() { return this._tileWidth; }
+    get tileHeight() { return this._tileHeight; }
+    get maximumLevel() { return this._maximumLevel; }
+    get minimumLevel() { return this._minimumLevel; }
+    get tilingScheme() { return this._tilingScheme; }
+    get rectangle() { return this._tilingScheme.rectangle; }
+    get credit() { return undefined; }
+    get hasAlphaChannel() { return true; }
+
+    async requestImage(x: any, y: any, level: any, request: any) {
+        const url = this._url
+            .replace('{z}', level)
+            .replace('{x}', x)
+            .replace('{y}', y);
+
+        const blob = await fetch(url).then(r => r.blob());
+        const imgBitmap = await createImageBitmap(blob);
+
+        // Windy 原图大小
+        const srcWidth = 257;
+        const srcHeight = 265;
+        const metaHeight = 8;
+
+        // 画到原图canvas
+        const fullCanvas = new OffscreenCanvas(srcWidth, srcHeight);
+        const fullCtx = fullCanvas.getContext("2d");
+        fullCtx?.drawImage(imgBitmap, 0, 0);
+
+        // 获取顶部8行编码信息
+        const metaImgData = fullCtx?.getImageData(0, 0, srcWidth, metaHeight);
+        const decodeInfo = this._decodeMeta(metaImgData);
+
+        // 裁剪掉顶部8行 & 裁成256×256
+        const cropCanvas = new OffscreenCanvas(256, 256);
+        const cropCtx = cropCanvas.getContext("2d");
+        cropCtx?.drawImage(
+            fullCanvas,
+            0, metaHeight,   // 源起点
+            256, 256,        // 源区域大小
+            0, 0,            // 目标起点
+            256, 256         // 目标大小
+        );
+
+        // 解码颜色
+        const imgData = cropCtx?.getImageData(0, 0, 256, 256);
+        const pixels = imgData!.data;
+        for (let i = 0; i < pixels.length; i += 4) {
+            const r = pixels[i];
+            const g = pixels[i + 1];
+            const b = pixels[i + 2];
+            const index = (r << 16) | (g << 8) | b;
+            const color = decodeInfo.palette[index] || [r, g, b];
+            pixels[i] = color[0];
+            pixels[i + 1] = color[1];
+            pixels[i + 2] = color[2];
+            pixels[i + 3] = 200;//控制透明色
+        }
+        cropCtx?.putImageData(imgData!, 0, 0);
+
+        return cropCanvas;
+    }
+
+    _decodeMeta(imgData: any) {
+        const width = imgData.width;
+        const data = imgData.data;
+
+        // 1. 调色板（取第0行的颜色）
+        const palette = [];
+        for (let x = 0; x < width; x++) {
+            const i = (0 * width + x) * 4;
+            const r = data[i];
+            const g = data[i + 1];
+            const b = data[i + 2];
+            palette.push([r, g, b]);
+        }
+
+        // 2. 温度范围（暂用推测公式）
+        const rgbToInt = (r, g, b) => (r << 16) + (g << 8) + b;
+        const minPix = (1 * width + 0) * 4;
+        const maxPix = (1 * width + 1) * 4;
+
+        const minTempRaw = rgbToInt(data[minPix], data[minPix + 1], data[minPix + 2]);
+        const maxTempRaw = rgbToInt(data[maxPix], data[maxPix + 1], data[maxPix + 2]);
+
+        const minTemp = minTempRaw / 100 - 273.15;
+        const maxTemp = maxTempRaw / 100 - 273.15;
+
+        return {
+            palette,
+            minTemp,
+            maxTemp
+        };
+    }
+}
+
+const aa = () => {
+    const provider = new WindyTemperatureImageryProvider({
+        url: 'https://ims.windy.com/im/v3.0/forecast/ecmwf-hres/2025081300/2025081309/wm_grid_257/{z}/{x}/{y}/temp-surface.jpg'
+    });
+
+    cesiumV.imageryLayers.addImageryProvider(provider)
+}
+
+
 </script>
 
 <style lang="scss" scoped>

@@ -32,7 +32,7 @@ export const mapStyle = [
     tileSize: 256,
     minzoom: 0,
     maxzoom: 18,
-    enabled: true,
+    enabled: false,
   },
   {
     name: "全球矢量",
@@ -68,7 +68,7 @@ export const mapStyle = [
     tileSize: 256,
     minzoom: 0,
     maxzoom: 18,
-    enabled: false,
+    enabled: true,
   },
   {
     name: "世界地图tms",
@@ -93,6 +93,20 @@ export const mapStyle = [
     dataSourceName: "地图",
     tiles: [
       "geoserverApi/geoserver/ne/wms?service=WMS&version=1.1.0&request=GetMap&layers=ne%3Acountries&bbox={bbox-epsg-3857}&width=768&height=370&srs=EPSG%3A3857&styles=&format=image%2Fjpeg",
+    ],
+    tileSize: 256,
+    minzoom: 0,
+    maxzoom: 18,
+    enabled: false,
+  },
+  {
+    name: "降雨数据",
+    id: "jysj",
+    type: "raster", //栅格类型
+    typeName: "栅格地图",
+    dataSourceName: "地图",
+    tiles: [
+      "geoserverApi/geoserver/gxh/wms?service=WMS&version=1.1.0&request=GetMap&layers=gxh%3Awind-mercator&bbox={bbox-epsg-3857}&width=768&height=370&srs=EPSG%3A3857&styles=&format=image%2Fjpeg&INTERPOLATION=BILINEAR",
     ],
     tileSize: 256,
     minzoom: 0,
@@ -129,13 +143,13 @@ export const mapStyle = [
     enabled: false,
   },
   {
-    name: '中国人口数据分布',
-    id: 'china_pop',
-    type: 'raster',//栅格类型 使用wmts服务
-    typeName: '栅格地图',
-    dataSourceName: '地图',
+    name: "中国人口数据分布",
+    id: "china_pop",
+    type: "raster", //栅格类型 使用wmts服务
+    typeName: "栅格地图",
+    dataSourceName: "地图",
     tiles: [
-      "geoserverApi/geoserver/gwc/service/tms/1.0.0/k-peoject%3Achina-pop@EPSG%3A900913@png/{z}/{x}/{y}.png"
+      "geoserverApi/geoserver/gwc/service/tms/1.0.0/k-peoject%3Achina-pop@EPSG%3A900913@png/{z}/{x}/{y}.png",
     ],
     scheme: "tms",
     tileSize: 256,

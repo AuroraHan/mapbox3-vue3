@@ -108,7 +108,7 @@ const routsList = ref([
         type: 'cesium'
     },
     {
-        name: 'Cesium弹出框',
+        name: 'Cesium标牌',
         path: 'cesiumPopup',
         type: 'cesium'
     },
@@ -150,6 +150,16 @@ const routsList = ref([
     {
         name: 'Cesium模拟windy',
         path: 'cesiumWindy',
+        type: 'cesium'
+    },
+    {
+        name: 'Cesium通用',
+        path: 'cesiumGeneral',
+        type: 'cesium'
+    },
+    {
+        name: 'Cesium|Geoserver服务',
+        path: 'cesiumGeoserver',
         type: 'cesium'
     },
     {

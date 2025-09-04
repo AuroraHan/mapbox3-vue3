@@ -146,7 +146,7 @@ const initMap = () => {
     mapR.removeControl(map._logoControl);
 
     map.on('load', () => {
-        addDemData()
+        // addDemData()
     })
 
     map.on('click', (e) => {
