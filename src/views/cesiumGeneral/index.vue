@@ -19,6 +19,7 @@ import { useCesium } from '../../hooks/useCesium'
 import { CesiumEvent } from '/@/utils/cesiumEvent'
 import { useCesiumEventStore } from '/@/stores/cesiumStore'
 import { InteractivePolygon } from './InteractivePolygon';
+import { FireEffect } from './FireEffect';
 
 
 const cesiumEventStore = useCesiumEventStore();
@@ -31,7 +32,8 @@ const { getCesiumViewer } = useCesium({ container: 'cesiumContainer', addTerrain
 onMounted(() => {
     cesiumV = getCesiumViewer()
     // addTerrainLine()
-    new CesiumEvent(cesiumV)
+    // new CesiumEvent(cesiumV)
+    addFire()
 })
 
 
@@ -269,6 +271,19 @@ const drawPolygon = () => {
     }
 
 }
+
+//-------------案例三----------
+//火焰燃烧
+const addFire = () => {
+    const fire = new FireEffect(cesiumV, {
+        lng: 117.16,
+        lat: 32.71
+    })
+    cesiumV.camera.setView({
+        destination: Cesium.Cartesian3.fromDegrees(117.16, 32.71, 1500.0)
+    });
+}
+
 
 </script>
 <style scoped lang='scss'>
