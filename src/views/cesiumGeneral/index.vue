@@ -18,7 +18,7 @@ import * as Cesium from 'cesium';
 import { useCesium } from '../../hooks/useCesium'
 import { CesiumEvent } from '/@/utils/cesiumEvent'
 import { useCesiumEventStore } from '/@/stores/cesiumStore'
-import { InteractivePolygon } from './interactivePolygon';
+import { InteractivePolygon } from './InteractivePolygon';
 
 
 const cesiumEventStore = useCesiumEventStore();
