@@ -33,9 +33,9 @@ onMounted(() => {
     cesiumV = getCesiumViewer()
     // addTerrainLine()
     // new CesiumEvent(cesiumV)
-    addFire()
+    // addFire()
+    addShockwave()
 })
-
 
 //添加等高线
 const addTerrainLine = () => {
@@ -282,8 +282,45 @@ const addFire = () => {
     cesiumV.camera.setView({
         destination: Cesium.Cartesian3.fromDegrees(117.16, 32.71, 1500.0)
     });
+
+    // setTimeout(() => {
+    //     fire.remove()
+    // }, 10000)
 }
 
+//添加冲击波
+const addShockwave = () => {
+
+
+    cesiumV.entities.add({
+        position: Cesium.Cartesian3.fromDegrees(117.16, 32.71, 50.0),
+        ellipse: {
+            semiMajorAxis: 100.0,
+            semiMinorAxis: 100.0,
+            material: new Cesium.ImageMaterialProperty({
+                image: createRingTexture(),
+                transparent: true
+            }),
+            height: 50.0
+        }
+    });
+
+    cesiumV.camera.setView({
+        destination: Cesium.Cartesian3.fromDegrees(117.16, 32.71, 1500.0)
+    });
+}
+
+const createRingTexture = (size = 256) => {
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = size;
+    const ctx = canvas.getContext("2d");
+    const gradient = ctx!.createRadialGradient(size / 2, size / 2, size / 4, size / 2, size / 2, size / 2);
+    gradient.addColorStop(0.7, "rgba(255,255,255,0.6)");
+    gradient.addColorStop(1.0, "rgba(255,255,255,0)");
+    ctx!.fillStyle = gradient;
+    ctx!.fillRect(0, 0, size, size);
+    return canvas;
+}
 
 </script>
 <style scoped lang='scss'>
