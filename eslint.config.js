@@ -14,9 +14,10 @@ export default {
 
     //针对语言进行配置
     languageOptions: {
-        //指定解释器
+        //指定解释器 vue
         parser: vueParser,
 
+        //内部文件解析 ts
         parserOptions: {
             parser: tsParser,
         }
