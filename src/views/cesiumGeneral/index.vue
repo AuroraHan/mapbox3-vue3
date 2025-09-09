@@ -37,6 +37,9 @@ onMounted(() => {
     addShockwave()
 })
 
+
+
+
 //添加等高线
 const addTerrainLine = () => {
     cesiumV.scene.skyAtmosphere.show = true;

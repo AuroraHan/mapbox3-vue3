@@ -1,5 +1,6 @@
 import * as Cesium from 'cesium';
 
+
 export class FireEffect {
     viewer: Cesium.Viewer;
     viewModel: {
