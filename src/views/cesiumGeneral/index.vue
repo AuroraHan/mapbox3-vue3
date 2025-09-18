@@ -1,7 +1,7 @@
 <!--  -->
 <template>
     <div id="cesiumContainer"></div>
-    <div class="show-info">
+    <div class="show-info" @click="weatherImg">
         经度:{{ position.longitude.toFixed(4) }}
         纬度:{{ position.latitude.toFixed(4) }}
         高空:{{ position.height.toFixed(2) }}km
@@ -34,7 +34,8 @@ onMounted(() => {
     // addTerrainLine()
     // new CesiumEvent(cesiumV)
     // addFire()
-    addShockwave()
+    // addShockwave()
+    // weatherImg()
 })
 
 
@@ -324,6 +325,90 @@ const createRingTexture = (size = 256) => {
     ctx!.fillRect(0, 0, size, size);
     return canvas;
 }
+
+//-----------天气系统动态播放-------
+const defaultDays = 7
+const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+const weatherImg = () => {
+    const startDay = new Date("1 2,2006")
+    const endDay = new Date("12 30,2016")
+    const startTime = Cesium.JulianDate.fromDate(startDay)
+    const stopTime = Cesium.JulianDate.fromDate(endDay)
+
+    let clock = new Cesium.Clock({
+        startTime: startTime,
+        currentTime: startTime,
+        stopTime: stopTime,
+        clockRange: Cesium.ClockRange.LOOP_STOP,
+        clockStep: Cesium.ClockStep.SYSTEM_CLOCK_MULTIPLIER,
+        multiplier: 1 * 60 * 60 * 24 * defaultDays
+    })
+
+    const clockViewModel = new Cesium.ClockViewModel(clock)
+
+    let timeline = cesiumV.timeline
+    timeline.zoomTo(startTime, stopTime)
+
+    const imageryLayers = cesiumV.imageryLayers
+    let p0 = new Cesium.SingleTileImageryProvider({
+        url: 'http://support.supermap.com.cn:8090/webgl/data/LandTemperature/2016.1.jpg',
+        tileWidth: 2048,
+        tileHeight: 1024
+    })
+
+    let p1 = new Cesium.SingleTileImageryProvider({
+        url: 'http://support.supermap.com.cn:8090/webgl/data/LandTemperature/2016.2.jpg',
+        tileWidth: 2048,
+        tileHeight: 1024
+    })
+
+    let layer0 = imageryLayers.addImageryProvider(p0)
+    let layer1 = imageryLayers.addImageryProvider(p1)
+
+    layer1.alpha = 0
+
+    let currentMonth = 1
+
+    cesiumV.animation.viewModel.dateFormatter = function (date, viewModel) {
+        const gregorianDate = Cesium.JulianDate.clone(clock.currentTime)
+        const currentTime = Cesium.JulianDate.toGregorianDate(gregorianDate)
+
+        let nY = currentTime.year
+        let nM = currentTime.month
+        let nD = currentTime.day
+
+        if (layer0.alpha >= 0) {
+            let alpha = nD / 30
+            layer0.alpha = 1 - alpha
+            layer1.alpha = alpha
+        }
+
+        if (currentMonth != nM) {
+            updateLayers(nY, nM)
+            currentMonth = nM
+        }
+
+        return monthNames[currentTime.month - 1] + ' ' + currentTime.day + ' ' + currentTime.year
+    }
+
+    function updateLayers(nY: number, nM: number) {
+        let urlNew = `http://support.supermap.com.cn:8090/webgl/data/LandTemperature/${nY}.${nM}.jpg`
+        let pNew = new Cesium.SingleTileImageryProvider({
+            url: urlNew,
+            tileWidth: 2048,
+            tileHeight: 1024,
+        })
+
+        let layerNew = imageryLayers.addImageryProvider(pNew)
+        imageryLayers.remove(layer0)
+        layer0 = layer1
+        layer0.alpha = 1
+        layer1 = layerNew
+        layer1.alpha = 0
+    }
+}
+
+
 
 </script>
 <style scoped lang='scss'>
