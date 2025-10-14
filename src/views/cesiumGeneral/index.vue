@@ -32,7 +32,7 @@ const { getCesiumViewer } = useCesium({ container: 'cesiumContainer', addTerrain
 onMounted(() => {
     cesiumV = getCesiumViewer()
     // addTerrainLine()
-    // new CesiumEvent(cesiumV)
+    new CesiumEvent(cesiumV)
     // addFire()
     // addShockwave()
     // weatherImg()

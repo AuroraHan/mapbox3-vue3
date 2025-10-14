@@ -18,6 +18,9 @@
         <source src="/data/1.mp4" type="video/mp4">
     </video>
 
+    <div class="my-menu" ref="menuRef">
+        菜单栏
+    </div>
 
     <IntegrationTools v-model="tools[0].enable" :viewerI="cesiumV"></IntegrationTools>
     <AnalysisTools v-model="tools[2].enable" :viewerI="cesiumV"></AnalysisTools>
@@ -49,7 +52,8 @@ onMounted(() => {
 const baseConfig = () => {
     cesiumV = getCesiumViewer()
     getLngLat()
-    geojsonPri()
+    addModelMenu()
+    // geojsonPri()
     // add()
 }
 
@@ -316,7 +320,42 @@ const geojsonPri = async () => {
     cesiumV.scene.primitives.add(primitive);
 }
 
+//添加模型右击按钮
+const menuRef = ref()
+const addModelMenu = () => {
+    const mode = new Cesium.Entity({
+        id: 'model1',
+        position: Cesium.Cartesian3.fromDegrees(120, 30, 10000),
+        model: {
+            uri: '/models/Cesium_Air.glb',
+            minimumPixelSize: 128,
+            maximumScale: 20000,
+        }
+    })
 
+    cesiumV.entities.add(mode)
+    cesiumV.trackedEntity = mode
+
+
+    // ===== 鼠标右键事件捕获 =====
+    const handler = new Cesium.ScreenSpaceEventHandler(cesiumV.scene.canvas);
+    handler.setInputAction(function (movement: any) {
+        // 获取鼠标点击对象
+        const pickedObject = cesiumV.scene.pick(movement.position);
+
+        if (Cesium.defined(pickedObject) && pickedObject.id && pickedObject.id.id === 'model1') {
+            console.log(menuRef.value);
+
+            // 显示菜单
+            menuRef.value.style.left = movement.position.x + 'px';
+            menuRef.value.style.top = movement.position.y + 'px';
+            menuRef.value.style.display = 'block';
+        } else {
+            // 点击其他地方隐藏菜单
+            menuRef.value.style.display = 'none';
+        }
+    }, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
+}
 </script>
 
 <style lang="scss" scoped>
