@@ -9,6 +9,7 @@
     </div>
     <div class="options">
         <el-button type="primary" @click="drawPolygon">绘制面</el-button>
+        <el-button type="primary" @click="mouseMove">十字架</el-button>
     </div>
 </template>
 
@@ -408,7 +409,93 @@ const weatherImg = () => {
     }
 }
 
+//------鼠标移动十字架
+// 控制更新频率（节流）
+let pending = ref(false);
+let lastMousePos: any = null;
+let lonPositions: Array<Cesium.Cartesian3> = [];
+let latPositions: Array<Cesium.Cartesian3> = [];
+let lonLine: Cesium.Entity, latLine: Cesium.Entity;
+const mouseMove = () => {
+    // 创建两条 polyline (经线和纬线)，初始隐藏
+    lonLine = cesiumV.entities.add({
+        name: 'longitude-line',
+        polyline: {
+            positions: new Cesium.CallbackProperty(() => lonPositions, false),
+            width: 2,
+            // 可按需修改材质：这里用纯色
+            material: Cesium.Color.RED.withAlpha(0.9),
+            clampToGround: false
+        },
+        show: false
+    });
 
+    latLine = cesiumV.entities.add({
+        name: 'latitude-line',
+        polyline: {
+            positions: new Cesium.CallbackProperty(() => latPositions, false),
+            width: 2,
+            material: Cesium.Color.YELLOW.withAlpha(0.9),
+            clampToGround: false
+        },
+        show: false
+    });
+
+    const handler = new Cesium.ScreenSpaceEventHandler(cesiumV.scene.canvas);
+    handler.setInputAction((movement: any) => {
+        lastMousePos = movement;
+        if (!pending.value) {
+            pending.value = true;
+            // 使用 requestAnimationFrame 来节流更新（可改为 setTimeout 固定频率）
+            requestAnimationFrame(() => {
+                pending.value = false;
+                updateCrossAtMouse(lastMousePos);
+            });
+        }
+    }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+}
+
+const updateCrossAtMouse = (movement: any) => {
+
+    if (!movement || !movement.startPosition) return;
+
+    const pick = cesiumV.scene.pickPosition(movement.startPosition);
+    let carto;
+    if (Cesium.defined(pick)) {
+        carto = cesiumV.scene.globe.ellipsoid.cartesianToCartographic(pick);
+    }
+
+    if (!carto) {
+        // 没有拾取到地表（例如鼠标在天空或地图以外），隐藏
+        lonLine.show = false;
+        latLine.show = false;
+        return;
+    }
+
+    const lon = Cesium.Math.toDegrees(carto.longitude);
+    const lat = Cesium.Math.toDegrees(carto.latitude);
+
+    // 计算经纬线点数组
+    lonPositions = [
+        Cesium.Cartesian3.fromDegrees(lon, 90),
+        Cesium.Cartesian3.fromDegrees(lon, 0),
+        Cesium.Cartesian3.fromDegrees(lon, -90),
+    ];
+    latPositions = buildLatitudePositions(lat)
+
+    // 显示并更新实体（CallbackProperty 会读取 lonPositions / latPositions 最新值）
+    lonLine.show = true;
+    latLine.show = true;
+}
+
+const buildLatitudePositions = (lat: number) => {
+    const pts = [];
+    // lon 从 -180 到 180，步长 1 度
+    for (let lon = -180; lon <= 180; lon += 1.0) {
+        pts.push(Cesium.Cartesian3.fromDegrees(lon, lat));
+    }
+    return pts;
+}
 
 </script>
 <style scoped lang='scss'>
