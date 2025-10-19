@@ -52,7 +52,8 @@ onMounted(() => {
 const baseConfig = () => {
     cesiumV = getCesiumViewer()
     getLngLat()
-    addModelMenu()
+    // addModelMenu()
+    hprModel()
     // geojsonPri()
     // add()
 }
@@ -355,6 +356,103 @@ const addModelMenu = () => {
             menuRef.value.style.display = 'none';
         }
     }, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
+}
+
+//模拟飞行翻滚角 暂时无效
+const hprModel = () => {
+    // ========== 1. 设置时间范围 ==========
+    const start = Cesium.JulianDate.fromDate(new Date());
+    const stop = Cesium.JulianDate.addSeconds(start, 60, new Cesium.JulianDate()); // 60秒
+    cesiumV.clock.startTime = start.clone();
+    cesiumV.clock.stopTime = stop.clone();
+    cesiumV.clock.currentTime = start.clone();
+    cesiumV.clock.clockRange = Cesium.ClockRange.LOOP_STOP;
+    cesiumV.clock.multiplier = 1;
+
+    // ========== 2. 创建位置属性（SampledPositionProperty） ==========
+    const position = new Cesium.SampledPositionProperty();
+
+    // 假设我们有一组路径点数据（经纬度 + 高度）
+    const route = [
+        [113.91848, 30.92213, 10000],
+        [113.92848, 30.92213, 15000],
+        [113.93848, 30.92513, 20000],
+        [113.94848, 30.93013, 18000],
+        [113.95848, 30.93513, 15000],
+    ];
+
+    // 按时间加入位置点
+    for (let i = 0; i < route.length; i++) {
+        const time = Cesium.JulianDate.addSeconds(start, i * 10, new Cesium.JulianDate());
+        const pos = Cesium.Cartesian3.fromDegrees(route[i][0], route[i][1], route[i][2]);
+        position.addSample(time, pos);
+    }
+
+    // ========== 3. 计算朝向并加入翻滚角（自定义 OrientationProperty） ==========
+    // const orientation = new Cesium.VelocityOrientationProperty(position);
+
+    // VelocityOrientationProperty 只能自动算出 Heading/Pitch，
+    // 如果你要控制 Roll，就需要自己定义一个 CallbackProperty：
+
+    const customOrientation = new Cesium.CallbackProperty(function (time, result) {
+        // 当前时间位置
+        const curPos = position.getValue(time);
+        // 稍后一点的位置（用于计算方向）
+        const nextTime = Cesium.JulianDate.addSeconds(time!, 0.1, new Cesium.JulianDate());
+        const nextPos = position.getValue(nextTime);
+
+        if (!curPos || !nextPos) return result;
+
+        // 计算方向向量
+        const forward = Cesium.Cartesian3.normalize(
+            Cesium.Cartesian3.subtract(nextPos, curPos, new Cesium.Cartesian3()),
+            new Cesium.Cartesian3()
+        );
+
+        // 定义世界坐标的 up 向量
+        const up = Cesium.Cartesian3.normalize(Cesium.Cartesian3.UNIT_Z, new Cesium.Cartesian3());
+        const right = Cesium.Cartesian3.cross(forward, up, new Cesium.Cartesian3());
+        Cesium.Cartesian3.cross(right, forward, up);
+
+        // 生成旋转矩阵
+        const rotationMatrix = Cesium.Matrix3.multiply(right, up, forward);
+
+        // 从矩阵转为四元数
+        const baseQuat = Cesium.Quaternion.fromRotationMatrix(rotationMatrix);
+
+        // 转为 HeadingPitchRoll 再叠加 Roll
+        const hpr = Cesium.HeadingPitchRoll.fromQuaternion(baseQuat);
+
+        // 模拟飞机轻微翻滚
+        const roll = Math.sin(Cesium.JulianDate.secondsDifference(time!, start) * 0.5) * 0.3;
+        hpr.roll += roll;
+
+        // 转回四元数作为返回值
+        return Cesium.Transforms.headingPitchRollQuaternion(curPos, hpr);
+    }, false);
+
+    // ========== 4. 添加飞机模型 ==========
+    const airplane = cesiumV.entities.add({
+        availability: new Cesium.TimeIntervalCollection([
+            new Cesium.TimeInterval({ start: start, stop: stop }),
+        ]),
+        position: position,
+        // orientation: customOrientation, // 使用自定义带翻滚角的朝向
+        model: {
+            uri: '/models/Cesium_Air.glb',
+            minimumPixelSize: 64,
+            scale: 1.5,
+        },
+        path: {
+            show: true,
+            leadTime: 0,
+            trailTime: 60,
+            width: 3,
+            material: Cesium.Color.CYAN,
+        },
+    });
+    // 相机跟随
+    cesiumV.trackedEntity = airplane;
 }
 </script>
 
