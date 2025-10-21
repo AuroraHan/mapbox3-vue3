@@ -48,6 +48,11 @@ const routes = [
     component: () => import("/@/views/baseThree/index.vue"),
   },
   {
+    path: "/threeGeneral",
+    name: "threeGeneral",
+    component: () => import("/@/views/threeGeneral/index.vue"),
+  },
+  {
     path: "/mapBoxAircraft",
     name: "mapBoxAircraft",
     component: () => import("/@/views/mapBoxAircraft/index.vue"),

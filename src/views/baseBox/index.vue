@@ -183,11 +183,15 @@ const routsList = ref([
         type: 'mapbox'
     },
     {
+        name: 'three基础',
+        path: 'threeGeneral',
+        type: 'other'
+    },
+    {
         name: 'three火焰',
         path: 'baseThree',
         type: 'other'
     },
-
 ])
 
 const mapboxFilter = computed(() => {
