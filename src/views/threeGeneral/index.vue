@@ -18,10 +18,10 @@ let camera: THREE.Camera,
 
 
 onMounted(() => {
-    loadGLTF()
+    initThree()
 })
 
-const loadGLTF = () => {
+const initThree = () => {
     const { innerWidth, innerHeight } = window;
 
     camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 1, 5000);
@@ -98,6 +98,7 @@ const loadModel = async () => {
 const objs: Array<THREE.Object3D> = []
 let dragControls: DragControls;
 let transformControls: TransformControls;
+//拖拽模型
 const dragModel = () => {
 
     transformControls = new TransformControls(camera, renderer.domElement);
@@ -129,6 +130,11 @@ const dragModel = () => {
         controls.enabled = true;
         transformControls.detach()
     })
+}
+
+//模型飞行效果
+const modelFly = () => {
+
 }
 </script>
 
