@@ -7,6 +7,7 @@ import { onMounted } from 'vue'
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
+import { DragControls } from 'three/examples/jsm/controls/DragControls';
 
 let camera, scene, renderer, controls;
 onMounted(() => {
@@ -58,7 +59,48 @@ const loadModel = async () => {
     const model = gltf.scene
     model.position.set(0, 100, 0)
     model.scale.set(100, 100, 100)
-    scene.add(model)
+    // scene.add(model)
+
+
+    const missileGroup = new THREE.Group()
+    missileGroup.add(model)
+    scene.add(missileGroup)
+    objs.push(missileGroup)
+
+    dragModel()
+}
+const objs = []
+let dragControls;
+const dragModel = () => {
+    let currentGroup;
+    dragControls = new DragControls(objs, camera, renderer.domElement)
+    //当开始拖拽时，禁用 OrbitControls
+    dragControls.addEventListener('dragstart', function (event) {
+        controls.enabled = false
+        // ✅ 无论点中子mesh还是group，找到最外层Group
+        currentGroup = event.object
+        while (currentGroup && !(currentGroup instanceof THREE.Group)) {
+            currentGroup = currentGroup.parent
+        }
+    })
+
+    // 拖拽中
+    dragControls.addEventListener('drag', function (event) {
+        // event.object 是被拖拽的模型对象
+        // 你可以在这里限制拖拽范围
+        // 例如：
+        // event.object.position.y = Math.max(event.object.position.y, 0)
+        if (currentGroup) {
+            // 将 drag 中的偏移应用到最外层 Group
+            currentGroup.position.copy(event.object.position)
+        }
+    })
+
+    // 拖拽结束后恢复 OrbitControls
+    dragControls.addEventListener('dragend', function (event) {
+        controls.enabled = true
+        currentGroup = null
+    })
 }
 </script>
 
