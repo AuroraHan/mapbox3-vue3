@@ -157,6 +157,11 @@ const routes = [
     name: "cesiumGeoserver",
     component: () => import("/@/views/cesiumGeoserver/index.vue"),
   },
+  {
+    path: "/cesiumThree",
+    name: "cesiumThree",
+    component: () => import("/@/views/cesiumThree/index.vue"),
+  },
 ];
 
 const router = createRouter({
