@@ -19,6 +19,7 @@
     "@types/geojson": "^7946.0.16",
     "@types/mapbox-gl": "^3.4.1",
     "@types/three": "^0.180.0",
+    "cesium": "^1.134.1",
     "coordtransform": "^2.1.2",
     "dat.gui": "^0.7.9",
     "echarts": "^5.6.0",
@@ -39,7 +40,6 @@
   "devDependencies": {
     "@typescript-eslint/parser": "^8.42.0",
     "@vitejs/plugin-vue": "^5.1.4",
-    "cesium": "^1.127.0",
     "eslint": "^9.35.0",
     "sass": "^1.80.7",
     "typescript": "^5.9.2",
