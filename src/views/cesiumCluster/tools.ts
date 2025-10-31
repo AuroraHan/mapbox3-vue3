@@ -78,7 +78,7 @@ export class GeometryPrimitive {
    *
    * @param {*} frameState
    */
-  update(frameState) {
+  update(frameState: any) {
     if (Cesium.defined(this._drawCommand)) {
       frameState.commandList.push(this._drawCommand);
       return;
@@ -125,9 +125,6 @@ export class GeometryPrimitive {
       ...this.options,
     });
   }
-  _drawCommand(_drawCommand: any) {
-    throw new Error('Method not implemented.');
-  }
 
   destroy() {
     return destroyObject(this);
@@ -139,7 +136,7 @@ export class GeometryPrimitive {
 }
 // GeometryPrimitive end
 
-export function makeTexture3D(context) {
+export function makeTexture3D(context: any) {
 
   const size = 100;
   const dataLength = size * size * size;
@@ -189,10 +186,10 @@ export function makeTexture3D(context) {
       height: size,
       depth: size,
     },
-    // sampler: Sampler({
-    //   minificationFilter: Cesium.TextureMinificationFilter.LINEAR,
-    //   magnificationFilter: Cesium.TextureMagnificationFilter.LINEAR,
-    // }),
+    sampler: new Sampler({
+      minificationFilter: Cesium.TextureMinificationFilter.LINEAR,
+      magnificationFilter: Cesium.TextureMagnificationFilter.LINEAR,
+    }),
   });
 }
 
@@ -217,9 +214,6 @@ const _p = [
   29, 24, 72, 243, 141, 128, 195, 78, 66, 215, 61, 156, 180,
 ];
 
-for (let i = 0; i < 256; i++) {
-  _p[256 + i] = _p[i];
-}
 
 function fade(t) {
   return t * t * t * (t * (t * 6 - 15) + 10);
@@ -232,15 +226,13 @@ function grad(hash, x, y, z) {
   return ((h & 1) === 0 ? u : -u) + ((h & 2) === 0 ? v : -v);
 }
 
-/**
- * A utility class providing a 3D noise function.
- *
- * The code is based on [IMPROVED NOISE]{@link https://cs.nyu.edu/~perlin/noise/}
- * by Ken Perlin, 2002.
- *
- * @three_import import { ImprovedNoise } from 'three/addons/math/ImprovedNoise.js';
- */
+
 class ImprovedNoise {
+  constructor() {
+    for (let i = 0; i < 256; i++) {
+      _p[256 + i] = _p[i];
+    }
+  }
   /**
    * Returns a noise value for the given parameters.
    *
@@ -300,3 +292,265 @@ class ImprovedNoise {
     );
   }
 }
+
+export const vertexShader = `
+    in vec3 position3DHigh;
+    in vec3 position3DLow;
+    in vec3 normal;
+    in vec2 st;
+    in float batchId;
+
+    out vec3 vPositionWC; // world-space position for fragment shader
+
+    vec4 translateRelativeToEye(vec3 high, vec3 low) {
+        vec3 highDifference = high - czm_encodedCameraPositionMCHigh;
+        if(length(highDifference) == 0.0) {
+            highDifference = vec3(0);
+        }
+        vec3 lowDifference = low - czm_encodedCameraPositionMCLow;
+        return vec4(highDifference + lowDifference, 1.0);
+    }
+
+    void main()
+    {
+        // get model-space vertex (position3DHigh + position3DLow) in world coordinates
+        vec3 modelPosition = position3DHigh + position3DLow;
+        // compute world position using czm_model (modelMatrix)
+        vec4 worldPos = czm_model * vec4(modelPosition, 1.0);
+        vPositionWC = worldPos.xyz;
+
+        // do the usual relative-to-eye translate for gl_Position
+        vec4 p = translateRelativeToEye(position3DHigh, position3DLow);
+        gl_Position = czm_modelViewProjectionRelativeToEye * p;
+    }
+  `;
+
+// ---------------------- 片元着色器 ----------------------
+export const fragmentShader = `
+    #version 300 es
+    precision highp float;
+    precision highp sampler3D;
+
+    in vec3 vPositionWC;
+
+    //out vec4 out_FragColor;
+
+    uniform sampler3D map;
+    uniform vec3 base;
+    uniform float threshold;
+    uniform float range;
+    uniform float opacity;
+    uniform float steps;
+    uniform float frame;
+    uniform float u_time;
+    uniform vec3 czm_cameraPositionWC;
+
+    uniform mat4 u_inverseModel;
+
+    float g_blastTime;
+    vec3 g_cloudCentre;
+
+    void InitBlastParams() {
+        g_blastTime = fract(u_time / 20.0);
+        g_cloudCentre = vec3(0.0, g_blastTime * 5.0, 0.0);
+    }
+
+    vec3 Flow(vec3 pos) {
+        vec3 p = pos - g_cloudCentre;
+        vec3 v;
+        vec2 xz = p.xz;
+        float lenxz = length(xz);
+        vec2 dir_xz = (lenxz > 0.0) ? (-xz / lenxz) : vec2(0.0);
+        v.xz = dir_xz * p.y * -1.0;
+        v.y = length(xz) - 0.8;
+        v *= 0.1;
+        float g = length(vec2(p.y, length(p.xz) - 0.8)) - 1.0;
+        v *= exp2(-pow(g * 3.0, 2.0));
+        return v;
+    }
+
+    float sampleNoise(vec3 coord) {
+        return texture(map, coord).r;
+    }
+
+    float SDF(vec3 pos) {
+        const float period = 1.6;
+        float tt = fract(u_time / period);
+        float t0 = tt * period;
+        float t1 = (tt - 1.0) * period;
+
+        vec3 uvw = (pos - g_cloudCentre) / 0.30; // tuned scaling (was /30 in shadertoy)
+        float f0 = 0.0;
+        float f1 = 0.0;
+
+
+        for (int i = 0; i < 2; i++) {
+            float ti = (i==0) ? t0 : t1;
+            vec3 offset = Flow(pos) * ti * 0.2;
+            vec3 u = uvw + offset;
+
+            vec3 c2 = 0.5 + u * 0.02;  
+            vec3 c4 = 0.5 + u * 0.04;
+            vec3 c8 = 0.5 + u * 0.08;
+            vec3 c16 = 0.5 + u * 0.16;
+            vec3 c32 = 0.5 + u * 0.32;
+
+
+            f0 += sampleNoise(c2) * 0.5;
+            f0 += sampleNoise(c4) * 0.25;
+            f0 += sampleNoise(c8) * 0.125;
+            f0 += sampleNoise(c16) * 0.0625;
+            f0 += sampleNoise(c32) * 0.03125;
+
+
+            f1 += sampleNoise(c2 + offset * 0.0) * 0.5;
+            f1 += sampleNoise(c4 + offset * 0.0) * 0.25;
+            f1 += sampleNoise(c8 + offset * 0.0) * 0.125;
+            f1 += sampleNoise(c16 + offset * 0.0) * 0.0625;
+            f1 += sampleNoise(c32 + offset * 0.0) * 0.03125;
+        }
+
+        float ff = mix(f0, f1, tt);
+        ff *= 0.5; 
+
+        vec3 p = pos - g_cloudCentre;
+        float bulge = 1.0 - exp2(-20.0 * g_blastTime);
+        float g = length(vec2(p.y, length(p.xz) - 1.0 * bulge)) - 1.0;
+        ff *= bulge;
+
+        float h = length(pos.xz) - 0.7 + 0.2 * (g_cloudCentre.y - pos.y - 1.2);
+        h = max(h, pos.y - g_cloudCentre.y);
+        h = max(h, (g_cloudCentre.y * 1.25 - 4.0 - pos.y) * 0.3);
+
+        g = min(g, h);
+        ff += g * 0.6;
+
+        return ff;
+    }
+
+
+    float shading(vec3 coord) {
+        float step = 0.01;
+        return sampleNoise(coord - vec3(step)) - sampleNoise(coord + vec3(step));
+    }
+
+
+    vec2 hitBox(vec3 orig, vec3 dir) {
+        vec3 box_min = vec3(-0.5);
+        vec3 box_max = vec3(0.5);
+        vec3 inv_dir = 1.0 / dir;
+        vec3 tmin_tmp = (box_min - orig) * inv_dir;
+        vec3 tmax_tmp = (box_max - orig) * inv_dir;
+        vec3 tmin = min(tmin_tmp, tmax_tmp);
+        vec3 tmax = max(tmin_tmp, tmax_tmp);
+        float t0 = max(tmin.x, max(tmin.y, tmin.z));
+        float t1 = min(tmax.x, min(tmax.y, tmax.z));
+        return vec2(t0, t1);
+    }
+
+    uint wang_hash(uint s)
+    {
+            s = (s ^ 61u) ^ (s >> 16u);
+            s *= 9u;
+            s = s ^ (s >> 4u);
+            s *= 0x27d4eb2du;
+            s = s ^ (s >> 15u);
+            return s;
+    }
+
+    float randomFloat(inout uint s) {
+        return float(wang_hash(s)) / 4294967296.0;
+    }
+
+    void main() {
+        vec3 camWC = czm_cameraPositionWC;
+        vec3 camModel = (u_inverseModel * vec4(camWC, 1.0)).xyz;
+        vec3 posModel = (u_inverseModel * vec4(vPositionWC, 1.0)).xyz;
+
+        vec3 dir = normalize(posModel - camModel);
+
+        InitBlastParams();
+
+
+        vec2 bounds = hitBox(camModel, dir);
+        if (bounds.x > bounds.y) {
+            discard;
+        }
+        bounds.x = max(bounds.x, 0.0);
+        vec3 p = camModel + bounds.x * dir; 
+
+        vec3 absDir = abs(dir);
+        float delta = min(absDir.x, min(absDir.y, absDir.z));
+        delta = delta / steps; 
+
+        uint seed = uint(gl_FragCoord.x) * 1973u + uint(gl_FragCoord.y) * 9277u + uint(frame) * 26699u;
+        
+        
+        float randNum = randomFloat(seed) * 2.0 - 1.0;
+        vec3 size = vec3(textureSize(map, 0));
+        p += dir * randNum * (1.0 / max(size.x, 1.0));
+
+
+        vec4 ac = vec4(base, 0.0);
+        float visibility = 1.0;
+        float light0 = 0.0;
+        float light1 = 0.0;
+        vec3 sunDir = normalize(vec3(1.0, 0.8, 0.5)); 
+        for (float t = bounds.x; t < bounds.y; t += delta) {
+            vec3 sampleP = p; 
+
+            vec3 texCoord = sampleP + vec3(0.5);
+
+            float h = SDF(sampleP);
+
+            float softness = 0.1 + pow(g_blastTime, 2.0) * 0.5;
+            float density = 1.2 / softness;
+            const float epsilon = 0.001;
+            float vis = smoothstep(epsilon, softness, h);
+            if (sampleP.y < 0.0) vis = 1.0; 
+
+            h = max(h, epsilon);
+            if (vis < 1.0) {
+                float newvis = visibility * pow(vis, h * density);
+              
+                float sc = smoothstep(-0.5, 1.0, (SDF(sampleP + sunDir * softness) - h) / softness);
+                light0 += (visibility - newvis) * sc;
+                
+                vec3 lightDelta = g_cloudCentre - sampleP;
+                float sc2 = pow(smoothstep(-1.0, 1.0, (SDF(sampleP + normalize(lightDelta) * softness) - h) / softness), 2.0);
+                light1 += (visibility - newvis) * sc2 / (dot(lightDelta, lightDelta) + 1.0);
+                visibility = newvis;
+            }
+            
+            if (vis <= 0.0 || sampleP.y < 0.0) {
+                break;
+            }
+
+           
+            float shade = shading(texCoord);
+            float d = smoothstep(threshold - range, threshold + range, sampleNoise(texCoord)) * opacity;
+            float col = shade * 3.0 + ((texCoord.x + texCoord.y) * 0.25) + 0.2;
+            ac.rgb += (1.0 - ac.a) * d * col;
+            ac.a += (1.0 - ac.a) * d;
+            if (ac.a >= 0.95) break;
+
+            p += dir * delta;
+        }
+
+        
+        vec4 color = vec4(.1, .2, .3, 1.0);
+        color += light0 * vec4(.9, .8, .7, 0.0);
+        color *= pow(g_blastTime, 0.5) * 0.5;
+        color += light1 * vec4(8.0, 2.0, 0.25, 0.0) / (25.0 * pow(g_blastTime + 0.0001, 2.0)); 
+
+        
+        color = mix(color, vec4(.2, .4, .8, 1.0) + 0.003 / max(g_blastTime, 0.0001), visibility);
+        
+        color.rgb += ac.rgb;
+
+       
+        color = pow(color, vec4(1.0 / 2.2));
+        if (ac.a == 0.0) discard;
+        out_FragColor = czm_gammaCorrect(color);
+    }
+`;

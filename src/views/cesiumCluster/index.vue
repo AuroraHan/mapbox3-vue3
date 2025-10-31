@@ -10,7 +10,7 @@ import { onMounted, reactive, ref } from 'vue';
 import * as Cesium from 'cesium';
 import { useCesium } from '../../hooks/useCesium'
 import { getCurrentPositionByMouse } from '../../utils/cesiumTools'
-import { GeometryPrimitive, makeTexture3D } from './tools';
+import { fragmentShader, GeometryPrimitive, makeTexture3D, vertexShader } from './tools';
 
 let cesiumV: Cesium.Viewer;
 const { getCesiumViewer } = useCesium({ container: 'cesiumContainer', infoBox: true })
@@ -299,137 +299,107 @@ const mushRoom = () => {
 //蘑菇云效果2
 const mushRoomEffect = () => {
     const texture3D = makeTexture3D(cesiumV.scene.context);
-    // texture3D.generateMipmap();
+    texture3D.generateMipmap();
+    // console.log(texture3D);
 
-    const geometry = new Cesium.BoxGeometry({
-        minimum: new Cesium.Cartesian3(-500000, -500000, -500000),
-        maximum: new Cesium.Cartesian3(500000, 500000, 500000),
+    const boxSideLength = 1.0;
+    const zoomScale = 1000000;
+    const centerPoint = Cesium.Cartesian3.fromDegrees(
+        113,
+        33,
+        500000,
+    );
+
+    let modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(centerPoint);
+    const zoomMat = Cesium.Matrix4.fromScale(
+        new Cesium.Cartesian3(zoomScale, zoomScale, zoomScale),
+        new Cesium.Matrix4(),
+    );
+    Cesium.Matrix4.multiply(modelMatrix, zoomMat, modelMatrix);
+
+    // create box geometry (same as you had)
+    const halfBox = Cesium.Cartesian3.multiplyByScalar(
+        new Cesium.Cartesian3(boxSideLength, boxSideLength, boxSideLength),
+        0.5,
+        new Cesium.Cartesian3(),
+    );
+    const negHalfBox = Cesium.Cartesian3.negate(halfBox, new Cesium.Cartesian3());
+    const boxGeometry = new Cesium.BoxGeometry({
+        minimum: negHalfBox,
+        maximum: halfBox,
     });
 
-    const primitive = new GeometryPrimitive(geometry, {
-        modelMatrix: Cesium.Transforms.eastNorthUpToFixedFrame(
-            Cesium.Cartesian3.fromDegrees(110.0, 30.0, 10000),
-        ),
-        vertexShaderSource: `
-            in vec3 position3DHigh;
-            in vec3 position3DLow;
-            uniform mat4 u_modelViewProjection;
-            void main() {
-            vec4 position = czm_modelViewProjectionRelativeToEye * czm_computePosition();
-            gl_Position = position;
-            }
-        `,
-        fragmentShaderSource: `
-            uniform sampler3D u_volume;
-            uniform float u_time;
+    // uniforms object
+    const uniforms = {
+        base: new Cesium.Color(0.9912, 0.8542, 0.3515, 0),
+        map: texture3D,
+        opacity: 0.25,
+        range: 0.1,
+        steps: 100.0,
+        frame: 0.0,
+        threshold: 0.25,
+        u_time: 0.0,
+        u_inverseModel: new Cesium.Matrix4(),
+        czm_cameraPositionWC: cesiumV.camera.positionWC
+    };
 
-            in vec3 v_positionMC;
-            out vec4 fragColor;
+    // window.uniforms = uniforms;
 
-            vec3 g_cloudCentre;
-            float g_blastTime;
+    // helper to return uniform values for DrawCommand
+    const cmdUniforms: any = {};
+    for (const key in uniforms) {
+        if (Object.prototype.hasOwnProperty.call(uniforms, key)) {
+            cmdUniforms[key] = function () {
+                return uniforms[key];
+            };
+        }
+    }
 
-            void InitBlastParams()
-            {
-                g_blastTime = fract(u_time / 20.0);
-                g_cloudCentre = vec3(0.0, g_blastTime * 5.0, 0.0);
-            }
-
-            vec3 Flow(vec3 pos)
-            {
-                vec3 p = pos - g_cloudCentre;
-                vec3 v;
-                v.xz = -normalize(p.xz) * p.y;
-                v.y = length(p.xz) - 0.8;
-                v *= 0.1;
-                float g = length(vec2(p.y, length(p.xz) - 0.8)) - 1.0;
-                v *= exp2(-pow(g * 3.0, 2.0));
-                return v;
-            }
-
-            float SDF(vec3 pos)
-            {
-                const float period = 1.6;
-                float tt = fract(u_time / period);
-                float t0 = tt * period;
-                float t1 = (tt - 1.0) * period;
-                vec3 uvw = (pos - g_cloudCentre) / 30.0;
-                float f0 = 0.0;
-                float f1 = 0.0;
-
-                for (int i = 0; i < 2; i++)
-                {
-                    float t = (i == 0) ? t0 : t1;
-                    vec3 offset = Flow(pos) * t;
-                    vec3 u = uvw + offset * 0.2;
-                    f0 += texture(u_volume, offset + u * 2.0).r / 2.0;
-                    f0 += texture(u_volume, offset + u * 4.0).r / 4.0;
-                    f0 += texture(u_volume, offset + u * 8.0).r / 8.0;
-                    f0 += texture(u_volume, offset + u * 16.0).r / 16.0;
-                }
-
-                float ff = f0 * 0.5;
-                vec3 p = pos - g_cloudCentre;
-                float bulge = 1.0 - exp2(-20.0 * g_blastTime);
-                float g = length(vec2(p.y, length(p.xz) - 1.0 * bulge)) - 1.0;
-                ff *= bulge;
-                float h = length(pos.xz) - 0.7 + 0.2 * (g_cloudCentre.y - pos.y - 1.2);
-                h = max(h, pos.y - g_cloudCentre.y);
-                h = max(h, (g_cloudCentre.y * 1.25 - 4.0 - pos.y) * 0.3);
-                g = min(g, h);
-                ff += g * 0.6;
-                return ff;
-            }
-
-            void main()
-            {
-                InitBlastParams();
-                vec3 rayDir = normalize(v_positionMC);
-                vec3 pos = vec3(0.0, 2.0, -5.0);
-                float visibility = 1.0;
-                float light0 = 0.0;
-                vec3 sunDir = normalize(vec3(1.0, 1.0, 1.0));
-
-                for (int i = 0; i < 20; i++)
-                {
-                    float h = SDF(pos);
-                    float vis = smoothstep(0.001, 0.1, h);
-                    h = max(h, 0.001);
-                    if (vis < 1.0)
-                    {
-                        float newvis = visibility * pow(vis, h * 1.2);
-                        light0 += (visibility - newvis) *
-                                smoothstep(-0.5, 1.0, (SDF(pos + sunDir * 0.1) - h) / 0.1);
-                        visibility = newvis;
-                    }
-                    if (vis <= 0.0 || pos.y < 0.0)
-                        break;
-                    pos += h * rayDir;
-                }
-
-                vec4 color = vec4(0.1, 0.2, 0.3, 1.0);
-                color += light0 * vec4(0.9, 0.8, 0.7, 0.0);
-                color *= pow(g_blastTime, 0.5) * 0.5;
-                color.a = 1.0 - visibility;
-                fragColor = color;
-            }
-        `,
-        uniformMap: {
-            u_volume: () => texture3D,
-            u_time: () => performance.now() * 0.001,
+    const renderState = Cesium.RenderState.fromCache({
+        depthMask: false,
+        blending: {
+            enabled: true,
+            color: { red: 0, green: 0, blue: 0, alpha: 0 },
         },
-        renderState: Cesium.RenderState.fromCache({
-            depthTest: { enabled: true },
-            blending: Cesium.BlendingState.ALPHA_BLEND,
-        }),
+        depthTest: { enabled: true, func: Cesium.DepthFunction.LESS_OR_EQUAL },
+        cull: { enabled: true, face: Cesium.CullFace.BACK }, // back-face culling
+    });
+
+    const primitive = new GeometryPrimitive(boxGeometry, {
+        uniformMap: cmdUniforms,
+        vertexShaderSource: vertexShader,
+        fragmentShaderSource: fragmentShader,
+        renderState: renderState,
+        modelMatrix,
         pass: Cesium.Pass.TRANSLUCENT,
     });
 
+
     cesiumV.scene.primitives.add(primitive);
-    // cesiumV.camera.flyTo({
-    //     destination: Cesium.Cartesian3.fromDegrees(110.0, 30.0, 17000)
-    // })
+
+    function updateInverseModelMatrix() {
+        const inv = Cesium.Matrix4.inverse(modelMatrix, new Cesium.Matrix4());
+        uniforms.u_inverseModel = inv;
+    }
+
+    let frameCount = 0;
+    cesiumV.scene.preRender.addEventListener(function (scene, time) {
+        frameCount++;
+
+        uniforms.frame = frameCount;
+        // use seconds since epoch (or viewer.clock) - here use scene.time.secondsOfDay for smoother animation
+        // fallback to Date.now() when scene.time is not reliable
+        const seconds = cesiumV.clock ? Cesium.JulianDate.toDate(cesiumV.clock.currentTime).getTime() / 1000.0 : Date.now() / 1000.0;
+        uniforms.u_time = seconds;
+        updateInverseModelMatrix();
+    });
+
+    cesiumV.camera.flyTo({
+        destination: centerPoint
+    })
 }
+
+
 </script>
 
 <style scoped>
