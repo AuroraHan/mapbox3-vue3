@@ -7,11 +7,11 @@
 import { onMounted, createApp } from 'vue';
 import mapbox from 'mapbox-gl';
 import MPop from './mPop.vue';
-import emitter from '/@/mitt/index';
+import emitter from '@/mitt/index';
 import * as Turf from '@turf/turf'
 import { useMapbox } from '../../hooks/useMapBox'
-import CitySelectorControl from '/@/utils/CitySelectorControl'
-import '/@/utils/CitySelectorControl/style.css'
+import CitySelectorControl from '@/utils/CitySelectorControl'
+import '@/utils/CitySelectorControl/style.css'
 
 let mapR: mapboxgl.Map | null = null;
 const { getMap } = useMapbox({ container: 'map', isOffline: false })

@@ -1,7 +1,7 @@
 import * as Cesium from "cesium";
 
-import DrawBase from "../../../../utils/drawBase";
-import { uuid, postionTransfrom } from "../../../../utils/cesiumTools";
+import DrawBase from "@/utils/drawBase";
+import { uuid, postionTransfrom } from "@/utils/cesiumTools";
 
 //折线数据
 type LineDataType = {
@@ -20,6 +20,7 @@ class LineDraw extends DrawBase {
   currentId: string = "";
   //当前绘制折线坐标点
   positions: number[][] = [];
+  onDrawComplete: ((data: LineDataType) => void) | null = null;
   //折线样式
   lineStyle = {
     width: 5,
@@ -47,6 +48,10 @@ class LineDraw extends DrawBase {
   }
   //关闭绘制，置空数据
   closeDraw() {
+    if (this.currentData) {
+      //回调：把绘制的完整数据抛出去
+      this.onDrawComplete?.(this.currentData);
+    }
     this.currentId = "";
     this.currentData = null;
     this.positions = [];

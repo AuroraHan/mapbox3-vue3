@@ -44,7 +44,7 @@ const props = defineProps({
 
     .line {
         height: 38px;
-        background-image: url('/@/assets/popupLbl.png');
+        background-image: url('@/assets/popupLbl.png');
     }
 }
 </style>

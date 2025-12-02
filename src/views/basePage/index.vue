@@ -15,7 +15,7 @@ import { reactive, ref, onBeforeMount, onMounted } from 'vue'
 import * as Turf from '@turf/turf'
 import mapboxgl from "mapbox-gl";
 import Heavy from './heavy.vue';
-import { useDefer } from '/@/hooks/useDefer'
+import { useDefer } from '@/hooks/useDefer'
 
 const defer = useDefer()
 </script>

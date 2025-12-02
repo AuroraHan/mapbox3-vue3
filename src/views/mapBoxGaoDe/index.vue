@@ -50,7 +50,7 @@ import * as Turf from '@turf/turf'
 import coordtransform from 'coordtransform'
 import mapboxgl from 'mapbox-gl';
 import arrow from '../../assets/nav2.png'
-import { removeLayerAndSource } from '/@/utils/mapTools';
+import { removeLayerAndSource } from '@/utils/mapTools';
 
 let mapR: mapboxgl.Map;
 const marker = ref<mapboxgl.Marker | null>(null)

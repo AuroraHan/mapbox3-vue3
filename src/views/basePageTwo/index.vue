@@ -7,7 +7,7 @@
 
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
-import MapTimePopup from '/@/components/mapTimePopup/index.vue'
+import MapTimePopup from '@/components/mapTimePopup/index.vue'
 
 
 onMounted(() => {

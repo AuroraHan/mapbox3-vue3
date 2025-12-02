@@ -16,7 +16,7 @@
 
 <script lang='ts' setup>
 import { ref, onMounted } from 'vue';
-import WinControl from '/@/components/winControl/index.vue'
+import WinControl from '@/components/winControl/index.vue'
 import * as Cesium from 'cesium';
 import { Cluster } from './analysisTools'
 

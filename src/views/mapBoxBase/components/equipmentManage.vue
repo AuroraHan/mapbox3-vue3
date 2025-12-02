@@ -13,9 +13,9 @@
 <script setup lang='ts'>
 import mapboxgl from 'mapbox-gl';
 import { reactive, toRefs, PropType, onMounted } from 'vue'
-import { createImg } from '/@/utils/mapTools'
-import { equipmentList } from '/@/assets/const'
-import WinControl from '/@/components/winControl/index.vue'
+import { createImg } from '@/utils/mapTools'
+import { equipmentList } from '@/assets/const'
+import WinControl from '@/components/winControl/index.vue'
 
 const props = defineProps({
     mapI: {

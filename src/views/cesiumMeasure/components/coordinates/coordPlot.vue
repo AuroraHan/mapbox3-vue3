@@ -137,7 +137,13 @@ let lineDrawI: LineDraw
 const drawLine = () => {
     lineDrawI = new LineDraw(cViewer)
     lineDrawI.openDraw()
+    lineDrawI.onDrawComplete = (line) => {
+        console.log(line, 'kkkkk');
+
+    }
 }
+
+
 
 //绘制面的方法
 let polygonDrawI: PolygonDraw

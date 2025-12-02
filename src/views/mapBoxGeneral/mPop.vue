@@ -8,7 +8,7 @@
 
 <script setup>
 import { onMounted } from 'vue'
-import emitter from '/@/mitt/index'
+import emitter from '@/mitt/index'
 
 const props = defineProps({
     title: {

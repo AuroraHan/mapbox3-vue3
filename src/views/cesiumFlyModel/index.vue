@@ -13,9 +13,9 @@
 <script lang='ts' setup>
 import { onMounted, ref, reactive, watch } from 'vue';
 import * as Cesium from 'cesium';
-import { useCesium } from '../../hooks/useCesium'
-import CesiumDialog from '/@/components/cesiumDialog/index.vue'
-import MyDialog from '/@/components/cesiumPopupTwo/index.vue';
+import { useCesium } from '@/hooks/useCesium'
+import CesiumDialog from '@/components/cesiumDialog/index.vue'
+import MyDialog from '@/components/cesiumPopupTwo/index.vue';
 
 let cesiumV: Cesium.Viewer;
 const { getCesiumViewer } = useCesium({ container: 'cesiumContainer', timeline: true, animation: true, shouldAnimate: true })

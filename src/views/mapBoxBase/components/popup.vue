@@ -7,15 +7,12 @@
 </template>
 
 <script lang='ts' setup>
-// import emitter from '/@/utils/mitt';
 import { PropType } from 'vue';
 const props = defineProps({
     objInfo: {
         type: Object as PropType<any>
     }
 })
-
-
 
 
 </script>

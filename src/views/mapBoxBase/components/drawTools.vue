@@ -28,8 +28,7 @@
 import { reactive, PropType, toRefs } from 'vue'
 import * as Turf from '@turf/turf'
 import mapboxgl from 'mapbox-gl';
-//@ts-ignore
-import WinControl from '/@/components/winControl/index.vue'
+import WinControl from '@/components/winControl/index.vue'
 
 const props = defineProps({
     drawI: {

@@ -8,7 +8,7 @@ export default {
     files: ["**/*.ts", "**/*.vue"],
     //规范配置
     rules: {
-        "no-unused-vars": "warn",
+        "no-unused-vars": "no",
         "no-console": "warn",
     },
 

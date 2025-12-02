@@ -7,8 +7,8 @@
 import { onMounted, ref, reactive } from 'vue';
 import * as Cesium from 'cesium';
 import { useCesium } from '../../hooks/useCesium'
-import MyDialog from '/@/components/cesiumPopupTwo/index.vue';
-import DivBillboard from '/@/utils/DivBillboard'
+import MyDialog from '@/components/cesiumPopupTwo/index.vue';
+import DivBillboard from '@/utils/DivBillboard'
 import lineDiv from './lineDiv.vue';
 
 let cesiumV: Cesium.Viewer;

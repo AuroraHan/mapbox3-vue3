@@ -1,4 +1,4 @@
-import Dialog from "/@/utils/cesiumDialog";
+import Dialog from "@/utils/cesiumDialog";
 import { FeatureCollection } from "geojson";
 import * as Cesium from "cesium";
 import { randomGeoJsonPoint } from "../tools";

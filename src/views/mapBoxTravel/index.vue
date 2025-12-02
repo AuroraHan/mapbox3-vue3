@@ -5,7 +5,7 @@
 
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import { useMapbox } from '/@/hooks/useMapBoxLine'
+import { useMapbox } from '@/hooks/useMapBoxLine'
 import coordtransform from 'coordtransform'
 import { markerGeojson } from './mock'
 import mapboxgl from 'mapbox-gl';

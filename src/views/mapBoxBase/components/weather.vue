@@ -9,11 +9,11 @@
 
 <script lang='ts' setup>
 import { ref, toRefs } from 'vue';
-import WinControl from '/@/components/winControl/index.vue'
+import WinControl from '@/components/winControl/index.vue'
 import mapboxgl from 'mapbox-gl';
 import * as Cesium from 'cesium';
 import krigingExport from 'kriging'
-import { removeLayerAndSource } from '/@/utils/mapTools'
+import { removeLayerAndSource } from '@/utils/mapTools'
 const { kriging } = krigingExport
 
 

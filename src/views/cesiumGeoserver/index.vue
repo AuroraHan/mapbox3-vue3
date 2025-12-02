@@ -8,8 +8,8 @@
 import { onMounted, ref, computed } from 'vue';
 import * as Cesium from 'cesium';
 import { useCesium } from '../../hooks/useCesium'
-import { CesiumEvent } from '/@/utils/cesiumEvent'
-import { useCesiumEventStore } from '/@/stores/cesiumStore'
+import { CesiumEvent } from '@/utils/cesiumEvent'
+import { useCesiumEventStore } from '@/stores/cesiumStore'
 
 const cesiumEventStore = useCesiumEventStore();
 const position = computed(() => cesiumEventStore.mouseMovePostion);

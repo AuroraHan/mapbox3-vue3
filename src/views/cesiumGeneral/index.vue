@@ -17,8 +17,8 @@
 import { onMounted, ref, computed, watch } from 'vue';
 import * as Cesium from 'cesium';
 import { useCesium } from '../../hooks/useCesium'
-import { CesiumEvent } from '/@/utils/cesiumEvent'
-import { useCesiumEventStore } from '/@/stores/cesiumStore'
+import { CesiumEvent } from '@/utils/cesiumEvent'
+import { useCesiumEventStore } from '@/stores/cesiumStore'
 import { InteractivePolygon } from './InteractivePolygon';
 import { FireEffect } from './FireEffect';
 
