@@ -2,7 +2,7 @@
     <WinControl v-if="modelValue" :initCss="{ width: 350, height: 300, x: 600, y: 350 }" :title="'集成工具'">
         <template #close><el-button @click="hide" type="danger">关闭</el-button></template>
         <div>
-            集成工具
+            <el-button type="success">水体</el-button>
         </div>
     </WinControl>
 </template>
@@ -27,7 +27,6 @@ const emits = defineEmits(['update:modelValue'])
 const hide = () => {
     emits('update:modelValue', false)
 }
-
 
 </script>
 <style lang='scss' scoped></style>

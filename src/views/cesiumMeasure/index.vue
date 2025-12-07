@@ -10,7 +10,7 @@
             <div class="title">测绘集</div>
             <el-switch v-model="flagMeasureTool" />
         </div>
-        <img @click="onClickImg" src="/images/school.png" alt="" srcset="">
+        <img @click="boom" src="/images/school.png" alt="" srcset="">
     </div>
     <Coordinates v-if="flagCoordinates"></Coordinates>
     <MeasureTool v-if="flagMeasureTool"></MeasureTool>
@@ -23,6 +23,7 @@ import { useCesium } from '../../hooks/useCesium'
 import Coordinates from './components/coordinates/index.vue'
 import MeasureTool from './components/measureTool/index.vue'
 import { rotateGlobe } from '../../utils/cesiumTools'
+import { functions } from 'lodash';
 
 // import { useCesiumS } from '@/stores/cesiumStore'
 
@@ -53,6 +54,81 @@ onMounted(() => {
 
 const onClickImg = () => {
     document.body.style.cursor = `url(/images/arm/soldier.png) 32 32, help`
+}
+
+
+const boom = () => {
+    let billboardCollection = cesiumV.scene.primitives.add(new Cesium.BillboardCollection());
+    let particles: any = [];
+    // 粒子数量
+    const particleCount = 520;
+    // 爆炸中心（自己传入）
+    const explosionCenter = Cesium.Cartesian3.fromDegrees(120, 31, 1000);
+
+    createExplosion()
+
+    function createExplosion() {
+        for (let i = 0; i < particleCount; i++) {
+
+            // 随机方向（单位向量）
+            const dir = Cesium.Cartesian3.normalize(
+                new Cesium.Cartesian3(
+                    Math.random() - 0.5,
+                    Math.random() - 0.5,
+                    Math.random() - 0.2
+                ),
+                new Cesium.Cartesian3()
+            );
+
+            const billboard = billboardCollection.add({
+                image: "/images/fire.png",  // 一张小的亮点/烟雾贴图
+                position: explosionCenter,
+                width: 20,
+                height: 20,
+                color: Cesium.Color.WHITE.withAlpha(1.0)
+            });
+
+            particles.push({
+                billboard,
+                dir,                // 扩散方向
+                speed: 30 + Math.random() * 30,  // 初速度
+                life: 1.0           // 生命周期(透明度)
+            });
+        }
+
+        // 使用请求动画帧来优化性能
+        cesiumV.scene.postRender.addEventListener(updateExplosion);
+    }
+
+    function updateExplosion() {
+
+        particles.forEach(p => {
+            const b = p.billboard;
+
+            // 计算新位置（沿 dir 扩散）
+            const pos = new Cesium.Cartesian3();
+            Cesium.Cartesian3.multiplyByScalar(p.dir, p.speed, pos);
+            Cesium.Cartesian3.add(b.position, pos, pos);
+
+            b.position = pos;
+
+            // 粒子逐渐消失
+            p.life -= 0.015;
+            b.color = Cesium.Color.WHITE.withAlpha(p.life);
+
+            // 粒子逐渐变大（烟雾效果）
+            b.width += 0.5;
+            b.height += 0.5;
+
+            // 生命周期结束移除
+            if (p.life <= 0) {
+                billboardCollection.remove(b);
+            }
+        });
+
+        // 清理结束的粒子
+        particles = particles.filter(p => p.life > 0);
+    }
 }
 
 </script>

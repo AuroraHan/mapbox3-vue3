@@ -53,7 +53,7 @@ const baseConfig = () => {
     cesiumV = getCesiumViewer()
     getLngLat()
     // addModelMenu()
-    hprModel()
+    // hprModel()
     // geojsonPri()
     // add()
 }
