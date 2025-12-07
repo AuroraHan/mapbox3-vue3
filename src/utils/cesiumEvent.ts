@@ -1,7 +1,7 @@
 // 1、cesium事件封装
 import * as Cesium from "cesium";
 import { debounce, getViewBounds } from "./cesiumTools";
-import { useCesiumEventStore } from '/@/stores/cesiumStore'
+import { useCesiumEventStore } from '@/stores/cesiumStore'
 
 interface PosI {
     longitude: number,

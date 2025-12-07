@@ -10,6 +10,7 @@
             <div class="title">测绘集</div>
             <el-switch v-model="flagMeasureTool" />
         </div>
+        <img @click="onClickImg" src="/images/school.png" alt="" srcset="">
     </div>
     <Coordinates v-if="flagCoordinates"></Coordinates>
     <MeasureTool v-if="flagMeasureTool"></MeasureTool>
@@ -22,6 +23,7 @@ import { useCesium } from '../../hooks/useCesium'
 import Coordinates from './components/coordinates/index.vue'
 import MeasureTool from './components/measureTool/index.vue'
 import { rotateGlobe } from '../../utils/cesiumTools'
+
 // import { useCesiumS } from '@/stores/cesiumStore'
 
 let cesiumV: Cesium.Viewer;
@@ -44,9 +46,14 @@ onMounted(() => {
     // useCesiumS().setCesiumS(unref(cesiumV))
 
     //旋转地球效果
-    rotateGlobe(cesiumV)
+    // rotateGlobe(cesiumV)
 })
 
+//
+
+const onClickImg = () => {
+    document.body.style.cursor = `url(/images/arm/soldier.png) 32 32, help`
+}
 
 </script>
 
