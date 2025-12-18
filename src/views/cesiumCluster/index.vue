@@ -12,15 +12,19 @@ import { useCesium } from '@/hooks/useCesium'
 import { getCurrentPositionByMouse } from '@/utils/cesiumTools'
 
 let cesiumV: Cesium.Viewer;
-const { getCesiumViewer } = useCesium({ container: 'cesiumContainer', infoBox: true })
+const { getCesiumViewer } = useCesium({
+    container: 'cesiumContainer',
+    infoBox: true,
+    animation: false,
+    timeline: false,
+})
 
 
 onMounted(() => {
     cesiumV = getCesiumViewer()
     getLngLat()
+
 })
-
-
 
 //根据鼠标获取经纬度
 const lnglat = reactive({
@@ -42,7 +46,6 @@ const getLngLat = () => {
         }
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE)
 }
-
 
 </script>
 
