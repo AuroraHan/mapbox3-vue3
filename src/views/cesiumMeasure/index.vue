@@ -56,7 +56,7 @@ const onClickImg = () => {
     document.body.style.cursor = `url(/images/arm/soldier.png) 32 32, help`
 }
 
-
+//高级爆炸效果
 const boom = () => {
     let billboardCollection = cesiumV.scene.primitives.add(new Cesium.BillboardCollection());
     let particles: any = [];
