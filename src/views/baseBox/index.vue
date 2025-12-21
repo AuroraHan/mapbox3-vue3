@@ -133,7 +133,7 @@ const routsList = ref([
         type: 'cesium'
     },
     {
-        name: 'Cesium聚合',
+        name: 'Cesium航母编队',
         path: 'cesiumCluster',
         type: 'cesium'
     },
