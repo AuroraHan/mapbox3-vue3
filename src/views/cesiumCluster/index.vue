@@ -1,6 +1,6 @@
 <template>
     <div id="cesiumContainer"></div>
-    <div class="lnglat" @click="addFleet">
+    <div class="lnglat" @click="azimth">
         经度:{{ lnglat.longitude }} &nbsp;纬度:{{ lnglat.latitude }}
     </div>
 </template>
@@ -11,6 +11,7 @@ import * as Cesium from 'cesium';
 import { useCesium } from '@/hooks/useCesium'
 import { getCurrentPositionByMouse } from '@/utils/cesiumTools'
 import { FleetManager } from './utils';
+import { AzimuthDraw } from '@/utils/AzimuthDraw';
 
 let cesiumV: Cesium.Viewer;
 const { getCesiumViewer } = useCesium({
@@ -20,10 +21,11 @@ const { getCesiumViewer } = useCesium({
     timeline: false,
 })
 
-
+let draw: AzimuthDraw
 onMounted(() => {
     cesiumV = getCesiumViewer()
     getLngLat()
+    draw = new AzimuthDraw(cesiumV);
 })
 
 //根据鼠标获取经纬度
@@ -47,7 +49,7 @@ const getLngLat = () => {
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE)
 }
 
-//======================
+//========舰队管理==============
 const addFleet = () => {
     const fleet = new FleetManager(cesiumV);
     // 航母
@@ -86,6 +88,11 @@ const addFleet = () => {
             }, false);
         }
     });
+}
+
+//=====方向角=====
+const azimth = () => {
+    draw.openDraw()
 }
 
 </script>
