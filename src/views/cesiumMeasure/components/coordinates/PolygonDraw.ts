@@ -1,6 +1,6 @@
 import * as Cesium from "cesium";
-import DrawBase from "../../../../utils/drawBase";
-import { uuid, postionTransfrom } from "../../../../utils/cesiumTools";
+import DrawBase from "@/utils/drawBase";
+import { uuid, postionTransfrom } from "@/utils/cesiumTools";
 
 //多边形数据
 type PolygonDataType = {
@@ -64,8 +64,8 @@ class PolygonDraw extends DrawBase {
       positions.length === 1
         ? [positions[0], positions[0], positions[0]]
         : positions.length === 2
-        ? [positions[0], positions[1], positions[0]]
-        : [...positions];
+          ? [positions[0], positions[1], positions[0]]
+          : [...positions];
     if (!polygon.polygon) {
       polygon.polygon = new Cesium.Entity({
         id: this.currentId,
@@ -74,7 +74,7 @@ class PolygonDraw extends DrawBase {
           positions: new Cesium.CallbackProperty(() => {
             //封闭形状
             return Cesium.Cartesian3.fromDegreesArray(
-              [...polygon.positions, polygon.positions[0]].flat(1)
+              [...polygon.positions, polygon.positions[0]].flat(1),
             );
           }, false),
           ...this.lineStyle,
@@ -84,7 +84,7 @@ class PolygonDraw extends DrawBase {
           hierarchy: new Cesium.CallbackProperty(() => {
             return {
               positions: Cesium.Cartesian3.fromDegreesArray(
-                polygon.positions.flat(1)
+                polygon.positions.flat(1),
               ),
             };
           }, false),
