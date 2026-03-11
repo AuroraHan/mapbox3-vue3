@@ -108,6 +108,11 @@ const routsList = ref([
         type: 'cesium'
     },
     {
+        name: '模型Cesium',
+        path: 'cesiumModel',
+        type: 'cesium'
+    },
+    {
         name: 'Cesium+Three',
         path: 'cesiumThree',
         type: 'cesium'
