@@ -6,12 +6,15 @@
 import { onMounted, ref, computed, watch } from 'vue';
 import * as Cesium from 'cesium';
 import { useCesium } from '@/hooks/useCesium'
+import { ModelRotateController } from '@/utils/ModelRotate';
 
 
 let cesiumV: Cesium.Viewer;
+let rotateController: ModelRotateController
 const { getCesiumViewer } = useCesium({ container: 'cesiumContainer', addTerrain: false, infoBox: false, shouldAnimate: true })
 onMounted(() => {
     cesiumV = getCesiumViewer()
+    rotateController = new ModelRotateController(cesiumV)
     addModel()
 })
 
@@ -26,7 +29,9 @@ const addModel = () => {
             maximumScale: 20000
         }
     });
-    cesiumV.trackedEntity = modelEntity;
+
+    rotateController.add(modelEntity);
+    // cesiumV.trackedEntity = modelEntity;
 }
 
 </script>
