@@ -23,7 +23,7 @@ export function useCesium(options: options) {
       89.5,
       20.4,
       110.4,
-      61.2
+      61.2,
     );
     cesiumV = new Cesium.Viewer(options.container, {
       infoBox: options.infoBox,
@@ -33,6 +33,10 @@ export function useCesium(options: options) {
       animation: options.animation,
       shouldAnimate: options.shouldAnimate,
     });
+
+    //设置相机最大最小高度
+    cesiumV.scene.screenSpaceCameraController.minimumZoomDistance = 1;
+    cesiumV.scene.screenSpaceCameraController.maximumZoomDistance = 10000000;
 
     //添加地形
     if (options.addTerrain) {
