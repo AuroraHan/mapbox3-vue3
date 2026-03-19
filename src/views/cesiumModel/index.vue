@@ -2,17 +2,18 @@
     <div id="cesiumContainer">
         <div class="options">
             <button @click="addModel">添加模型</button>
-            <button @click="play">播放动画</button>
+            <button @click="playGeo">播放动画</button>
             <button @click="pause">暂停动画</button>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
 import * as Cesium from 'cesium';
 import { useCesium } from '@/hooks/useCesium'
 import { ModelRotateController } from '@/utils/ModelRotate';
+import * as turf from '@turf/turf';
 
 
 let cesiumV: Cesium.Viewer;
@@ -21,7 +22,8 @@ const { getCesiumViewer } = useCesium({ container: 'cesiumContainer', addTerrain
 onMounted(() => {
     cesiumV = getCesiumViewer()
     rotateController = new ModelRotateController(cesiumV)
-    addGLB()
+    // addGLB()
+    loadGeoJson()
 })
 
 //添加模型
@@ -66,6 +68,51 @@ const play = () => {
 
 const pause = () => {
     modelAnimations.activeAnimations.removeAll()
+}
+
+
+//geojson数据加载
+const loadGeoJson = async () => {
+    // 加载 GeoJSON
+    const res = await fetch("/geojson/dep-conc-time.geojson");
+    const geojson = await res.json();
+    renderPolygons(geojson.features);
+    cesiumV.camera.flyTo({
+        destination: Cesium.Cartesian3.fromDegrees(122.48450369499642, 36.982489271601295, 10000),
+        duration: 2
+    })
+}
+
+const renderPolygons = (features: any) => {
+    features.forEach(f => {
+        cesiumV.entities.add({
+            polygon: {
+                hierarchy: Cesium.Cartesian3.fromDegreesArray(f.geometry.coordinates[0].flat()),
+                material: getColor(f.properties.Conc),
+                perPositionHeight: false
+            }
+        });
+    });
+}
+
+
+// ===== log归一化 =====
+const normalize = (val: number) => {
+    return Math.log10(val);
+}
+
+// =====  颜色映射 =====
+const getColor = (val: number) => {
+    const v = normalize(val);
+
+    const ratio = Math.min(v / 15, 1.0);
+
+    return Cesium.Color.fromHsl(
+        (1.0 - ratio) * 0.7,
+        1.0,
+        0.5,
+        0.6
+    );
 }
 
 </script>
