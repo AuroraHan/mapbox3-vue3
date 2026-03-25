@@ -289,6 +289,11 @@ function play1() {
         renderHour(currentHour.value);
     }, 800);
 }
+
+function stop() {
+    clearInterval(timer);
+    timer = null;
+}
 </script>
 
 <style scoped>
