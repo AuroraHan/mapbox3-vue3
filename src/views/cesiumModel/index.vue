@@ -131,7 +131,6 @@ const addHealthBar = () => {
 
 }
 
-
 const createHealthBar = () => {
     const el = document.createElement('div');
     el.className = 'hp-bar';
@@ -147,9 +146,6 @@ const createHealthBar = () => {
 
     return el;
 }
-
-
-
 
 </script>
 
