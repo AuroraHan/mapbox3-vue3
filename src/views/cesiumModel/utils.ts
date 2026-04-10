@@ -262,3 +262,158 @@ export class ModelZRotator {
     this.handler = null;
   }
 }
+
+class UnitEntityManager {
+  viewer: Cesium.Viewer;
+  entityMap: Map<string, any>;
+
+  constructor(viewer: Cesium.Viewer) {
+    this.viewer = viewer;
+    this.entityMap = new Map();
+    // UI统一刷新（只注册一次）
+    this.viewer.scene.postRender.addEventListener(this.updateUI.bind(this));
+  }
+
+  updateFromServer(list: Array<any>) {
+    const now = Cesium.JulianDate.now();
+    // const aliveIds = new Set();
+
+    list.forEach((data) => {
+      // aliveIds.add(data.id);
+
+      if (this.entityMap.has(data.id)) {
+        this.updateUnit(data, now);
+      } else {
+        this.createUnit(data, now);
+      }
+    });
+
+    // 删除
+    // this.map.forEach((_, id) => {
+    //     if (!aliveIds.has(id)) {
+    //         this.remove(id);
+    //     }
+    // });
+  }
+
+  createUnit(data: any, time: any) {
+    const position = Cesium.Cartesian3.fromDegrees(
+      data.lon,
+      data.lat,
+      data.height || 0,
+    );
+
+    const entity = this.viewer.entities.add({
+      id: data.id,
+      position: new Cesium.SampledPositionProperty(),
+      // ✅ 默认2D图标
+      billboard: {
+        image: data.iconUrl,
+        scale: 1,
+        verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+      },
+      properties: {
+        ...data,
+      },
+
+      // ❗先不加载模型（性能关键）
+      // model: undefined
+    });
+
+    entity.position.addSample(time, position);
+
+    const el = createHealthBar();
+    this.setHP(el, data.hp);
+
+    this.entityMap.set(data.id, {
+      entity,
+      el,
+    });
+  }
+
+  updateUnit(data: any, time: any) {
+    const item = this.entityMap.get(data.id);
+
+    const newPos = Cesium.Cartesian3.fromDegrees(
+      data.lon,
+      data.lat,
+      data.height || 0,
+    );
+
+    // 🚀 平滑移动（关键）
+    item.entity.position.addSample(time, newPos);
+
+    // 控制缓存长度（防止爆内存）
+    if (item.entity.position._property._times.length > 10) {
+      item.entity.position._property._times.shift();
+      item.entity.position._property._values.shift();
+    }
+
+    // 更新血条
+    this.setHP(item.el, data.hp);
+  }
+
+  // switchAllTo3D() {
+  //     if (this.globalMode === '3D') return;
+
+  //     this.globalMode = '3D';
+
+  //     this.map.forEach(item => {
+  //         const entity = item.entity;
+  //         const data = item.data;
+
+  //         // ❌ 关闭2D
+  //         entity.billboard = undefined;
+
+  //         // ✅ 开启3D（懒加载）
+  //         entity.model = {
+  //             uri: data.modelUrl,
+  //             scale: 1,
+  //             minimumPixelSize: 32
+  //         };
+  //     });
+  // }
+
+  setHP(el: HTMLElement, percent: number) {
+    const inner = el.querySelector(".hp-inner");
+    inner!.style.width = percent + "%";
+
+    if (percent > 60) inner.style.background = "green";
+    else if (percent > 30) inner.style.background = "orange";
+    else inner.style.background = "red";
+  }
+
+  updateUI() {
+    this.entityMap.forEach((item) => {
+      const entity = item.entity;
+      const el = item.el;
+
+      const position = entity.position.getValue(this.viewer.clock.currentTime);
+
+      if (!position) return;
+
+      const canvasPosition = Cesium.SceneTransforms.worldToWindowCoordinates(
+        this.viewer.scene,
+        position,
+      );
+
+      if (canvasPosition) {
+        el.style.left = canvasPosition.x - 30 + "px";
+        el.style.top = canvasPosition.y - 60 + "px";
+
+        // 🚀 距离缩放
+        const distance = Cesium.Cartesian3.distance(
+          this.viewer.camera.position,
+          position,
+        );
+
+        const scale = Math.max(0.5, 1 - distance / 5000000);
+        el.style.transform = `scale(${scale})`;
+
+        el.style.display = "block";
+      } else {
+        el.style.display = "none";
+      }
+    });
+  }
+}

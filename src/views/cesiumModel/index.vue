@@ -23,6 +23,8 @@ const { getCesiumViewer } = useCesium({ container: 'cesiumContainer', addTerrain
 onMounted(() => {
     cesiumV = getCesiumViewer()
     addModel()
+
+    addHealthBar()
     // rotateController = new ModelRotateController(cesiumV)
 })
 
@@ -86,6 +88,67 @@ const play = () => {
 const pause = () => {
     modelAnimations.activeAnimations.removeAll()
 }
+
+//添加血条效果
+const addHealthBar = () => {
+    const pos = Cesium.Cartesian3.fromDegrees(120, 30, 0);
+    const healthBarEntity = cesiumV.entities.add({
+        name: 'Health Bar',
+        position: pos,
+        label: {
+            text: '血条',
+            font: '14px sans-serif',
+            fillColor: Cesium.Color.RED,
+            outlineColor: Cesium.Color.WHITE,
+            outlineWidth: 2,
+            style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+            verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+            pixelOffset: new Cesium.Cartesian2(0, -20)
+        }
+    });
+
+    const div = createHealthBar()
+
+    // ✅ 关键：每帧更新
+    cesiumV.scene.postRender.addEventListener(() => {
+        const position = healthBarEntity.position.getValue(cesiumV.clock.currentTime);
+
+        if (!position) return;
+
+        const canvasPosition = Cesium.SceneTransforms.worldToWindowCoordinates(
+            cesiumV.scene,
+            position
+        );
+
+        if (canvasPosition) {
+            div.style.left = canvasPosition.x - 30 + 'px';
+            div.style.top = canvasPosition.y - 50 + 'px';
+            div.style.display = 'block';
+        } else {
+            div.style.display = 'none';
+        }
+    });
+
+}
+
+
+const createHealthBar = () => {
+    const el = document.createElement('div');
+    el.className = 'hp-bar';
+    el.innerHTML = `<div class="hp-inner"></div>`;
+    el.style.position = 'absolute';
+    el.style.width = '60px';
+    el.style.height = '6px';
+    el.style.background = '#333';
+    el.style.borderRadius = '3px';
+    el.style.pointerEvents = 'none';
+
+    document.body.appendChild(el);
+
+    return el;
+}
+
+
 
 
 </script>
