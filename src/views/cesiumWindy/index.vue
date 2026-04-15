@@ -1,5 +1,7 @@
 <template>
-    <div id="cesiumContainer"></div>
+    <div id="cesiumContainer">
+        <div class="my-btn" @click="bb"></div>
+    </div>
 </template>
 
 <script setup lang="ts">
@@ -12,9 +14,9 @@ const { getCesiumViewer } = useCesium({ container: 'cesiumContainer', infoBox: f
 
 onMounted(() => {
     cesiumV = getCesiumViewer()
-    setTimeout(() => {
-        aa()
-    }, 2000)
+    // setTimeout(() => {
+    //     aa()
+    // }, 2000)
 })
 
 class WindyTemperatureImageryProvider {
@@ -147,10 +149,141 @@ const aa = () => {
 
     cesiumV.imageryLayers.addImageryProvider(windyLayer);
 }
+//----------------------
+//粒子风场
+const windData = {
+    header: {
+        nx: 360,
+        ny: 181,
+        lo1: -180,
+        la1: 90,
+        dx: 1,
+        dy: 1
+    },
+    data: new Array(360 * 181).fill(0).map(() => ({
+        u: (Math.random() - 0.5) * 2,
+        v: (Math.random() - 0.5) * 2
+    }))
+}
+
+class WindField {
+    nx: any;
+    ny: any;
+    lo1: any;
+    la1: any;
+    dx: any;
+    dy: any;
+    data: any;
+    constructor(data: any) {
+        this.nx = data.header.nx
+        this.ny = data.header.ny
+        this.lo1 = data.header.lo1
+        this.la1 = data.header.la1
+        this.dx = data.header.dx
+        this.dy = data.header.dy
+        this.data = data.data
+    }
+
+    getVelocity(lon: number, lat: number) {
+        const i = Math.floor((lon - this.lo1) / this.dx)
+        const j = Math.floor((this.la1 - lat) / this.dy)
+
+        const index = j * this.nx + i
+        return this.data[index] || { u: 0, v: 0 }
+    }
+}
+
+// =========================
+// 粒子系统
+// =========================
+class WindParticleSystem {
+    viewer: Cesium.Viewer;
+    windField: WindField;
+    particles: never[];
+    billboards: any;
+    constructor(viewer: Cesium.Viewer, windField: WindField) {
+        this.viewer = viewer
+        this.windField = windField
+        this.particles = []
+
+        this.billboards = viewer.scene.primitives.add(
+            new Cesium.BillboardCollection()
+        )
+    }
+
+    randomParticle() {
+        return {
+            lon: Math.random() * 360 - 180,
+            lat: Math.random() * 180 - 90,
+            age: 0
+        }
+    }
+
+    addParticle() {
+        const p = this.randomParticle()
+
+        p.billboard = this.billboards.add({
+            position: Cesium.Cartesian3.fromDegrees(p.lon, p.lat),
+            image: 'https://unpkg.com/ionicons@5.5.2/dist/svg/ellipse.svg',
+            scale: 0.1
+        })
+
+        this.particles.push(p)
+    }
+
+    update() {
+        this.particles.forEach((p: any) => {
+            const vel = this.windField.getVelocity(p.lon, p.lat)
+
+            p.lon += vel.u * 0.05
+            p.lat += vel.v * 0.05
+
+            if (p.lon > 180) p.lon = -180
+            if (p.lon < -180) p.lon = 180
+
+            if (p.lat > 90) p.lat = -90
+            if (p.lat < -90) p.lat = 90
+
+            p.billboard.position = Cesium.Cartesian3.fromDegrees(p.lon, p.lat)
+
+            p.age++
+            if (p.age > 120) {
+                p.lon = Math.random() * 360 - 180
+                p.lat = Math.random() * 180 - 90
+                p.age = 0
+            }
+        })
+    }
+}
+
+const bb = () => {
+    const windField = new WindField(windData)
+    const system = new WindParticleSystem(cesiumV, windField)
+
+    // 初始化粒子
+    for (let i = 0; i < 3000; i++) {
+        system.addParticle()
+    }
+
+    // 动画循环
+    cesiumV.scene.preRender.addEventListener(() => {
+        system.update()
+    })
+}
 </script>
 
 <style scoped>
 #cesiumContainer {
     height: 100vh;
+}
+
+.my-btn {
+    width: 100px;
+    height: 60px;
+    position: absolute;
+    background-color: aquamarine;
+    left: 3%;
+    top: 5%;
+    z-index: 99;
 }
 </style>
