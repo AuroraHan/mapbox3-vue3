@@ -400,7 +400,7 @@ const singModelFly = () => {
         position: position,
         orientation: orientation,
         model: {
-            uri: "/models/CesiumDrone.glb",
+            uri: "/models/aim-9_missile/scene.gltf",
             minimumPixelSize: 128,
             maximumScale: 20000,
         },
