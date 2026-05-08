@@ -5,6 +5,7 @@
     <div class="flex-box" style="top: 15%;" @click="singModelFly">案例三</div>
     <div class="flex-box" style="top: 21%;" @click="multiModel">多模型加载</div>
     <div class="flex-box" style="top: 28%;" @click="randomPos">websorck加载</div>
+    <div class="flex-box" style="top: 33%;" @click="initModelMove">测试</div>
     <!-- 弹出框 -->
     <CesiumDialog :show="isOpen" @exportCesium="exportCesium" @closeDialog="closeDialog"></CesiumDialog>
     <MyDialog ref="mydialog" :positionXY="pos" @showHistory="showHistory"></MyDialog>
@@ -574,14 +575,18 @@ const randomPos = () => {
     let height = 1000;
 
     const position = new Cesium.SampledPositionProperty()
+    position.setInterpolationOptions({
+        interpolationDegree: 1,
+        interpolationAlgorithm: Cesium.LinearApproximation
+    });
     const orientation = new Cesium.VelocityOrientationProperty(position)
 
     const entity = cesiumV.entities.add({
         id: 'model1',
         model: {
-            uri: "/models/CesiumDrone.glb",
+            uri: "/models/Cesium_Air.glb",
             // scale: 2.0,
-            minimumPixelSize: 128,
+            minimumPixelSize: 64,
         },
         path: {
             material: Cesium.Color.RED,
@@ -620,7 +625,7 @@ const randomPos = () => {
         dataModel.timestamp = new Date()
         console.log(dataModel.longitude);
 
-    }, 1500)
+    }, 1000)
 }
 
 watch(dataModel, (newVal) => {
@@ -635,6 +640,135 @@ watch(dataModel, (newVal) => {
         cesiumV.clock.stopTime = t.clone()
     }
 })
+
+
+const dataModel1 = reactive({
+    longitude: 112,
+    latitude: 31,
+    height: 1000,
+    id: '123',
+    timestamp: new Date()
+})
+const initModelMove = () => {
+    let longitude = 112;
+    let latitude = 31;
+    let height = 1000;
+    setInterval(() => {
+        dataModel1.longitude = longitude += 0.01 * (Math.random() - 0.3);
+        dataModel1.latitude = latitude += 0.01 * (Math.random() - 0.2);
+        dataModel1.height = height += 10 * (Math.random() - 0.5);
+        dataModel1.timestamp = new Date()
+        dataModel1.id = '123'
+    }, 1500)
+}
+
+watch(dataModel1, (newVal) => {
+    const newDate = [newVal]
+    updateData(newDate)
+})
+type ShipState = {
+    entity: Cesium.Entity;
+    lastPosition?: Cesium.Cartesian3;
+    lastHeading: number;
+};
+
+const entityMap = new Map<string, ShipState>();
+function updateData(list: any[]) {
+
+    for (const data of list) {
+        const { id, longitude, latitude } = data;
+        const currentPosition =
+            Cesium.Cartesian3.fromDegrees(
+                longitude,
+                latitude,
+                0
+            );
+
+        // 已存在
+        if (entityMap.has(id)) {
+            const ship = entityMap.get(id)!;
+            let heading = ship.lastHeading;
+            // 有上一帧才能算方向
+            if (ship.lastPosition) {
+                const distance =
+                    Cesium.Cartesian3.distance(
+                        ship.lastPosition,
+                        currentPosition
+                    );
+
+                // 防止原地抖动
+                if (distance > 1) {
+                    heading = calcHeading(
+                        ship.lastPosition,
+                        currentPosition
+                    );
+                    ship.lastHeading = heading;
+                }
+            }
+
+            // 更新位置
+            ship.entity.position =
+                currentPosition;
+
+            // 更新方向
+            ship.entity.orientation =
+                Cesium.Transforms.headingPitchRollQuaternion(
+                    currentPosition,
+                    new Cesium.HeadingPitchRoll(
+                        heading,
+                        0,
+                        0
+                    )
+                );
+
+            // 缓存位置
+            ship.lastPosition = currentPosition;
+
+        } else {
+
+            // 首次创建
+            const entity = cesiumV.entities.add({
+                id,
+                position: currentPosition,
+                model: {
+                    uri: '/models/Cesium_Air.glb',
+                    minimumPixelSize: 64
+                }
+            });
+
+            entityMap.set(id, {
+                entity,
+                lastPosition: currentPosition,
+                lastHeading: 0
+            });
+
+            cesiumV.entities.add(entity)
+        }
+    }
+}
+
+function calcHeading(
+    p1: Cesium.Cartesian3,
+    p2: Cesium.Cartesian3
+) {
+    const transform = Cesium.Transforms.eastNorthUpToFixedFrame(p1);
+
+    const inverse = Cesium.Matrix4.inverse(
+        transform,
+        new Cesium.Matrix4()
+    );
+
+    const localPosition = Cesium.Matrix4.multiplyByPoint(
+        inverse,
+        p2,
+        new Cesium.Cartesian3()
+    );
+
+    return Math.atan2(
+        localPosition.x,
+        localPosition.y
+    );
+}
 
 </script>
 <style lang='scss' scoped>

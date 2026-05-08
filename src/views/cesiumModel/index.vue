@@ -2,7 +2,8 @@
     <div id="cesiumContainer">
         <div class="options">
             <button @click="addModel">添加模型</button>
-            <button @click="play1">播放动画</button>
+            <button @click="startAnalysis">可视域</button>
+            <button @click="destroyAnalysis">结束可视域</button>
             <button @click="pause">暂停动画</button>
         </div>
     </div>
@@ -15,18 +16,30 @@ import { useCesium } from '@/hooks/useCesium'
 import { ModelRotateController } from '@/utils/ModelRotate';
 import * as turf from '@turf/turf';
 import { ModelRotator, ModelZRotator } from './utils';
+import { ViewShedAnalysis } from '@/utils/cesiumTools';
 
 
 let cesiumV: Cesium.Viewer;
 let rotateController: ModelRotateController
-const { getCesiumViewer } = useCesium({ container: 'cesiumContainer', addTerrain: false, infoBox: false, shouldAnimate: true })
+const { getCesiumViewer } = useCesium({ container: 'cesiumContainer', addTerrain: true, infoBox: false, shouldAnimate: true })
+let analysis: ViewShedAnalysis | null = null;
 onMounted(() => {
-    cesiumV = getCesiumViewer()
-    addModel()
 
-    addHealthBar()
+    cesiumV = getCesiumViewer()
+    // addModel()
+
+    // addHealthBar()
     // rotateController = new ModelRotateController(cesiumV)
+    analysis = new ViewShedAnalysis(cesiumV);
 })
+
+const startAnalysis = () => {
+    analysis?.start();
+}
+
+const destroyAnalysis = () => {
+    analysis?.destroy();
+}
 
 //添加模型
 let rotator;
@@ -146,6 +159,9 @@ const createHealthBar = () => {
 
     return el;
 }
+
+//ke
+
 
 </script>
 
