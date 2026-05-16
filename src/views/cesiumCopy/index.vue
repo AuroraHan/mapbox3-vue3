@@ -10,9 +10,10 @@
 import { onMounted, ref } from "vue";
 import * as Cesium from "cesium";
 import { useCesium } from "@/hooks/useCesium";
+import { getCurrentPositionByMouseNew } from "@/utils/cesiumTools";
 
 let cesiumV: Cesium.Viewer;
-
+let handler: Cesium.ScreenSpaceEventHandler | null;
 const { getCesiumViewer } = useCesium({
   container: "cesiumContainer",
   addTerrain: false,
@@ -22,7 +23,27 @@ const { getCesiumViewer } = useCesium({
 
 onMounted(() => {
   cesiumV = getCesiumViewer();
+  handler = new Cesium.ScreenSpaceEventHandler(cesiumV.scene.canvas);
+
+  mouseleftAndRight();
 });
+
+//鼠标左键和右键配合
+const mouseleftAndRight = () => {
+  handler?.setInputAction(
+    (event: Cesium.ScreenSpaceEventHandler.PositionedEvent) => {
+      const currentPos = getCurrentPositionByMouseNew(cesiumV, event.position);
+      console.log("当前坐标：", currentPos);
+
+      // 右键点击事件,  移除左键事件
+      handler?.setInputAction(() => {
+        handler?.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
+        handler?.removeInputAction(Cesium.ScreenSpaceEventType.RIGHT_CLICK);
+      }, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
+    },
+    Cesium.ScreenSpaceEventType.LEFT_CLICK,
+  );
+};
 
 //添加模型
 const addModel = async () => {

@@ -1,6 +1,57 @@
 import * as Cesium from "cesium";
 
 /**
+ * 最新根据屏幕坐标获取经纬度
+ */
+export const getCurrentPositionByMouseNew = (
+  viewer: Cesium.Viewer,
+  position: Cesium.Cartesian2,
+) => {
+  let pos;
+  let scene = viewer.scene;
+  //在模型上提取坐标
+  let pickedObject = scene.pick(position);
+
+  //pickPositionSupported :判断是否支持深度拾取
+  if (scene.pickPositionSupported && Cesium.defined(pickedObject)) {
+    let cartesian = scene.pickPosition(position);
+    if (Cesium.defined(cartesian)) {
+      pos = transformRadianToDegree(cartesian);
+      return pos;
+    }
+  }
+
+  let cartesian;
+  //提取鼠标点的地理坐标
+  if (scene.mode === Cesium.SceneMode.SCENE3D) {
+    //三维模式下
+    let pickRay = scene.camera.getPickRay(position);
+    cartesian = scene.globe.pick(pickRay!, scene);
+  } else {
+    //二维模式下
+    cartesian = scene.camera.pickEllipsoid(position, scene.globe.ellipsoid);
+  }
+
+  pos = transformRadianToDegree(cartesian!);
+
+  return pos;
+};
+
+//弧度转成角度
+const transformRadianToDegree = (cartesian: Cesium.Cartesian3) => {
+  let { latitude, longitude, height } =
+    Cesium.Cartographic.fromCartesian(cartesian);
+  const lat = Number(Cesium.Math.toDegrees(latitude).toFixed(6));
+  const lon = Number(Cesium.Math.toDegrees(longitude).toFixed(6));
+
+  return {
+    longitude: lon,
+    latitude: lat,
+    height,
+  };
+};
+
+/**
  * 根据屏幕坐标获取经纬度
  * @param scene
  * @param position
