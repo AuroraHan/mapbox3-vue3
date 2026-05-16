@@ -167,6 +167,11 @@ const routes = [
     name: "cesiumModel",
     component: () => import("@/views/cesiumModel/index.vue"),
   },
+  {
+    path: "/cesiumCopy",
+    name: "cesiumCopy",
+    component: () => import("@/views/cesiumCopy/index.vue"),
+  },
 ];
 
 const router = createRouter({
