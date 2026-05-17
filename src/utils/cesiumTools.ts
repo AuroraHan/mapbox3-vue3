@@ -226,182 +226,228 @@ export const getViewBounds = (viewer: Cesium.Viewer) => {
 };
 
 /**
- * 视域分析类
- * 1. 点击选择视点和视线方向
- * 2. 绘制可视域范围
- * 3. 支持动态调整视线方向
- * 4. 支持清除分析结果
+ * 可视域分析类
+ * 用于分析地形/建筑的可视范围
  */
-export class ViewShedAnalysis {
-  viewer: Cesium.Viewer;
-  handler: Cesium.ScreenSpaceEventHandler;
-  frustrumLabel: undefined;
-  viewPointFlag: boolean;
-  pickPositions: any;
-  pickPoints: any;
-  boardLines: any;
-  activeLine: null;
-  constructor(viewer: Cesium.Viewer) {
+export class ViewAreaAnalysis {
+  private viewer: Cesium.Viewer;
+  private handler: Cesium.ScreenSpaceEventHandler;
+
+  // 内部状态
+  private frustrumLabel: Cesium.Entity | undefined;
+  private viewPointFlag: boolean = false;
+  private pickPositions: Cesium.Cartesian3[] = [];
+  private boardLines: Cesium.Entity[] = [];
+  private pickPoints: Cesium.Entity[] = [];
+  private activeLine: Cesium.Entity | undefined;
+
+  /**
+   * @param viewer - Cesium Viewer 实例
+   * @param handler - 事件处理器实例
+   */
+  constructor(viewer: Cesium.Viewer, handler: Cesium.ScreenSpaceEventHandler) {
     this.viewer = viewer;
-    this.handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
-
-    this.frustrumLabel = undefined;
-    this.viewPointFlag = false;
-
-    this.pickPositions = [];
-    this.pickPoints = [];
-    this.boardLines = [];
-
-    this.activeLine = null;
+    this.handler = handler;
   }
 
-  /** ===================== 对外方法 ===================== */
-
-  start() {
-    this._clear();
-    this._bindEvents();
+  /**
+   * 创建点实体
+   * @param position - 点的位置
+   * @param color - 点的颜色
+   * @returns 点实体
+   */
+  private createPoint(
+    position: Cesium.Cartesian3,
+    color: Cesium.Color = Cesium.Color.WHITE,
+  ): Cesium.Entity {
+    return this.viewer.entities.add({
+      position: position,
+      point: {
+        pixelSize: 10,
+        color: color,
+        outlineColor: Cesium.Color.BLACK,
+        outlineWidth: 2,
+        heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+      },
+    });
   }
 
-  destroy() {
-    this._unbindEvents();
-    this._clear();
-    if (this.handler) {
-      this.handler.destroy();
-      this.handler = null;
-    }
+  /**
+   * 创建标签实体
+   * @param position - 标签位置
+   * @param text - 标签文本
+   * @returns 标签实体
+   */
+  private createLabel(
+    position: Cesium.Cartesian3,
+    text: string,
+  ): Cesium.Entity {
+    return this.viewer.entities.add({
+      position: position,
+      label: {
+        text: text,
+        font: "16px sans-serif",
+        fillColor: Cesium.Color.WHITE,
+        outlineColor: Cesium.Color.BLACK,
+        outlineWidth: 2,
+        style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+        verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+        pixelOffset: new Cesium.Cartesian2(0, -20),
+        heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+      },
+    });
   }
 
-  /** ===================== 事件绑定 ===================== */
-
-  _bindEvents() {
-    // 左键点击
-    this.handler.setInputAction((event) => {
-      const earthPosition = this.viewer.scene.pickPosition(event.position);
-
-      if (Cesium.defined(earthPosition)) {
-        this.pickPoints.push(this._createPoint(earthPosition));
-
-        this.pickPositions.push(earthPosition);
-
-        if (this.pickPositions.length === 1) {
-          this.viewPointFlag = true;
-        }
-
-        if (this.pickPositions.length > 1) {
-          this._clearBoardLines();
-
-          this.frustrumLabel.label.text = "可视域分析中...";
-          this._unbindEvents();
-
-          this._viewAreaAnalysis(
-            45,
-            this.pickPositions[0],
-            this.pickPositions[1],
-          );
-          return;
-        }
-
-        const dynamicPositions = new Cesium.CallbackProperty(() => {
-          return this.pickPositions;
-        }, false);
-
-        this.activeLine = this._drawLine(
-          dynamicPositions,
-          Cesium.Color.WHITE,
-          Cesium.Color.WHITE,
-        );
-      }
-    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
-
-    // 鼠标移动
-    this.handler.setInputAction((event) => {
-      const newPosition = this.viewer.scene.pickPosition(event.endPosition);
-
-      if (!Cesium.defined(newPosition)) return;
-
-      if (!this.frustrumLabel) {
-        this.frustrumLabel = this._createLabel(newPosition, "点击选择视点");
-        return;
-      }
-
-      this.frustrumLabel.position = newPosition;
-
-      if (this.viewPointFlag) {
-        this.frustrumLabel.label.text = "点击视线方向";
-
-        this.pickPositions.pop();
-        this.pickPositions.push(newPosition);
-
-        this._clearBoardLines();
-
-        if (this.pickPositions.length > 1) {
-          this.boardLines = this._drawSector(
-            this.pickPositions[0],
-            this.pickPositions[1],
-          );
-        }
-      }
-    }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+  /**
+   * 计算两点之间的直线距离
+   * @param point1 - 第一个点
+   * @param point2 - 第二个点
+   * @returns 两点之间的距离（米）
+   */
+  private distanceBetweenTwoPoints(
+    point1: Cesium.Cartesian3,
+    point2: Cesium.Cartesian3,
+  ): number {
+    return Cesium.Cartesian3.distance(point1, point2);
   }
 
-  _unbindEvents() {
-    this.handler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
-    this.handler.removeInputAction(Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+  /**
+   * 绘制线
+   * @param positionData - 线的位置数据
+   * @param material - 线的材质
+   * @param depthFailMaterial - 被地形遮挡部分的材质
+   * @returns 线实体
+   */
+  private drawLine(
+    positionData: Cesium.Cartesian3[] | Cesium.CallbackProperty,
+    material: Cesium.MaterialProperty | Cesium.Color,
+    depthFailMaterial: Cesium.MaterialProperty | Cesium.Color,
+  ): Cesium.Entity {
+    return this.viewer.entities.add({
+      polyline: {
+        positions: positionData,
+        arcType: Cesium.ArcType.NONE,
+        width: 5,
+        material: material,
+        depthFailMaterial: depthFailMaterial,
+      },
+    });
   }
 
-  /** ===================== 核心分析 ===================== */
+  /**
+   * 计算某点绕另一点旋转radian后的终点坐标
+   * @param radian - 旋转弧度
+   * @param startPoint - 旋转中心点
+   * @param endPoint - 待旋转的点
+   * @returns 旋转后的坐标
+   */
+  private rotatePoint(
+    radian: number,
+    startPoint: Cesium.Cartesian3,
+    endPoint: Cesium.Cartesian3,
+  ): Cesium.Cartesian3 {
+    const startCartographic = Cesium.Cartographic.fromCartesian(startPoint)!;
+    const endCartographic = Cesium.Cartographic.fromCartesian(endPoint)!;
 
-  _viewAreaAnalysis(degree, startPoint, endPoint) {
-    for (let i = -degree; i <= degree; i++) {
-      let radian = Cesium.Math.toRadians(i);
-      let destPoint = this._rotatePoint(radian, startPoint, endPoint);
-      this._getIntersectPoint(startPoint, destPoint);
-    }
+    const webMercatorProjection = new Cesium.WebMercatorProjection(
+      this.viewer.scene.globe.ellipsoid,
+    );
+    const startMercator = webMercatorProjection.project(startCartographic);
+    const endMercator = webMercatorProjection.project(endCartographic);
 
-    this.viewer.entities.remove(this.frustrumLabel);
-    this.viewer.entities.remove(this.activeLine);
+    const position_Mercator = new Cesium.Cartesian3(
+      (endMercator.x - startMercator.x) * Math.cos(radian) -
+        (endMercator.y - startMercator.y) * Math.sin(radian) +
+        startMercator.x,
+      (endMercator.x - startMercator.x) * Math.sin(radian) +
+        (endMercator.y - startMercator.y) * Math.cos(radian) +
+        startMercator.y,
+      startMercator.z,
+    );
 
-    this.pickPositions = [];
-
-    this.pickPoints.forEach((p) => this.viewer.entities.remove(p));
-    this.pickPoints = [];
+    const position_Cartographic =
+      webMercatorProjection.unproject(position_Mercator);
+    return Cesium.Cartographic.toCartesian(position_Cartographic.clone())!;
   }
 
-  _getIntersectPoint(startPoint, endPoint) {
-    let direction = Cesium.Cartesian3.normalize(
+  /**
+   * 画线段绕起点旋转后的线
+   * @param radian - 旋转弧度
+   * @param startPoint - 起点
+   * @param endPoint - 终点
+   * @returns 旋转后的线实体
+   */
+  private rotateLine(
+    radian: number,
+    startPoint: Cesium.Cartesian3,
+    endPoint: Cesium.Cartesian3,
+  ): Cesium.Entity {
+    const position_Cartesian3 = this.rotatePoint(radian, startPoint, endPoint);
+    return this.drawLine(
+      [startPoint, position_Cartesian3],
+      new Cesium.PolylineDashMaterialProperty({ color: Cesium.Color.YELLOW }),
+      Cesium.Color.YELLOW,
+    );
+  }
+
+  /**
+   * 绘制扇形可视区域的两条边界线
+   * @param startPoint - 视点
+   * @param endPoint - 方向点
+   * @returns 边界线实体数组
+   */
+  private drawSector(
+    startPoint: Cesium.Cartesian3,
+    endPoint: Cesium.Cartesian3,
+  ): Cesium.Entity[] {
+    return [
+      this.rotateLine(Cesium.Math.toRadians(45), startPoint, endPoint),
+      this.rotateLine(Cesium.Math.toRadians(-45), startPoint, endPoint),
+    ];
+  }
+
+  /**
+   * 计算两点连线与地形/建筑的交点，并绘制可视线
+   * @param startPoint - 起点
+   * @param endPoint - 终点
+   */
+  private getIntersectPoint(
+    startPoint: Cesium.Cartesian3,
+    endPoint: Cesium.Cartesian3,
+  ): void {
+    const direction = Cesium.Cartesian3.normalize(
       Cesium.Cartesian3.subtract(endPoint, startPoint, new Cesium.Cartesian3()),
       new Cesium.Cartesian3(),
     );
 
-    let ray = new Cesium.Ray(startPoint, direction);
-    let result = this.viewer.scene.pickFromRay(ray);
+    const ray = new Cesium.Ray(startPoint, direction);
+    const result = this.viewer.scene.pickFromRay(ray);
 
-    if (Cesium.defined(result)) {
-      let intersect = result.position;
-
+    if (Cesium.defined(result) && result?.position) {
+      const intersectPosition = result.position;
       if (
-        this._distance(startPoint, endPoint) >
-        this._distance(startPoint, intersect)
+        this.distanceBetweenTwoPoints(startPoint, endPoint) >
+        this.distanceBetweenTwoPoints(intersectPosition, startPoint)
       ) {
-        this._drawLine(
-          [startPoint, intersect],
+        this.drawLine(
+          [startPoint, intersectPosition],
           Cesium.Color.GREEN,
           Cesium.Color.GREEN,
         );
-        this._drawLine(
-          [intersect, endPoint],
+        this.drawLine(
+          [intersectPosition, endPoint],
           Cesium.Color.RED,
           Cesium.Color.RED,
         );
       } else {
-        this._drawLine(
+        this.drawLine(
           [startPoint, endPoint],
           Cesium.Color.GREEN,
           Cesium.Color.GREEN,
         );
       }
     } else {
-      this._drawLine(
+      this.drawLine(
         [startPoint, endPoint],
         Cesium.Color.GREEN,
         Cesium.Color.GREEN,
@@ -409,145 +455,153 @@ export class ViewShedAnalysis {
     }
   }
 
-  /** ===================== 几何计算 ===================== */
+  /**
+   * 执行可视域分析
+   * @param degree - 分析角度范围（度）
+   * @param startPoint - 视点
+   * @param endPoint - 方向点
+   */
+  private analyze(
+    degree: number,
+    startPoint: Cesium.Cartesian3,
+    endPoint: Cesium.Cartesian3,
+  ): void {
+    for (let i = -degree; i <= degree; ++i) {
+      const radian = Cesium.Math.toRadians(i);
+      const destPoint = this.rotatePoint(radian, startPoint, endPoint);
+      this.getIntersectPoint(startPoint, destPoint);
+    }
 
-  _drawSector(startPoint, endPoint) {
-    let left = this._rotateLine(
-      Cesium.Math.toRadians(45),
-      startPoint,
-      endPoint,
-    );
-    let right = this._rotateLine(
-      Cesium.Math.toRadians(-45),
-      startPoint,
-      endPoint,
-    );
-    return [left, right];
+    // 清理临时实体
+    if (this.frustrumLabel) {
+      this.viewer.entities.remove(this.frustrumLabel);
+      this.frustrumLabel = undefined;
+    }
+    if (this.activeLine) {
+      this.viewer.entities.remove(this.activeLine);
+      this.activeLine = undefined;
+    }
+    this.pickPositions = [];
+
+    for (const point of this.pickPoints) {
+      this.viewer.entities.remove(point);
+    }
+    this.pickPoints = [];
   }
 
-  _rotateLine(radian, startPoint, endPoint) {
-    let p = this._rotatePoint(radian, startPoint, endPoint);
-    return this._drawLine(
-      [startPoint, p],
-      new Cesium.PolylineDashMaterialProperty({ color: Cesium.Color.YELLOW }),
-      Cesium.Color.YELLOW,
-    );
+  /**
+   * 设置鼠标事件处理器
+   * @param flag - true 启用，false 禁用
+   */
+  private setBuildFrustrumHandler(flag: boolean): void {
+    if (flag) {
+      // 左键点击事件
+      this.handler?.setInputAction(
+        (event: Cesium.ScreenSpaceEventHandler.PositionedEvent) => {
+          const earthPosition = this.viewer.scene.pickPosition(event.position);
+          if (Cesium.defined(earthPosition)) {
+            this.pickPoints.push(this.createPoint(earthPosition));
+            this.pickPositions.push(earthPosition);
+
+            if (this.pickPositions.length > 1) {
+              // 清除边界线
+              for (const line of this.boardLines) {
+                this.viewer.entities.remove(line);
+              }
+              if (this.frustrumLabel?.label) {
+                this.frustrumLabel.label.text = "可视域分析中...";
+              }
+              this.setBuildFrustrumHandler(false);
+              this.analyze(45, this.pickPositions[0], this.pickPositions[1]);
+              return;
+            }
+
+            this.viewPointFlag = true;
+            const dynamicPositions = new Cesium.CallbackProperty(
+              () => this.pickPositions,
+              false,
+            );
+            this.activeLine = this.drawLine(
+              dynamicPositions,
+              Cesium.Color.WHITE,
+              Cesium.Color.WHITE,
+            );
+          }
+        },
+        Cesium.ScreenSpaceEventType.LEFT_CLICK,
+      );
+
+      // 鼠标移动事件
+      this.handler.setInputAction(
+        (event: Cesium.ScreenSpaceEventHandler.MotionEvent) => {
+          const newPosition = this.viewer.scene.pickPosition(event.endPosition);
+          if (Cesium.defined(newPosition)) {
+            if (!this.frustrumLabel) {
+              this.frustrumLabel = this.createLabel(
+                newPosition,
+                "点击选择视点",
+              );
+            } else {
+              this.frustrumLabel.position =
+                newPosition as Cesium.PositionProperty;
+              if (this.viewPointFlag && this.frustrumLabel.label) {
+                this.frustrumLabel.label.text = "点击视线方向";
+                if (this.pickPositions.length > 1) {
+                  this.pickPositions.pop();
+                }
+                this.pickPositions.push(newPosition);
+
+                // 清除旧边界线
+                if (this.boardLines.length > 1) {
+                  for (const line of this.boardLines) {
+                    this.viewer.entities.remove(line);
+                  }
+                }
+
+                // 构建可视区域
+                if (this.pickPositions.length > 1) {
+                  this.boardLines = this.drawSector(
+                    this.pickPositions[0],
+                    this.pickPositions[1],
+                  );
+                }
+              }
+            }
+          }
+        },
+        Cesium.ScreenSpaceEventType.MOUSE_MOVE,
+      );
+    } else {
+      this.handler.removeInputAction(Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+      this.handler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
+    }
   }
 
-  _rotatePoint(radian, startPoint, endPoint) {
-    let projection = new Cesium.WebMercatorProjection(
-      this.viewer.scene.globe.ellipsoid,
-    );
-
-    let start = projection.project(
-      Cesium.Cartographic.fromCartesian(startPoint),
-    );
-    let end = projection.project(Cesium.Cartographic.fromCartesian(endPoint));
-
-    let x =
-      (end.x - start.x) * Math.cos(radian) -
-      (end.y - start.y) * Math.sin(radian) +
-      start.x;
-
-    let y =
-      (end.x - start.x) * Math.sin(radian) +
-      (end.y - start.y) * Math.cos(radian) +
-      start.y;
-
-    let result = projection.unproject(new Cesium.Cartesian3(x, y, start.z));
-    return Cesium.Cartographic.toCartesian(result);
-  }
-
-  _distance(a, b) {
-    return Cesium.Cartesian3.distance(a, b);
-  }
-
-  /** ===================== 绘制 ===================== */
-
-  _drawLine(positions, material, depthMaterial) {
-    return this.viewer.entities.add({
-      polyline: {
-        positions,
-        width: 5,
-        arcType: Cesium.ArcType.NONE,
-        material,
-        depthFailMaterial: depthMaterial,
-      },
-    });
-  }
-
-  _createPoint(position) {
-    return this.viewer.entities.add({
-      position,
-      point: {
-        pixelSize: 8,
-        color: Cesium.Color.RED,
-      },
-    });
-  }
-
-  _createLabel(position, text) {
-    return this.viewer.entities.add({
-      position,
-      label: {
-        text,
-        font: "14px sans-serif",
-        fillColor: Cesium.Color.WHITE,
-        showBackground: true,
-      },
-    });
-  }
-
-  /** ===================== 工具 ===================== */
-
-  _clearBoardLines() {
-    this.boardLines.forEach((line) => this.viewer.entities.remove(line));
-    this.boardLines = [];
-  }
-
-  _clear() {
+  /**
+   * 启动可视域分析
+   */
+  start(): void {
     this.viewer.entities.removeAll();
     this.pickPositions = [];
-    this.pickPoints = [];
     this.boardLines = [];
+    this.pickPoints = [];
     this.frustrumLabel = undefined;
     this.viewPointFlag = false;
+    this.activeLine = undefined;
+    this.setBuildFrustrumHandler(true);
+  }
+
+  /**
+   * 停止分析并清理资源
+   */
+  destroy(): void {
+    this.setBuildFrustrumHandler(false);
+    this.viewer.entities.removeAll();
+    this.pickPositions = [];
+    this.boardLines = [];
+    this.pickPoints = [];
+    this.frustrumLabel = undefined;
+    this.viewPointFlag = false;
+    this.activeLine = undefined;
   }
 }
-
-// 在cesium开发中，后端通过websocket发送数据到前端，数据是一个list，里面存放
-// 船只的移动数据。我的伪代码如下：
-// const entityMap = new Map(); // 存储船只实体的映射
-// const updataData = (list) => {
-//   for (let i = 0; i < list.length; i++) {
-//   const data = list[i];
-
-//   // 解析数据，获取船只的经纬度坐标
-//   const longitude = data.longitude;
-//   const latitude = data.latitude;
-//   const time = data.time;
-//   const id = data.id; // 每条数据都有一个唯一的id字段
-
-//   if (entityMap.has(id)) {
-//     //已经存在则更新位置和时间
-//     const entity = entityMap.get(id);
-//     const position = entity.position as Cesium.SampledPositionProperty;
-//     position.addSample(Cesium.JulianDate.fromDate(new Date(time)), Cesium.Cartesian3.fromDegrees(longitude, latitude));
-//   } else {
-//     //不存在实体则创建
-//     const position = new Cesium.SampledPositionProperty()
-//     position.addSample(Cesium.JulianDate.fromDate(new Date(time)), Cesium.Cartesian3.fromDegrees(longitude, latitude));
-//     const entity = viewer.entities.add({
-//       id: id,
-//       position: position,
-//       orientation:new Cesium.VelocityOrientationProperty(position),
-//       model: {
-//         uri: 'path/to/ship/model.gltf', // 替换为你的船只模型路径
-//         minimumPixelSize: 64, // 根据需要调整模型的最小像素大小
-//       },
-//     });
-//     entityMap.set(id, entity);
-//   }
-// }
-// }
-// 但是在实际页面中，模型的方向角还是存在问题。模型本身建模没有问题。
