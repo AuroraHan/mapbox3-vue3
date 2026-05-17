@@ -1,182 +1,214 @@
 <template>
-    <div id="cesiumContainer">
-        <div class="options">
-            <button @click="addModel">添加模型</button>
-            <button @click="startAnalysis">可视域</button>
-            <button @click="destroyAnalysis">结束可视域</button>
-            <button @click="pause">暂停动画</button>
-        </div>
+  <div id="cesiumContainer">
+    <div class="options">
+      <button @click="addModel">添加模型</button>
+      <button @click="startAnalysis">可视域</button>
+      <button @click="destroyAnalysis">结束可视域</button>
+      <button @click="pause">暂停动画</button>
     </div>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
-import * as Cesium from 'cesium';
-import { useCesium } from '@/hooks/useCesium'
-import { ModelRotateController } from '@/utils/ModelRotate';
-import * as turf from '@turf/turf';
-import { ModelRotator, ModelZRotator } from './utils';
-import { ViewShedAnalysis } from '@/utils/cesiumTools';
-
+import { onMounted, ref } from "vue";
+import * as Cesium from "cesium";
+import { useCesium } from "@/hooks/useCesium";
+import { ModelRotateController } from "@/utils/ModelRotate";
+import * as turf from "@turf/turf";
+import { ModelRotator, ModelZRotator } from "./utils";
+import { ViewShedAnalysis } from "@/utils/cesiumTools";
 
 let cesiumV: Cesium.Viewer;
-let rotateController: ModelRotateController
-const { getCesiumViewer } = useCesium({ container: 'cesiumContainer', addTerrain: true, infoBox: false, shouldAnimate: true })
+let rotateController: ModelRotateController;
+const { getCesiumViewer } = useCesium({
+  container: "cesiumContainer",
+  addTerrain: true,
+  infoBox: false,
+  shouldAnimate: true,
+});
 let analysis: ViewShedAnalysis | null = null;
 onMounted(() => {
+  cesiumV = getCesiumViewer();
+  // addModel()
+  addModelCollection();
 
-    cesiumV = getCesiumViewer()
-    // addModel()
-
-    // addHealthBar()
-    // rotateController = new ModelRotateController(cesiumV)
-    analysis = new ViewShedAnalysis(cesiumV);
-})
+  // addHealthBar()
+  // rotateController = new ModelRotateController(cesiumV)
+  analysis = new ViewShedAnalysis(cesiumV);
+});
 
 const startAnalysis = () => {
-    analysis?.start();
-}
+  analysis?.start();
+};
 
 const destroyAnalysis = () => {
-    analysis?.destroy();
-}
+  analysis?.destroy();
+};
 
 //添加模型
 let rotator;
 const addModel = async () => {
-    // const modelEntity = cesiumV.entities.add({
-    //     name: 'Cesium Air',
-    //     position: Cesium.Cartesian3.fromDegrees(120, 30, 0),
-    //     model: {
-    //         uri: '/models/Cesium_Air.glb',
-    //         minimumPixelSize: 128,
-    //         maximumScale: 20000
-    //     }
-    // });
+  // const modelEntity = cesiumV.entities.add({
+  //     name: 'Cesium Air',
+  //     position: Cesium.Cartesian3.fromDegrees(120, 30, 0),
+  //     model: {
+  //         uri: '/models/Cesium_Air.glb',
+  //         minimumPixelSize: 128,
+  //         maximumScale: 20000
+  //     }
+  // });
 
-    const model = await Cesium.Model.fromGltfAsync({
-        url: "/models/Cesium_Air.glb",
-        modelMatrix: Cesium.Transforms.eastNorthUpToFixedFrame(
-            Cesium.Cartesian3.fromDegrees(116.39, 39.9, 0)
-        )
-    })
+  const model = await Cesium.Model.fromGltfAsync({
+    url: "/models/Cesium_Air.glb",
+    modelMatrix: Cesium.Transforms.eastNorthUpToFixedFrame(
+      Cesium.Cartesian3.fromDegrees(116.39, 39.9, 0),
+    ),
+  });
 
-    cesiumV.scene.primitives.add(model)
+  cesiumV.scene.primitives.add(model);
 
-    rotator = new ModelZRotator(cesiumV, model)
+  rotator = new ModelZRotator(cesiumV, model);
 
-    // 监听旋转角度
-    rotator.onRotate((deg) => {
-        console.log("当前角度:", deg)
-    })
+  // 监听旋转角度
+  rotator.onRotate((deg) => {
+    console.log("当前角度:", deg);
+  });
 
-    // rotateController.add(modelEntity);
-    // cesiumV.trackedEntity = modelEntity;
-}
+  // rotateController.add(modelEntity);
+  // cesiumV.trackedEntity = modelEntity;
+};
 
 //模型动画并播放
 let modelAnimations: Cesium.Model;
 const addGLB = async () => {
-    modelAnimations = await Cesium.Model.fromGltfAsync({
-        url: "/models/AAAAAAA.glb",
-        modelMatrix: Cesium.Transforms.eastNorthUpToFixedFrame(
-            Cesium.Cartesian3.fromDegrees(120, 30, 0)
-        ),
-        scale: 1
-    })
+  modelAnimations = await Cesium.Model.fromGltfAsync({
+    url: "/models/AAAAAAA.glb",
+    modelMatrix: Cesium.Transforms.eastNorthUpToFixedFrame(
+      Cesium.Cartesian3.fromDegrees(120, 30, 0),
+    ),
+    scale: 1,
+  });
 
-    cesiumV.scene.primitives.add(modelAnimations)
-    cesiumV.camera.flyTo({
-        destination: Cesium.Cartesian3.fromDegrees(120, 30, 100),
-        duration: 2
-    })
-}
+  cesiumV.scene.primitives.add(modelAnimations);
+  cesiumV.camera.flyTo({
+    destination: Cesium.Cartesian3.fromDegrees(120, 30, 100),
+    duration: 2,
+  });
+};
 
 const play = () => {
-    modelAnimations.activeAnimations.addAll({
-        loop: Cesium.ModelAnimationLoop.REPEAT
-    })
-}
+  modelAnimations.activeAnimations.addAll({
+    loop: Cesium.ModelAnimationLoop.REPEAT,
+  });
+};
 
 const pause = () => {
-    modelAnimations.activeAnimations.removeAll()
-}
+  modelAnimations.activeAnimations.removeAll();
+};
 
 //添加血条效果
 const addHealthBar = () => {
-    const pos = Cesium.Cartesian3.fromDegrees(120, 30, 0);
-    const healthBarEntity = cesiumV.entities.add({
-        name: 'Health Bar',
-        position: pos,
-        label: {
-            text: '血条',
-            font: '14px sans-serif',
-            fillColor: Cesium.Color.RED,
-            outlineColor: Cesium.Color.WHITE,
-            outlineWidth: 2,
-            style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-            verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-            pixelOffset: new Cesium.Cartesian2(0, -20)
-        }
-    });
+  const pos = Cesium.Cartesian3.fromDegrees(120, 30, 0);
+  const healthBarEntity = cesiumV.entities.add({
+    name: "Health Bar",
+    position: pos,
+    label: {
+      text: "血条",
+      font: "14px sans-serif",
+      fillColor: Cesium.Color.RED,
+      outlineColor: Cesium.Color.WHITE,
+      outlineWidth: 2,
+      style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+      verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+      pixelOffset: new Cesium.Cartesian2(0, -20),
+    },
+  });
 
-    const div = createHealthBar()
+  const div = createHealthBar();
 
-    // ✅ 关键：每帧更新
-    cesiumV.scene.postRender.addEventListener(() => {
-        const position = healthBarEntity.position.getValue(cesiumV.clock.currentTime);
+  // ✅ 关键：每帧更新
+  cesiumV.scene.postRender.addEventListener(() => {
+    const position = healthBarEntity.position.getValue(
+      cesiumV.clock.currentTime,
+    );
 
-        if (!position) return;
+    if (!position) return;
 
-        const canvasPosition = Cesium.SceneTransforms.worldToWindowCoordinates(
-            cesiumV.scene,
-            position
-        );
+    const canvasPosition = Cesium.SceneTransforms.worldToWindowCoordinates(
+      cesiumV.scene,
+      position,
+    );
 
-        if (canvasPosition) {
-            div.style.left = canvasPosition.x - 30 + 'px';
-            div.style.top = canvasPosition.y - 50 + 'px';
-            div.style.display = 'block';
-        } else {
-            div.style.display = 'none';
-        }
-    });
-
-}
+    if (canvasPosition) {
+      div.style.left = canvasPosition.x - 30 + "px";
+      div.style.top = canvasPosition.y - 50 + "px";
+      div.style.display = "block";
+    } else {
+      div.style.display = "none";
+    }
+  });
+};
 
 const createHealthBar = () => {
-    const el = document.createElement('div');
-    el.className = 'hp-bar';
-    el.innerHTML = `<div class="hp-inner"></div>`;
-    el.style.position = 'absolute';
-    el.style.width = '60px';
-    el.style.height = '6px';
-    el.style.background = '#333';
-    el.style.borderRadius = '3px';
-    el.style.pointerEvents = 'none';
+  const el = document.createElement("div");
+  el.className = "hp-bar";
+  el.innerHTML = `<div class="hp-inner"></div>`;
+  el.style.position = "absolute";
+  el.style.width = "60px";
+  el.style.height = "6px";
+  el.style.background = "#333";
+  el.style.borderRadius = "3px";
+  el.style.pointerEvents = "none";
 
-    document.body.appendChild(el);
+  document.body.appendChild(el);
 
-    return el;
-}
+  return el;
+};
 
-//ke
+//使用collection管理模型
+const modelCollection = new Cesium.CustomDataSource("modelCollection");
+const addModelCollection = async () => {
+  const modelEntity = modelCollection.entities.add({
+    name: "Cesium Air",
+    position: Cesium.Cartesian3.fromDegrees(120, 30, 0),
+    model: {
+      uri: "/models/Cesium_Air.glb",
+      minimumPixelSize: 128,
+      maximumScale: 20000,
+    },
+  });
 
+  modelCollection.entities.add({
+    name: "Cesium Air",
+    position: Cesium.Cartesian3.fromDegrees(121, 31, 0),
+    model: {
+      uri: "/models/Cesium_Air.glb",
+      minimumPixelSize: 128,
+      maximumScale: 20000,
+    },
+  });
 
+  cesiumV.dataSources.add(modelCollection);
+};
+
+const controlCollection = () => {
+  modelCollection.show = !modelCollection.show; // 切换显示/隐藏
+  // modelCollection.entities.removeAll(); // 移除所有实体
+};
 </script>
 
 <style scoped>
 #cesiumContainer {
-    height: 100vh;
-    position: relative;
+  height: 100vh;
+  position: relative;
 }
 
 .options {
-    position: absolute;
-    left: 3%;
-    top: 3%;
-    width: 100px;
-    height: 50px;
-    z-index: 99;
+  position: absolute;
+  left: 3%;
+  top: 3%;
+  width: 100px;
+  height: 50px;
+  z-index: 99;
 }
 </style>
