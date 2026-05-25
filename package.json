@@ -20,6 +20,7 @@
     "@types/mapbox-gl": "^3.4.1",
     "@types/three": "^0.180.0",
     "cesium": "^1.134.1",
+    "cesium-wind-layer": "^0.10.1",
     "coordtransform": "^2.1.2",
     "dat.gui": "^0.7.9",
     "echarts": "^5.6.0",

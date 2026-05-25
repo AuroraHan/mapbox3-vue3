@@ -2930,6 +2930,11 @@ callsites@^3.0.0:
   resolved "https://registry.npmmirror.com/callsites/-/callsites-3.1.0.tgz#b3630abd8943432f54b3f0519238e33cd7df2f73"
   integrity sha512-P8BjAsXvZS+VIDUI11hHCQEv74YT67YUi5JJFNWIqL235sBmjX4+qx9Muvls5ivyNENctx46xQLQ3aTuE7ssaQ==
 
+cesium-wind-layer@^0.10.1:
+  version "0.10.1"
+  resolved "https://registry.npmmirror.com/cesium-wind-layer/-/cesium-wind-layer-0.10.1.tgz#7b5eb6d95c060e7d71b5c3864c6362fdb1681f45"
+  integrity sha512-m+LsmFKrzgeyW4im5FyMvJfQuLFMMMGsiAPzWBXbrPxJQH60yLEMfys3nAgmC49pqMpW+ZNU2V346n87/9+sZQ==
+
 cesium@^1.134.1:
   version "1.134.1"
   resolved "https://registry.npmmirror.com/cesium/-/cesium-1.134.1.tgz#b5369211ecbb6788a0477ba43e6527b6f2a51e1b"
