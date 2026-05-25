@@ -407,6 +407,41 @@ export class ViewAreaAnalysis {
   }
 
   /**
+   * 判断两点之间是否可见
+   * @param observerPosition - 观察者位置
+   * @param targetPosition - 目标位置
+   * @returns 是否可见（true=可见，false=被遮挡）
+   */
+  isVisible(
+    observerPosition: Cesium.Cartesian3,
+    targetPosition: Cesium.Cartesian3,
+  ): boolean {
+    const direction = Cesium.Cartesian3.normalize(
+      Cesium.Cartesian3.subtract(
+        targetPosition,
+        observerPosition,
+        new Cesium.Cartesian3(),
+      ),
+      new Cesium.Cartesian3(),
+    );
+
+    const ray = new Cesium.Ray(observerPosition, direction);
+    const result = this.viewer.scene.pickFromRay(ray);
+
+    if (Cesium.defined(result) && result?.position) {
+      const intersectPosition = result.position;
+      // 如果交点距离小于目标距离，说明被遮挡
+      if (
+        this.distanceBetweenTwoPoints(observerPosition, intersectPosition) <
+        this.distanceBetweenTwoPoints(observerPosition, targetPosition)
+      ) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
    * 计算两点连线与地形/建筑的交点，并绘制可视线
    * @param startPoint - 起点
    * @param endPoint - 终点
