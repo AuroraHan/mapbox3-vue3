@@ -41,8 +41,8 @@ export function useCesium(options: options) {
     //添加地形
     if (options.addTerrain) {
       const provider = await Cesium.createWorldTerrainAsync({
-        requestVertexNormals: true,
-        requestWaterMask: true,
+        requestVertexNormals: false,
+        requestWaterMask: false,
       });
       cesiumV.terrainProvider = provider;
     }
