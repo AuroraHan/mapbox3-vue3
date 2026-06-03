@@ -2,7 +2,7 @@
   <div id="cesiumContainer">
     <div class="options">
       <button @click="addModel">添加模型</button>
-      <button @click="play1">播放动画</button>
+      <button @click="play2">播放动画</button>
       <button @click="pause">暂停动画</button>
     </div>
   </div>
@@ -71,8 +71,9 @@ const getColor = (val: number) => {
 
   return Cesium.Color.fromHsl((1.0 - ratio) * 0.7, 1.0, 0.5, 0.6);
 };
+/**********************使用影像突出方法************************** */
 
-//-------------------
+/**********************使用多边形➕canvas方法************************** */
 const currentHour = ref(1);
 
 let timer: any = null;
@@ -109,24 +110,37 @@ const createCanvas = async () => {
   // 👇 在 buildHourMap 之后调用
   await precomputeAll();
 
-  // 初始化底图承载
-  rectangleEntity = cesiumV.entities.add({
-    rectangle: {
-      coordinates: Cesium.Rectangle.fromDegrees(minLon, minLat, maxLon, maxLat),
-      material: new Cesium.ImageMaterialProperty({
-        image: drawHeatmap(currentHour.value),
-        transparent: true,
-      }),
-    },
-  });
+  /**使用影像图层方式 */
+  loadAllTile();
+  //   const layer = cesiumV.imageryLayers.add(
+  //     new Cesium.ImageryLayer(
+  //       new Cesium.SingleTileImageryProvider({
+  //         url: drawHeatmap(currentHour.value).toDataURL(),
+  //         rectangle: Cesium.Rectangle.fromDegrees(minLon, minLat, maxLon, maxLat),
+  //         tileHeight: 256,
+  //         tileWidth: 256,
+  //       }),
+  //     ),
+  //   );
 
-  cesiumV.camera.flyTo({
-    destination: Cesium.Cartesian3.fromDegrees(
-      (minLon + maxLon) / 2,
-      (minLat + maxLat) / 2,
-      2000000,
-    ),
-  });
+  // 初始化底图承载
+  //   rectangleEntity = cesiumV.entities.add({
+  //     rectangle: {
+  //       coordinates: Cesium.Rectangle.fromDegrees(minLon, minLat, maxLon, maxLat),
+  //       material: new Cesium.ImageMaterialProperty({
+  //         image: drawHeatmap(currentHour.value),
+  //         transparent: true,
+  //       }),
+  //     },
+  //   });
+
+  //   cesiumV.camera.flyTo({
+  //     destination: Cesium.Cartesian3.fromDegrees(
+  //       (minLon + maxLon) / 2,
+  //       (minLat + maxLat) / 2,
+  //       2000000,
+  //     ),
+  //   });
 };
 
 // ===== 1. 按 Hour 分组 =====
@@ -237,6 +251,45 @@ function play1() {
     }
 
     renderHour(currentHour.value);
+  }, 800);
+}
+
+//结合影像图层的使用
+const layerMap = new Map();
+const loadAllTile = () => {
+  for (let i = 1; i < 5; i++) {
+    const cLayer = new Cesium.ImageryLayer(
+      new Cesium.SingleTileImageryProvider({
+        url: canvasCache.get(i)!.toDataURL(),
+        rectangle: Cesium.Rectangle.fromDegrees(minLon, minLat, maxLon, maxLat),
+        tileHeight: 256,
+        tileWidth: 256,
+      }),
+    );
+    cLayer!.show = false;
+    layerMap.set(i, cLayer);
+    const layer = cesiumV.imageryLayers.add(cLayer);
+  }
+};
+
+let currentLayer = null;
+function changeHour(hour: number) {
+  if (currentLayer) {
+    currentLayer.show = false;
+  }
+  currentLayer = layerMap.get(hour);
+  currentLayer.show = true;
+}
+
+function play2() {
+  if (timer) return;
+  timer = setInterval(() => {
+    currentHour.value++;
+    if (currentHour.value > 5) {
+      currentHour.value = 1;
+    }
+
+    changeHour(currentHour.value);
   }, 800);
 }
 
