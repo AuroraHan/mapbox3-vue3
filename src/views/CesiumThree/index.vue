@@ -1,9 +1,19 @@
 <template>
   <div id="cesiumContainer">
     <div class="options">
-      <button @click="addModel">添加模型</button>
-      <button @click="play2">播放动画</button>
-      <button @click="pause">暂停动画</button>
+      <div class="section">
+        <h4>GeoJSON 加载方式</h4>
+        <button @click="loadByEntities">方式一: Entities 实体</button>
+        <button @click="loadByRectangle">方式二: Rectangle 实体</button>
+        <button @click="loadByImageryLayer">方式三: 影像图层</button>
+      </div>
+      <div class="section" v-if="currentMethod">
+        <h4>动画控制</h4>
+        <button @click="playAnimation">播放</button>
+        <button @click="stopAnimation">停止</button>
+        <span>当前小时: {{ currentHour }}</span>
+      </div>
+      <button @click="clearAll">清除所有</button>
     </div>
   </div>
 </template>
@@ -12,9 +22,24 @@
 import { onMounted, ref } from "vue";
 import * as Cesium from "cesium";
 import { useCesium } from "@/hooks/useCesium";
-import * as turf from "@turf/turf";
+import {
+  fetchGeoJson,
+  getColorForEntity,
+  buildHourMap,
+  computeBounds,
+  precomputeCanvas,
+  createRectangle,
+  createFlyToPosition,
+  createSingleTileProvider,
+  type GeoBounds,
+  createEmptyBounds,
+} from "./utils";
 
+// ==================== 基础配置 ====================
 let cesiumV: Cesium.Viewer;
+const currentHour = ref(1);
+const currentMethod = ref<string>("");
+let timer: any = null;
 
 const { getCesiumViewer } = useCesium({
   container: "cesiumContainer",
@@ -22,18 +47,29 @@ const { getCesiumViewer } = useCesium({
   infoBox: false,
   shouldAnimate: true,
 });
+
 onMounted(() => {
   cesiumV = getCesiumViewer();
-
-  createCanvas();
 });
 
-//geojson数据加载
-const loadGeoJson = async () => {
-  // 加载 GeoJSON
-  const res = await fetch("/geojson/dep-conc-time.geojson");
-  const geojson = await res.json();
-  renderPolygons(geojson.features);
+// ==================== 方式一: Entities 实体直接加载 ====================
+
+/**
+ * 方式一: 使用 Entities 直接加载 GeoJSON 多边形
+ *
+ * 特点:
+ * - 最简单直接的方式
+ * - 每个多边形作为独立实体
+ * - 适合少量数据、需要交互选中单个要素的场景
+ * - 不会贴合地形，多边形在地球表面上方
+ */
+const loadByEntities = async () => {
+  clearAll();
+  currentMethod.value = "entities";
+
+  const geojson = await fetchGeoJson();
+  renderPolygonsAsEntities(geojson.features);
+
   cesiumV.camera.flyTo({
     destination: Cesium.Cartesian3.fromDegrees(
       122.48450369499642,
@@ -44,259 +80,228 @@ const loadGeoJson = async () => {
   });
 };
 
-const renderPolygons = (features: any) => {
+/**
+ * 渲染多边形实体
+ */
+const renderPolygonsAsEntities = (features: any[]) => {
   features.forEach((f) => {
     cesiumV.entities.add({
+      id: `entity-${f.properties.Hour}-${f.properties.Conc}`,
       polygon: {
         hierarchy: Cesium.Cartesian3.fromDegreesArray(
           f.geometry.coordinates[0].flat(),
         ),
-        material: getColor(f.properties.Conc),
+        material: getColorForEntity(f.properties.Conc),
         perPositionHeight: false,
+      },
+      properties: {
+        hour: f.properties.Hour,
+        conc: f.properties.Conc,
       },
     });
   });
 };
 
-// ===== log归一化 =====
-const normalize = (val: number) => {
-  return Math.log10(val);
-};
+// ==================== 方式二: Rectangle 实体 + Canvas ====================
 
-// =====  颜色映射 =====
-const getColor = (val: number) => {
-  const v = normalize(val);
+/**
+ * 方式二: 使用 Rectangle 实体承载 Canvas 热力图
+ *
+ * 特点:
+ * - 将 GeoJSON 数据绘制到 Canvas 上
+ * - Canvas 作为材质贴到 Rectangle 实体
+ * - 支持时间序列动画
+ * - 不会贴合地形，悬浮在地球表面
+ */
 
-  const ratio = Math.min(v / 15, 1.0);
-
-  return Cesium.Color.fromHsl((1.0 - ratio) * 0.7, 1.0, 0.5, 0.6);
-};
-/**********************使用影像突出方法************************** */
-
-/**********************使用多边形➕canvas方法************************** */
-const currentHour = ref(1);
-
-let timer: any = null;
 let rectangleEntity: Cesium.Entity | null = null;
+let hourMapForRectangle = new Map<number, any[]>();
+let canvasCacheForRectangle = new Map<number, HTMLCanvasElement>();
+let boundsForRectangle: GeoBounds = createEmptyBounds();
 
-// 数据
-const hourMap = new Map<number, any[]>();
-const canvasCache = new Map<number, HTMLCanvasElement>();
+const loadByRectangle = async () => {
+  clearAll();
+  currentMethod.value = "rectangle";
 
-// 地理范围（初始化计算）
-let minLon = Infinity,
-  maxLon = -Infinity;
-let minLat = Infinity,
-  maxLat = -Infinity;
+  const geojson = await fetchGeoJson();
 
-async function precomputeAll() {
-  for (const hour of hourMap.keys()) {
-    drawHeatmap(hour);
+  // 按时间分组
+  hourMapForRectangle = buildHourMap(geojson);
 
-    // 👉 防止主线程卡死（非常关键）
-    await new Promise((resolve) => setTimeout(resolve, 0));
-  }
+  // 计算范围
+  boundsForRectangle = computeBounds(geojson);
 
-  console.log("✅ 热力图缓存完成");
-}
+  // 预计算所有 Canvas
+  canvasCacheForRectangle = await precomputeCanvas(
+    hourMapForRectangle,
+    boundsForRectangle,
+  );
 
-const createCanvas = async () => {
-  const res = await fetch("/geojson/dep-conc-time.geojson");
-  const geojson = await res.json();
-
-  buildHourMap(geojson);
-  computeBounds(geojson);
-
-  // 👇 在 buildHourMap 之后调用
-  await precomputeAll();
-
-  /**使用影像图层方式 */
-  loadAllTile();
-  //   const layer = cesiumV.imageryLayers.add(
-  //     new Cesium.ImageryLayer(
-  //       new Cesium.SingleTileImageryProvider({
-  //         url: drawHeatmap(currentHour.value).toDataURL(),
-  //         rectangle: Cesium.Rectangle.fromDegrees(minLon, minLat, maxLon, maxLat),
-  //         tileHeight: 256,
-  //         tileWidth: 256,
-  //       }),
-  //     ),
-  //   );
-
-  // 初始化底图承载
-  //   rectangleEntity = cesiumV.entities.add({
-  //     rectangle: {
-  //       coordinates: Cesium.Rectangle.fromDegrees(minLon, minLat, maxLon, maxLat),
-  //       material: new Cesium.ImageMaterialProperty({
-  //         image: drawHeatmap(currentHour.value),
-  //         transparent: true,
-  //       }),
-  //     },
-  //   });
-
-  //   cesiumV.camera.flyTo({
-  //     destination: Cesium.Cartesian3.fromDegrees(
-  //       (minLon + maxLon) / 2,
-  //       (minLat + maxLat) / 2,
-  //       2000000,
-  //     ),
-  //   });
-};
-
-// ===== 1. 按 Hour 分组 =====
-function buildHourMap(geojson: any) {
-  geojson.features.forEach((f: any) => {
-    const hour = f.properties.Hour;
-
-    if (!hourMap.has(hour)) {
-      hourMap.set(hour, []);
-    }
-
-    hourMap.get(hour)!.push(f);
-  });
-}
-
-// ===== 2. 计算范围 =====
-function computeBounds(geojson: any) {
-  geojson.features.forEach((f: any) => {
-    const coords = f.geometry.coordinates[0];
-
-    coords.forEach(([lon, lat]: number[]) => {
-      minLon = Math.min(minLon, lon);
-      maxLon = Math.max(maxLon, lon);
-      minLat = Math.min(minLat, lat);
-      maxLat = Math.max(maxLat, lat);
-    });
-  });
-}
-
-// ===== 4. 颜色映射 =====
-function getColor1(val: number) {
-  const v = normalize(val);
-  const ratio = Math.min(v / 15, 1.0);
-
-  // 蓝 → 红
-  const h = (1.0 - ratio) * 240;
-
-  return `hsla(${h}, 100%, 50%, 0.6)`;
-}
-
-// ===== 5. 坐标转Canvas =====
-function project(lon: number, lat: number, width: number, height: number) {
-  const x = ((lon - minLon) / (maxLon - minLon)) * width;
-  const y = height - ((lat - minLat) / (maxLat - minLat)) * height;
-  return [x, y];
-}
-
-// ===== 6. 核心：绘制热力图 =====
-function drawHeatmap(hour: number) {
-  if (canvasCache.has(hour)) {
-    return canvasCache.get(hour)!;
-  }
-
-  const canvas = document.createElement("canvas");
-  canvas.width = 1024;
-  canvas.height = 1024;
-
-  const ctx = canvas.getContext("2d")!;
-  const features = hourMap.get(hour)!;
-
-  features.forEach((f: any) => {
-    const coords = f.geometry.coordinates[0];
-    const conc = f.properties.Conc;
-
-    if (!conc) return;
-
-    ctx.beginPath();
-
-    coords.forEach(([lon, lat]: number[], i: number) => {
-      const [x, y] = project(lon, lat, canvas.width, canvas.height);
-
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    });
-
-    ctx.closePath();
-
-    ctx.fillStyle = getColor1(conc);
-    //高斯模糊（更像热力图）
-    ctx.filter = "blur(8px)";
-    ctx.fill();
-  });
-
-  canvasCache.set(hour, canvas);
-  return canvas;
-}
-
-// ===== 7. 渲染某一小时 =====
-function renderHour(hour: number) {
-  if (!rectangleEntity) return;
-
-  const canvas = canvasCache.get(hour);
-
-  if (!canvas) return;
-
-  (rectangleEntity.rectangle!.material as any).image = canvas;
-}
-
-// ===== 8. 播放 =====
-function play1() {
-  if (timer) return;
-
-  timer = setInterval(() => {
-    currentHour.value++;
-
-    if (currentHour.value > 5) {
-      currentHour.value = 1;
-    }
-
-    renderHour(currentHour.value);
-  }, 800);
-}
-
-//结合影像图层的使用
-const layerMap = new Map();
-const loadAllTile = () => {
-  for (let i = 1; i < 5; i++) {
-    const cLayer = new Cesium.ImageryLayer(
-      new Cesium.SingleTileImageryProvider({
-        url: canvasCache.get(i)!.toDataURL(),
-        rectangle: Cesium.Rectangle.fromDegrees(minLon, minLat, maxLon, maxLat),
-        tileHeight: 256,
-        tileWidth: 256,
+  // 创建 Rectangle 实体
+  rectangleEntity = cesiumV.entities.add({
+    rectangle: {
+      coordinates: createRectangle(boundsForRectangle),
+      material: new Cesium.ImageMaterialProperty({
+        image: canvasCacheForRectangle.get(currentHour.value)!,
+        transparent: true,
       }),
-    );
-    cLayer!.show = false;
-    layerMap.set(i, cLayer);
-    const layer = cesiumV.imageryLayers.add(cLayer);
-  }
+    },
+  });
+
+  cesiumV.camera.flyTo({
+    destination: createFlyToPosition(boundsForRectangle),
+    duration: 2,
+  });
 };
 
-let currentLayer = null;
-function changeHour(hour: number) {
+/**
+ * 更新 Rectangle 的 Canvas 材质
+ */
+const updateRectangleCanvas = (hour: number) => {
+  if (!rectangleEntity) return;
+  const canvas = canvasCacheForRectangle.get(hour);
+  if (!canvas) return;
+  (rectangleEntity.rectangle!.material as Cesium.ImageMaterialProperty).image =
+    canvas;
+};
+
+// ==================== 方式三: 影像图层 + Canvas ====================
+
+/**
+ * 方式三: 使用影像图层承载 Canvas 热力图
+ *
+ * 特点:
+ * - 将 Canvas 转为 SingleTileImageryProvider
+ * - 影像图层自动贴合地形
+ * - 每个时间点一个图层，通过 show 属性切换
+ * - 适合大数据量、需要贴合地形的场景
+ */
+
+let hourMapForImagery = new Map<number, any[]>();
+let canvasCacheForImagery = new Map<number, HTMLCanvasElement>();
+let boundsForImagery: GeoBounds = createEmptyBounds();
+const layerMap = new Map<number, Cesium.ImageryLayer>();
+let currentLayer: Cesium.ImageryLayer | null = null;
+
+const loadByImageryLayer = async () => {
+  clearAll();
+  currentMethod.value = "imagery";
+
+  const geojson = await fetchGeoJson();
+
+  // 按时间分组
+  hourMapForImagery = buildHourMap(geojson);
+
+  // 计算范围
+  boundsForImagery = computeBounds(geojson);
+
+  // 预计算所有 Canvas
+  canvasCacheForImagery = await precomputeCanvas(
+    hourMapForImagery,
+    boundsForImagery,
+  );
+
+  // 创建影像图层
+  createImageryLayers();
+
+  // 显示第一个时间点
+  showImageryLayer(currentHour.value);
+
+  cesiumV.camera.flyTo({
+    destination: createFlyToPosition(boundsForImagery),
+    duration: 2,
+  });
+};
+
+/**
+ * 创建所有影像图层
+ */
+const createImageryLayers = () => {
+  canvasCacheForImagery.forEach((canvas, hour) => {
+    const provider = createSingleTileProvider(canvas, boundsForImagery);
+    const layer = cesiumV.imageryLayers.addImageryProvider(provider);
+    layer.show = hour === currentHour.value;
+    layerMap.set(hour, layer);
+  });
+  currentLayer = layerMap.get(currentHour.value) || null;
+};
+
+/**
+ * 显示指定时间点的影像图层
+ */
+const showImageryLayer = (hour: number) => {
   if (currentLayer) {
     currentLayer.show = false;
   }
-  currentLayer = layerMap.get(hour);
-  currentLayer.show = true;
-}
+  currentLayer = layerMap.get(hour) || null;
+  if (currentLayer) {
+    currentLayer.show = true;
+  }
+};
 
-function play2() {
+// ==================== 动画控制 ====================
+
+/**
+ * 播放时间序列动画
+ */
+const playAnimation = () => {
   if (timer) return;
+
   timer = setInterval(() => {
     currentHour.value++;
     if (currentHour.value > 5) {
       currentHour.value = 1;
     }
 
-    changeHour(currentHour.value);
+    if (currentMethod.value === "rectangle") {
+      updateRectangleCanvas(currentHour.value);
+    } else if (currentMethod.value === "imagery") {
+      showImageryLayer(currentHour.value);
+    }
   }, 800);
-}
+};
 
-function stop() {
-  clearInterval(timer);
-  timer = null;
-}
+/**
+ * 停止动画
+ */
+const stopAnimation = () => {
+  if (timer) {
+    clearInterval(timer);
+    timer = null;
+  }
+};
+
+// ==================== 清理 ====================
+
+/**
+ * 清除所有加载的内容
+ */
+const clearAll = () => {
+  stopAnimation();
+  currentHour.value = 1;
+  currentMethod.value = "";
+
+  // 清除实体
+  cesiumV.entities.removeAll();
+  rectangleEntity = null;
+
+  // 清除影像图层
+  layerMap.forEach((layer) => {
+    cesiumV.imageryLayers.remove(layer);
+  });
+  layerMap.clear();
+  currentLayer = null;
+
+  // 清除缓存
+  hourMapForRectangle.clear();
+  canvasCacheForRectangle.clear();
+  hourMapForImagery.clear();
+  canvasCacheForImagery.clear();
+
+  // 重置范围
+  boundsForRectangle = createEmptyBounds();
+  boundsForImagery = createEmptyBounds();
+};
 </script>
 
 <style scoped>
@@ -309,8 +314,55 @@ function stop() {
   position: absolute;
   left: 3%;
   top: 3%;
-  width: 100px;
-  height: 50px;
   z-index: 99;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 15px;
+  border-radius: 8px;
+  color: white;
+}
+
+.section {
+  margin-bottom: 15px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.section:last-of-type {
+  border-bottom: none;
+  margin-bottom: 10px;
+}
+
+h4 {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  color: #4fc3f7;
+}
+
+button {
+  display: block;
+  width: 100%;
+  margin: 5px 0;
+  padding: 8px 12px;
+  background: #2196f3;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+button:hover {
+  background: #1976d2;
+}
+
+button:active {
+  background: #0d47a1;
+}
+
+span {
+  display: block;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #ccc;
 }
 </style>
