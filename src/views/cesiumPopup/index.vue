@@ -91,7 +91,7 @@ const demoB = () => {
   const div = {
     id: "002",
     name: "这是Vue组件",
-    position: [113, 37, 100],
+    position: [120, 30, 100],
     content: "这是一个Vue组件",
     vueComponent: lineDiv,
   };
@@ -108,7 +108,7 @@ const demoB = () => {
     true,
     div.id,
   );
-  // divbillboard.flyTo()
+  // divbillboard.flyTo();
 };
 </script>
 

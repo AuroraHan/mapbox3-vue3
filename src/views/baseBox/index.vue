@@ -129,7 +129,7 @@ const routsList = ref([
     type: "cesium",
   },
   {
-    name: "Cesium+Three",
+    name: "Cesium+Geojson渲染",
     path: "cesiumThree",
     type: "cesium",
   },
