@@ -134,6 +134,11 @@ const routsList = ref([
     type: "cesium",
   },
   {
+    name: "Cesium+CZML",
+    path: "cesiumCZML",
+    type: "cesium",
+  },
+  {
     name: "Cesium标牌",
     path: "cesiumPopup",
     type: "cesium",
