@@ -109,7 +109,7 @@ function createDynamicInfoBox() {
   // 创建容器元素
   infoBoxContainer = document.createElement("div");
   infoBoxContainer.style.position = "absolute";
-  infoBoxContainer.style.zIndex = "999";
+  infoBoxContainer.style.zIndex = "99";
   document.body.appendChild(infoBoxContainer);
 
   // 使用 watchEffect 响应式渲染组件
