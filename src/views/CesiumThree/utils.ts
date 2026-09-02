@@ -248,6 +248,53 @@ export const precomputeCanvas = async (
   return canvasCache;
 };
 
+// ==================== 拾取辅助 ====================
+
+/**
+ * 判断经纬度点是否在多边形内（射线法 / Ray Casting）
+ * @description Canvas 转影像图层后 Cesium 无法直接拾取到 feature，
+ * 因此鼠标交互时需要反过来用该方法在原始 GeoJSON 坐标上做命中测试
+ * @param lon 经度
+ * @param lat 纬度
+ * @param coords 多边形外环坐标，形如 [[lon, lat], ...]
+ */
+export const isPointInPolygon = (
+  lon: number,
+  lat: number,
+  coords: number[][],
+): boolean => {
+  let inside = false;
+  for (let i = 0, j = coords.length - 1; i < coords.length; j = i++) {
+    const [xi, yi] = coords[i];
+    const [xj, yj] = coords[j];
+    const intersect =
+      yi > lat !== yj > lat && lon < ((xj - xi) * (lat - yi)) / (yj - yi) + xi;
+    if (intersect) inside = !inside;
+  }
+  return inside;
+};
+
+/**
+ * 在指定要素集合中查找包含该经纬度点的 feature
+ * @param lon 经度
+ * @param lat 纬度
+ * @param features 待检索的 GeoJSON 要素数组（通常是当前 hour 对应的要素）
+ * @returns 命中的 feature，未命中时返回 null
+ */
+export const findFeatureAtPoint = (
+  lon: number,
+  lat: number,
+  features: any[],
+): any | null => {
+  for (const f of features) {
+    const coords = f.geometry.coordinates[0];
+    if (isPointInPolygon(lon, lat, coords)) {
+      return f;
+    }
+  }
+  return null;
+};
+
 // ==================== Cesium 辅助 ====================
 
 /**
